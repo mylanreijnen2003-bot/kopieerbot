@@ -1,0 +1,36 @@
+name: paper-h4
+
+# Papieren kopieerbot H4 (zie H4.md): dagelijks bijwerken. Stand op branch results, map paper_h4/.
+on:
+  schedule:
+    - cron: "43 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: {group: results-h4, cancel-in-progress: false}
+
+jobs:
+  paper:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          test -f res/paper_h4/selection.json || { echo "::notice::H4 nog niet gestart"; exit 0; }
+      - run: test -f res/paper_h4/selection.json && python -m bot.paper res/paper_h4 res/paper_h4/selection.json res/paper_h4/kraken.json || true
+        env: {REGELS: H4}
+      - run: test -f res/paper_h4/ledger.csv && python -m bot.report res/paper_h4 || true
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A paper_h4 || true
+          git commit -qm "paper H4 $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

@@ -79,7 +79,7 @@ def process(local, wanted):
 def main():
     shard, n, out = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
     os.makedirs(out, exist_ok=True)
-    wanted = pa.array(sorted(set(pd.read_parquet("data/universe.parquet").address.str.lower())))
+    wanted = pa.array(sorted(set(pd.read_parquet(os.environ.get("UNIVERSE", "data/universe.parquet")).address.str.lower())))
     mine = files()[shard::n]
     bars, fills = [], []
     for i, path in enumerate(mine):

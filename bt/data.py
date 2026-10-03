@@ -11,6 +11,7 @@ import pyarrow as pa
 import pyarrow.dataset as ds
 
 TRAIN = (pd.Timestamp("2025-07-28").value // 10**6, pd.Timestamp("2026-03-01").value // 10**6)
+FULL = (pd.Timestamp("2025-07-28").value // 10**6, pd.Timestamp("2026-08-19").value // 10**6)
 TEST = (pd.Timestamp("2026-03-01").value // 10**6, pd.Timestamp("2026-08-19").value // 10**6)
 
 
@@ -49,6 +50,11 @@ def av(d):
 def beurzen(d):
     paths = glob.glob(f"{d}/**/beurzen.json", recursive=True)
     return json.load(open(paths[0])) if paths else {}
+
+
+def fill_counts(d):
+    dset = ds.dataset(glob.glob(f"{d}/**/fills_*.parquet", recursive=True), format="parquet")
+    return dset.to_table(columns=["address"]).to_pandas().address.value_counts()
 
 
 def fills(d, addrs):

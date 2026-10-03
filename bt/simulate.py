@@ -16,19 +16,27 @@ from bt.variants import variants
 MAX_FILLS_DAG = 150     # kopieerbaar: niet te veel fills per dag (vertraging en kosten)
 MIN_ACTIEVE_DAGEN = 30  # minimaal aantal dagrendementen voor een Sharpe
 MIN_TRADES = 100        # steekproef: genoeg afgeronde trades, ongeacht hoe lang de wallet actief is
+MAX_FILLS_TOTAAL = 150_000  # meer fills dan dit = gemiddeld > ~380 per dag: nooit kopieerbaar, niet inladen (geheugen)
 
 
 def main():
     shard, n, d, out = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3], sys.argv[4]
     os.makedirs(out, exist_ok=True)
-    uni = pd.read_parquet("data/universe.parquet").sort_values("address")
+    uni = pd.read_parquet(os.environ.get("UNIVERSE", "data/universe.parquet")).sort_values("address")
+    window = getattr(data, os.environ.get("WINDOW", "TRAIN"))
     mine = uni.iloc[shard::n]
+    counts = data.fill_counts(d)
+    te_groot = set(counts[counts > MAX_FILLS_TOTAAL].index)
     bars, fund, av, venues = data.bars(d), data.funding(d), data.av(d), data.beurzen(d)
-    cfg: Cfg = variants(venues)["P"]
-    f_all = data.fills(d, set(mine.address))
-    f_all = f_all[(f_all.ts >= data.TRAIN[0]) & (f_all.ts < data.TRAIN[1])]
+    cfg: Cfg = variants(venues)[os.environ.get("CFG", "P")]
+    f_all = data.fills(d, set(mine.address) - te_groot)
+    f_all = f_all[(f_all.ts >= window[0]) & (f_all.ts < window[1])]
     stats, curves = [], []
     for i, (addr, w) in enumerate(mine.set_index("address").iterrows()):
+        if addr in te_groot:
+            stats.append({"address": addr, "median_av": w.median_av, "fills": int(counts[addr]), "gesimuleerd": False,
+                          "reden_niet": "te veel fills"})
+            continue
         f = f_all[f_all.address == addr]
         per_day = f.groupby(f.ts // 86_400_000).size()
         trades = int((((f.after == 0) & (f.start != 0)) | (f.start * f.after < 0)).sum())
@@ -38,7 +46,7 @@ def main():
         if (trades >= MIN_TRADES and row["actieve_dagen"] >= MIN_ACTIEVE_DAGEN
                 and row["fills_per_dag_mediaan"] <= MAX_FILLS_DAG):
             av_t, av_v = av.get(addr, ([], []))
-            eq, p = run(cfg, data.as_list(f), bars, fund, av_t, av_v, w.median_av, *data.TRAIN)
+            eq, p = run(cfg, data.as_list(f), bars, fund, av_t, av_v, w.median_av, *window)
             row.update(gesimuleerd=True, gekopieerd=p.copied, overgeslagen_geerfd=p.skip_geerfd,
                        overgeslagen_beurs=p.skip_beurs, max_hefboom=p.max_lev, gestopt=p.dead, reden=p.reden,
                        **data.curve_stats(eq))

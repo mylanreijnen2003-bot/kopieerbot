@@ -1,7 +1,7 @@
 """Papieren kopieerbot H3b (dagelijks): kopieert op papier de perps-trades van de 60 gekozen wallets.
 
 Verwerkt alle hele uren t/m gisteren 23:59 UTC. Stand in <map>/state.json, dagregels in <map>/ledger.csv.
-Gebruik: python -m bot.paper <map>
+Gebruik: python -m bot.paper <map> [selectie.json] [munten.json]  (H3b: alleen <map>)
 """
 
 from __future__ import annotations
@@ -28,13 +28,15 @@ def dstr(t: int) -> str:
 
 def main():
     d = sys.argv[1]
+    sel_path = sys.argv[2] if len(sys.argv) > 2 else "data/selection.json"
+    coins = set(json.load(open(sys.argv[3]))) if len(sys.argv) > 3 else None
     os.makedirs(d, exist_ok=True)
     state_path, ledger_path = f"{d}/state.json", f"{d}/ledger.csv"
     if os.path.exists(state_path):
         state = json.load(open(state_path))
     else:
-        sel = json.load(open("data/selection.json"))
-        state = {"regels": "H3b", "next_hour": ms(START),
+        sel = json.load(open(sel_path))
+        state = {"regels": os.environ.get("REGELS", "H3b"), "next_hour": ms(START),
                  "wallets": {w["address"]: {"pot": sim.new_pot(), "last_t": ms(START) - 1, "last_tid": 0,
                                             "median_av": w["median_av"], "onvolledig": False}
                              for w in sel["wallets"]}}
@@ -75,7 +77,7 @@ def main():
         n_day = 0
         for h in range(s, end, hl.HOUR):
             for f in by_hour.get(h, []):
-                sim.on_fill(p, f, hl.av_at(avs.get(a, []), f["time"]), w["median_av"])
+                sim.on_fill(p, f, hl.av_at(avs.get(a, []), f["time"]), w["median_av"], coins)
                 w["last_t"], w["last_tid"] = f["time"], f["tid"]
                 n_day += 1
             sim.hour_end(p, h, bars, fund)

@@ -9,6 +9,7 @@ def variants(venues: dict) -> dict[str, Cfg]:
     kr = frozenset(venues["kraken"]) if venues.get("kraken") else None
     bv = frozenset(venues["bitvavo"]) if venues.get("bitvavo") else None
     return {
+        "H4": Cfg("H4: Kraken, 2x, stop -20%", lev=2.0, stop=0.80, coins=kr),
         "P": Cfg("P: Kraken, 2x, stop -35%", lev=2.0, stop=0.65, coins=kr),
         "K_stop_geen": Cfg("Kraken, 2x, geen stop", lev=2.0, stop=None, coins=kr),
         "K_stop20": Cfg("Kraken, 2x, stop -20%", lev=2.0, stop=0.80, coins=kr),

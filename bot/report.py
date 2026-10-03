@@ -49,7 +49,7 @@ def main():
     redenen = pd.Series([p["reden"] for p in pots.values() if p["dead"]]).value_counts().to_dict()
     days = len(ret)
     res = {
-        "regels": "H3b", "periode": [eq.index[0], eq.index[-1]], "dagen": days, "wallets": int(n_w),
+        "regels": state.get("regels", "H3b"), "periode": [eq.index[0], eq.index[-1]], "dagen": days, "wallets": int(n_w),
         "uitgesloten_onvolledig": len(bad), "totaal_rendement": round(float(eq.iloc[-1] / sim_cap - 1), 4),
         "max_drawdown": round(dd, 4), "gem_dagrendement": round(float(ret.mean()), 5), "nw_t": round(nw_t(ret.values), 2),
         "zonder_2_beste_dagen": round(float(ret.drop(ret.nlargest(2).index).mean()), 5) if days > 3 else None,

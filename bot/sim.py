@@ -53,7 +53,7 @@ def close_all(p: dict, px: dict, t: int, reden: str) -> None:
     p.update(dead=True, dead_t=t, reden=reden, cash=max(p["cash"], 0.0))
 
 
-def on_fill(p: dict, f: dict, av: float | None, fallback_av: float) -> None:
+def on_fill(p: dict, f: dict, av: float | None, fallback_av: float, coins: set | None = None) -> None:
     """Eén fill van de leider verwerken."""
     if p["dead"]:
         return
@@ -70,6 +70,9 @@ def on_fill(p: dict, f: dict, av: float | None, fallback_av: float) -> None:
             if after == 0:
                 p["armed"][c] = True                  # leider is nu plat; volgende opening kopiëren
             return
+    if coins is not None and (c[1:] if c.startswith("k") and c[1:2].isupper() else c) not in coins:
+        p["overgeslagen"]["niet_op_beurs"] = p["overgeslagen"].get("niet_op_beurs", 0) + 1
+        return
     p["last_px"][c] = px
     av_use = av if av and av > 1000 else fallback_av
     eq = max(equity(p), 0.0)
