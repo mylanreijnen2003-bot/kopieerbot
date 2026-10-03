@@ -11,6 +11,7 @@ Gebruik: python -m bt.var_select <groep> <statsmap> <universe.parquet> <uitmap>
 import glob
 import math
 import os
+import signal
 import sys
 import time
 
@@ -49,7 +50,32 @@ def main():
     print(groep, stap, flush=True)
     top = m.sort_values("bot_gem_maand_pct", ascending=False).head(15).reset_index(drop=True)
     rows = []
+    pd.DataFrame([{"groep": groep, **stap}]).to_csv(f"{out}/{groep}_trechter.csv", index=False)
+
+    def te_lang(*_):
+        raise TimeoutError
+
+    signal.signal(signal.SIGALRM, te_lang)
+    begin = time.time()
     for _, w in top.iterrows():
+        if time.time() - begin > 80 * 60:
+            print("tijdbudget op, stop", flush=True)
+            break
+        t0 = time.time()
+        signal.alarm(300)
+        try:
+            rows.append(toets(groep, w))
+        except Exception as exc:  # noqa: BLE001
+            print(w.address[:10], "overgeslagen:", type(exc).__name__, flush=True)
+        finally:
+            signal.alarm(0)
+        if rows:
+            pd.DataFrame(rows).to_csv(f"{out}/{groep}_top15.csv", index=False)
+        print(f"{w.address[:10]} klaar in {time.time() - t0:.0f}s", flush=True)
+
+
+def toets(groep, w):
+    if True:
         fl = [f for f in hl.fills(w.address, EIND, NU) if f["kind"] == "perp"]
         bt_ = [t for t in bot_trades(fl) if t[1] >= EIND]
         k = int(w.bot_K)
@@ -64,7 +90,7 @@ def main():
                 hand.append(r * (b / a - 1) - KOSTEN)
         e = lambda x: round(100 / k * sum(x), 2)  # noqa: E731
         ch = hl.info({"type": "clearinghouseState", "user": w.address})
-        rows.append({"groep": groep, "kort": w.address[:6] + "…" + w.address[-4:], "address": w.address,
+        res = {"groep": groep, "kort": w.address[:6] + "…" + w.address[-4:], "address": w.address,
                      "trades_per_week": round(w.trades_per_week, 2), "K": k, "keuze_trades": int(w.bot_trades),
                      "keuze_maanden": int(w.bot_maanden), "keuze_verliesmaanden": int(w.bot_verliesmaanden),
                      "keuze_winst_pct": w.bot_winst_pct, "keuze_gem_r_pct": w.bot_gem_r_pct,
@@ -72,11 +98,9 @@ def main():
                      "houdtijd_uur": w.bot_houdtijd_uur, "test_trades": len(bt_),
                      "test_bot": e(bot), "test_bot_zonder_kosten": e([x + KOSTEN for x in bot]),
                      "test_hun_prijs": e(hun), "test_hand_1u": e(hand), "test_hand_trades": len(hand),
-                     "accountwaarde_nu": round(float(ch.get("marginSummary", {}).get("accountValue", 0)), 0)})
-        print(rows[-1]["kort"], rows[-1]["test_bot"], rows[-1]["test_hand_1u"], flush=True)
-    res = pd.DataFrame(rows)
-    res.to_csv(f"{out}/{groep}_top15.csv", index=False)
-    pd.DataFrame([{"groep": groep, **stap}]).to_csv(f"{out}/{groep}_trechter.csv", index=False)
+                     "accountwaarde_nu": round(float(ch.get("marginSummary", {}).get("accountValue", 0)), 0)}
+        print(res["kort"], res["test_bot"], res["test_hand_1u"], flush=True)
+        return res
 
 
 if __name__ == "__main__":
