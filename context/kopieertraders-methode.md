@@ -1,4 +1,4 @@
-# Methode: winstgevende traders vinden en kopiëren (elke chain) — stand 3 okt 2026 (avond)
+# Methode: winstgevende traders vinden en kopiëren (elke chain) — stand 4 okt 2026 (nacht)
 
 Kort, alleen wat nodig is. Kopie van het projectdocument; volledige walletadressen staan hier bewust niet in.
 
@@ -23,6 +23,8 @@ Kort, alleen wat nodig is. Kopie van het projectdocument; volledige walletadress
 6. Papieren test vooruit, daarna klein met echt geld.
 
 ## Lessen
+- **Kosten per trade beslissen alles.** Echte kopie op Kraken ~0,31%/trade (fee + spread). Rekenen met hun eerste fill (bot) en 0,32% kosten (`bt/bot_stats.py`). Backtest op hun prijzen = bovengrens: top 5 +€228/€100 → replay met Kraken-prijzen verlies.
+- Praktisch-selectie (bot-basis, ≥ 0,4%/trade, test 19-8 t/m 3-10): top 5 +€5, top 10 −€3, top 30 −€12 per €100. Geen betrouwbare voorsprong na kosten; ~1/3 van de gekozen traders stopte.
 - **Vertraging is beslissend.** Scalpers verliezen ~90% van hun winst als je 15 min later instapt (top 5, 19-8 t/m 2-10: +€1.141 → +€18 op €500). Met de hand alleen traders met lange houdtijd; scalpers alleen met een bot (seconden).
 - Ook met een bot: kosten (fee + spread) per trade zijn vaak bijna net zo groot als hun winst per trade. Meten in de papierfase.
 - Selectie op gerealiseerde winst kan misleiden → open posities / accountwinst checken.
