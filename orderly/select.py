@@ -1,5 +1,5 @@
 """Orderly stap 2-7: kandidaten, trades reconstrueren, filters, kiezen, eerlijke test op knipdatum, open posities.
-Gebruik: python -m orderly.select <uitmap>     (env LIMIT=n voor een proefrun op n adressen)
+Gebruik: python -m orderly.select pool <uit> | shard <uit> <pool_lijst.csv> <i> <n> | kies <uit> <shardmap...>   (env LIMIT=n: proef)
 
 Rendement per trade = richting x (gem. uitstap / gem. instap - 1) - 0,2% kosten (zelfde als bt/vast_select.py).
 Mark-to-market (MTM): elke trade wordt per dag gewaardeerd op de slotkoers (dag-candles), open trades tellen mee.
@@ -22,16 +22,17 @@ import pandas as pd
 from bt.vast_select import KOSTEN, trades_pct
 from orderly import probe as P
 
-OUT = sys.argv[1]
-os.makedirs(OUT, exist_ok=True)
+MODUS = sys.argv[1]                 # pool | shard | kies
+OUT = sys.argv[2]
+os.makedirs(f"{OUT}/voorbeelden", exist_ok=True)
 P.OUT = OUT
 DAG = P.DAG
 NU = P.NU
 KNIP = int(pd.Timestamp("2026-08-19").value // 10**6)
-MAXDAGEN = 365
+MAXDAGEN = 300
 LIMIT = int(os.environ.get("LIMIT", "0"))
 START = time.time()
-MAX_SEC = 4.5 * 3600
+MAX_SEC = 5.2 * 3600
 HIER = os.path.dirname(__file__)
 log = P.log
 
@@ -158,13 +159,14 @@ def naar_fills(tr, acc, staat):
 
 def trades_vol(fl):
     """Zelfde wiskunde als trades_pct, maar met instap/uitstap/richting en de nog open trades."""
-    st, out = {}, []
+    st, out, skip = {}, [], 0
     for f in fl:
         c, s, a, px = f["coin"], f["start"], f["after"], f["px"]
         if s == 0 and a != 0:
             st[c] = {"dir": 1 if a > 0 else -1, "in_q": abs(a), "in_c": abs(a) * px, "uit_q": 0.0, "uit_c": 0.0, "t": f["time"]}
             continue
         if c not in st:
+            skip += 1
             continue
         p = st[c]
         flip = a != 0 and a * s < 0
@@ -184,6 +186,7 @@ def trades_vol(fl):
                 st[c] = {"dir": 1 if a > 0 else -1, "in_q": abs(a), "in_c": abs(a) * px, "uit_q": 0.0, "uit_c": 0.0, "t": f["time"]}
     for c, p in st.items():
         out.append({"coin": c, "open": p["t"], "sluit": None, "r": None, "dir": p["dir"], "in_px": p["in_c"] / p["in_q"], "uit_px": None})
+    trades_vol.skip = skip
     return out
 
 
@@ -264,6 +267,7 @@ def periode(trs, fills, t0, t1, mark, eerste):
     f30 = [f for f in fills if t1 - 30 * DAG <= f["time"] < t1]
     uren = [(x["sluit"] - x["open"]) / 3.6e6 for x in gesl]
     munten = pd.Series([x["coin"].split("|")[1] for x in gesl])
+    maes = [x["mae"] for x in gesl if x.get("mae") is not None]
     return {
         "trades": len(r), "winst_pct": round(100 * (r > 0).mean(), 1) if len(r) else None,
         "gem_r_pct": round(100 * r.mean(), 2) if len(r) else None,
@@ -279,6 +283,8 @@ def periode(trs, fills, t0, t1, mark, eerste):
         "fills_per_dag_30d": round(len(f30) / 30, 1), "maker_pct_30d": round(100 * np.mean([f["maker"] for f in f30]), 1) if f30 else None,
         "houdtijd_mediaan_uur": round(float(np.median(uren)), 1) if uren else None,
         "kraken_pct": round(100 * munten.map(lambda s: P.munt(s) in P.KRAKEN).mean(), 1) if len(munten) else None,
+        "mae_slechtst_pct": round(100 * min(maes), 1) if maes else None,
+        "mae_mediaan_pct": round(100 * float(np.median(maes)), 1) if maes else None,
         "mnd": {k: round(100 * v, 2) for k, v in mnd.items()},
     }
 
@@ -298,13 +304,14 @@ def wallet(a):
         for x in acc:
             tr, f = historie({"address": a, "account_id": x["account_id"], "broker_id": x["broker_id"]})
             per_acc[x["account_id"]], afg = tr, afg or f
-    fills, voor, trs, mark = [], {}, [], {}
+    fills, voor, trs, mark, skip = [], {}, [], {}, 0
     for acc_id, tr in per_acc.items():
         pos = staat.get(acc_id, {}).get("pos", {})
         fl, v = naar_fills(tr, acc_id, pos)
         fills += fl
         voor.update({f"{acc_id[-6:]}|{s}": q for s, q in v.items()})
         tv = trades_vol(fl)
+        skip += trades_vol.skip
         # controle: zelfde rendementen als bt/vast_select.trades_pct
         ref = trades_pct(fl)
         assert len(ref) == sum(x["sluit"] is not None for x in tv) and all(abs(x[3] - y["r"]) < 1e-9 for x, y in zip(ref, [t for t in tv if t["sluit"] is not None]))
@@ -320,9 +327,9 @@ def wallet(a):
         x["mae"] = mae(x)
     return {"address": a, "accounts": len(acc), "brokers": ",".join(sorted({str(x.get("broker_id")) for x in acc})),
             "fills": len(fills), "afgekapt": afg, "eerste_fill": eerste, "voorposities": len(voor),
-            "open_nu": sum(x["sluit"] is None for x in trs),
-            "open_check": sorted(c for c in [x["coin"] for x in trs if x["sluit"] is None]) == sorted(
-                f"{k[-6:]}|{s}" for k, v in staat.items() for s in v["pos"] if f"{k[-6:]}|{s}" not in voor),
+            "open_nu": sum(x["sluit"] is None for x in trs), "dekking_pct": round(100 * (1 - skip / len(fills)), 1),
+            "voor": json.dumps({k: round(v, 6) for k, v in voor.items()}),
+            "dubbel": int(pd.DataFrame([(f["time"], f["coin"], f["px"], f["start"]) for f in fills]).duplicated().sum()),
             "account_value": sum(v["av"] for v in staat.values()), "upnl": sum(v["upnl"] for v in staat.values()),
             "_trs": trs, "_fills": fills, "_mark": mark, "_staat": staat}
 
@@ -331,7 +338,9 @@ def wallet(a):
 def geschikt(s, min_dagen, min_trades):
     return (s["historie_dagen"] >= min_dagen and s["trades"] >= min_trades and (s["winst_pct"] or 0) > 50 and s["mtm_som_pct"] > 0
             and s["trades_7d"] >= 1 and s["trades_14d"] >= 4 and s["trades_per_dag_30d"] <= 3
-            and (s["houdtijd_mediaan_uur"] or 0) >= 2 and s["fills_per_dag_30d"] <= 150 and (s["maker_pct_30d"] or 0) < 90)
+            and (s["houdtijd_mediaan_uur"] or 0) >= 2 and s["fills_per_dag_30d"] <= 150 and (s["maker_pct_30d"] or 0) < 90
+            and (s["gem_r_pct"] or 0) > 0 and s["p90_tegelijk"] <= 15
+            and (s["mae_slechtst_pct"] if s["mae_slechtst_pct"] == s["mae_slechtst_pct"] and s["mae_slechtst_pct"] is not None else -99) > -50)
 
 
 def kies(tab):
@@ -344,26 +353,29 @@ def kies(tab):
     return m, me
 
 
-def main():
-    adr, ms = pool()
-    lijst = sorted(adr)
+def main_pool():
+    adr, _ = pool()
+    pd.DataFrame({"address": list(adr), "bron": list(adr.values())}).to_csv(f"{OUT}/pool_lijst.csv", index=False)
+
+
+def main_shard(lijst_pad, i, n):
+    p = pd.read_csv(lijst_pad).sort_values("address")
+    adr = dict(zip(p.address, p.bron))
+    lijst = p.address.tolist()[i::n]
     if LIMIT:
-        # proefrun: neem adressen met bekende activiteit uit probe1 + willekeurige
-        top = pd.read_csv(os.path.join(HIER, "top_rows_probe1.csv"))
-        top["trade_count_24h"] = pd.to_numeric(top.trade_count_24h, errors="coerce")
-        act = top[top.trade_count_24h.between(1, 60)].address.tolist()
-        lijst = act[: LIMIT // 2] + [a for a in lijst if a not in act][: LIMIT - LIMIT // 2]
+        lijst = lijst[:LIMIT]
+    log("shard", i, "van", n, "adressen", len(lijst))
     vf = voorfilter(lijst)
     vf["bron"] = vf.address.map(adr)
-    door = vf[((vf.fills_7d >= 1) & (vf.fills_14d >= 4) | (vf.fills_knip_14d >= 4))
-              & (vf.fills_24u < 3000) & (vf.fills_14d < 2000)]
-    log("voorfilter klaar", len(vf), "door", len(door), "(nu actief", int(((vf.fills_7d >= 1) & (vf.fills_14d >= 4)).sum()),
-        ", actief rond knip", int((vf.fills_knip_14d >= 4).sum()), ")")
-
+    nu_actief = (vf.fills_7d >= 1) & (vf.fills_14d >= 4)
+    door = vf[(nu_actief | (vf.fills_knip_14d >= 4)) & (vf.fills_24u < 3000) & (vf.fills_14d < 2000)
+              & ~((vf.maker_pct_14d.fillna(0) >= 90) & (vf.fills_14d > 200))]
+    log("voorfilter klaar", len(vf), "door", len(door), "(nu actief", int(nu_actief.sum()), ", actief rond knip",
+        int((vf.fills_knip_14d >= 4).sum()), ")")
     rows, alle_trades, oudste = [], [], NU
-    for i, a in enumerate(door.address):
+    for k, a in enumerate(door.address):
         if time.time() - START > MAX_SEC:
-            log("tijdslimiet: gestopt bij", i); break
+            log("tijdslimiet: gestopt bij", k); break
         try:
             w = wallet(a)
         except Exception as e:  # noqa: BLE001
@@ -376,70 +388,93 @@ def main():
         nu_s = periode(trs, fills, w["eerste_fill"], NU, mark, w["eerste_fill"])
         k_s = periode(trs, fills, w["eerste_fill"], KNIP, mark, w["eerste_fill"]) if w["eerste_fill"] < KNIP else None
         t_s = periode(trs, fills, KNIP, NU, mark, KNIP) if w["eerste_fill"] < KNIP else None
-        row = {**w, "eerste_fill": str(pd.Timestamp(w["eerste_fill"], unit="ms").date()),
-               **{f"nu_{k}": v for k, v in nu_s.items()},
-               **({f"keuze_{k}": v for k, v in k_s.items()} if k_s else {}),
-               **({f"test_{k}": v for k, v in t_s.items()} if t_s else {}),
-               "mae_mediaan_pct": round(100 * float(np.nanmedian([x["mae"] for x in trs if x["mae"] is not None])), 1) if trs else None,
-               "mae_slechtst_pct": round(100 * float(np.nanmin([x["mae"] for x in trs if x["mae"] is not None])), 1) if any(x["mae"] is not None for x in trs) else None,
-               "open_posities": json.dumps([{"symbol": s, "q": p["q"], "notional": p.get("notional"), "upnl": p.get("unrealized_pnl"),
-                                             "lev": p.get("leverage"), "broker": v["broker"]} for v in staat.values() for s, p in v["pos"].items()])}
-        rows.append(row)
+        rows.append({**w, "eerste_fill": str(pd.Timestamp(w["eerste_fill"], unit="ms").date()),
+                     **{f"nu_{x}": v for x, v in nu_s.items()},
+                     **({f"keuze_{x}": v for x, v in k_s.items()} if k_s else {}),
+                     **({f"test_{x}": v for x, v in t_s.items()} if t_s else {}),
+                     "open_posities": json.dumps([{"symbol": sy, "q": pp["q"], "notional": pp.get("notional"),
+                                                   "upnl": pp.get("unrealized_pnl"), "lev": pp.get("leverage"), "broker": v["broker"]}
+                                                  for v in staat.values() for sy, pp in v["pos"].items()])})
         for x in trs:
-            alle_trades.append({"address": a, **{k: x[k] for k in ("coin", "open", "sluit", "r", "dir", "in_px", "uit_px", "mae")}})
-        if i % 25 == 0:
-            log("wallets", i, "/", len(door), round((time.time() - START) / 60), "min")
+            alle_trades.append({"address": a, **{c: x[c] for c in ("coin", "open", "sluit", "r", "dir", "in_px", "uit_px", "mae")}})
+        if k % 25 == 0:
+            log("wallets", k, "/", len(door), round((time.time() - START) / 60), "min")
             pd.DataFrame(rows).to_csv(f"{OUT}/wallets.csv", index=False)
-    tab = pd.DataFrame(rows)
-    tab.to_csv(f"{OUT}/wallets.csv", index=False)
+    pd.DataFrame(rows).to_csv(f"{OUT}/wallets.csv", index=False)
     pd.DataFrame(alle_trades).to_csv(f"{OUT}/trades.csv.gz", index=False)
-    log("wallets klaar", len(tab), "oudste fill", pd.Timestamp(oudste, unit="ms"))
+    json.dump({"pool": len(lijst), "voorfilter_door": len(door), "wallets": len(rows), "oudste": int(oudste)},
+              open(f"{OUT}/shard.json", "w"))
+    log("shard klaar", len(rows), "oudste fill", pd.Timestamp(oudste, unit="ms"))
 
-    # ---- eerlijke test op de knipdatum
+
+def main_kies(mappen):
+    import ast
+    tab = pd.concat([pd.read_csv(f"{m}/wallets.csv") for m in mappen if os.path.exists(f"{m}/wallets.csv")], ignore_index=True)
+    tr = pd.concat([pd.read_csv(f"{m}/trades.csv.gz") for m in mappen if os.path.exists(f"{m}/trades.csv.gz")], ignore_index=True)
+    sh = [json.load(open(f"{m}/shard.json")) for m in mappen if os.path.exists(f"{m}/shard.json")]
+    for c in tab.columns:
+        if c.endswith("_mnd"):
+            tab[c] = tab[c].map(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+    tab.to_csv(f"{OUT}/wallets.csv", index=False)
+    tr.to_csv(f"{OUT}/trades.csv.gz", index=False)
+    oudste = min(x["oudste"] for x in sh) if sh else NU
     besch = (KNIP - oudste) / DAG
     min_dagen_k = 90 if besch >= 95 else max(30, int(besch) - 5)
     min_tr_k = 100 if min_dagen_k == 90 else int(round(100 * min_dagen_k / 90))
-    uit = {"knip": "2026-08-19", "oudste_data": str(pd.Timestamp(oudste, unit="ms").date()), "pool": len(lijst),
-           "voorfilter_door": len(door), "wallets_met_fills": int((tab.fills > 0).sum()) if len(tab) else 0,
-           "test_eisen": {"min_dagen": min_dagen_k, "min_trades": min_tr_k}}
-    if len(tab) and "keuze_trades" in tab:
+    uit = {"knip": "2026-08-19", "oudste_data": str(pd.Timestamp(oudste, unit="ms").date()), "shards": len(sh),
+           "pool": sum(x["pool"] for x in sh), "voorfilter_door": sum(x["voorfilter_door"] for x in sh),
+           "wallets_met_fills": len(tab), "test_eisen": {"min_dagen": min_dagen_k, "min_trades": min_tr_k}}
+
+    def sub(df, pre):
+        return df.rename(columns=lambda c: c[len(pre):] if c.startswith(pre) else (c if c in ("address",) else "_" + c))
+
+    if "keuze_trades" in tab:
         kt = tab[tab.keuze_trades.notna()].copy()
-        kt = kt[[geschikt({k[6:]: r[k] for k in r.index if k.startswith("keuze_")}, min_dagen_k, min_tr_k) for _, r in kt.iterrows()]]
+        ks = sub(kt, "keuze_")
+        ok = [geschikt(r, min_dagen_k, min_tr_k) for _, r in ks.iterrows()]
+        kt, ks = kt[ok], ks[ok]
         uit["test_geschikt"] = len(kt)
-        m, me = kies(kt.rename(columns=lambda c: c[6:] if c.startswith("keuze_") else c))
+        m, me = kies(ks)
         for naam, sel in (("regel_mylan", m), ("regel_methode", me)):
-            s = kt[kt.address.isin(sel)]
-            uit[naam] = {"gekozen": sel, "test_potje_pm_pct_gem": round(float(s.test_potje_pm_pct.mean()), 2) if len(s) else None,
-                         "test_verliesmaanden": s.test_verliesmaanden.tolist(), "test_winst_pct": s.test_winst_pct.tolist(),
-                         "test_trades": s.test_trades.tolist(), "test_potje_pm_pct": s.test_potje_pm_pct.tolist()}
-        uit["basis_alle_geschikt_test_potje_pm_pct_gem"] = round(float(kt.test_potje_pm_pct.mean()), 2) if len(kt) else None
-        uit["basis_alle_geschikt_test_potje_pm_pct_mediaan"] = round(float(kt.test_potje_pm_pct.median()), 2) if len(kt) else None
+            s = kt.set_index("address").loc[sel] if sel else kt.iloc[:0]
+            uit[naam] = {"gekozen": sel, **{f"test_{c}": s[f"test_{c}"].tolist() for c in
+                         ("trades", "winst_pct", "gem_r_pct", "verliesmaanden", "potje_pm_pct", "potje_totaal_pct")},
+                         "keuze_potje_pm_pct": s["keuze_potje_pm_pct"].tolist(),
+                         "test_potje_pm_pct_gem": round(float(s.test_potje_pm_pct.mean()), 2) if len(s) else None}
+        uit["basis_alle_geschikt_test_potje_pm_pct"] = {"gem": round(float(kt.test_potje_pm_pct.mean()), 2) if len(kt) else None,
+                                                         "mediaan": round(float(kt.test_potje_pm_pct.median()), 2) if len(kt) else None,
+                                                         "aandeel_winst": round(float((kt.test_potje_totaal_pct > 0).mean()), 2) if len(kt) else None}
         kt.to_csv(f"{OUT}/test_geschikt.csv", index=False)
 
-    # ---- selectie vandaag (strikte regel; indien < 5: versoepeld en gemeld)
-    if len(tab) and "nu_trades" in tab:
-        nt = tab.rename(columns=lambda c: c[3:] if c.startswith("nu_") else c)
-        for md, mt in ((90, 100), (60, 60)):
-            g = nt[[geschikt(r, md, mt) for _, r in nt.iterrows()]]
-            if len(g) >= 5 or md == 60:
-                break
-        uit["vandaag_eisen"] = {"min_dagen": md, "min_trades": mt, "geschikt": len(g)}
-        m, me = kies(g)
-        uit["vandaag_regel_mylan"], uit["vandaag_regel_methode"] = m, me
-        g.to_csv(f"{OUT}/vandaag_geschikt.csv", index=False)
-        # per munt: waar kopiëren
-        tr = pd.DataFrame(alle_trades)
-        mp = []
-        for a in dict.fromkeys(m + me):
-            x = tr[tr.address == a]
-            vc = x.coin.str.split("|").str[1].value_counts(normalize=True)
-            for s, v in vc.items():
-                mu = P.munt(s)
-                mp.append({"address": a, "symbol": s, "munt": mu, "aandeel_pct": round(100 * v, 1),
-                           "kopieer_op": "Kraken" if mu in P.KRAKEN else "Orderly-frontend"})
-        pd.DataFrame(mp).to_csv(f"{OUT}/munten_gekozen.csv", index=False)
+    ns = sub(tab, "nu_")
+    for md, mt in ((90, 100), (60, 60)):
+        okv = [geschikt(r, md, mt) for _, r in ns.iterrows()]
+        if sum(okv) >= 5 or md == 60:
+            break
+    g, gs = tab[okv], ns[okv]
+    uit["vandaag_eisen"] = {"min_dagen": md, "min_trades": mt, "geschikt": len(g)}
+    m, me = kies(gs)
+    uit["vandaag_regel_mylan"], uit["vandaag_regel_methode"] = m, me
+    g.to_csv(f"{OUT}/vandaag_geschikt.csv", index=False)
+    mp = []
+    for a in dict.fromkeys(m + me):
+        x = tr[tr.address == a]
+        for sy, v in x.coin.str.split("|").str[1].value_counts(normalize=True).items():
+            mu = P.munt(sy)
+            mp.append({"address": a, "symbol": sy, "munt": mu, "aandeel_pct": round(100 * v, 1),
+                       "kopieer_op": "Kraken" if mu in P.KRAKEN else "Orderly-frontend"})
+    pd.DataFrame(mp).to_csv(f"{OUT}/munten_gekozen.csv", index=False)
     json.dump(uit, open(f"{OUT}/uitslag.json", "w"), indent=1, default=str)
-    log("klaar", json.dumps(uit, default=str)[:3000])
+    log("klaar", json.dumps(uit, default=str)[:4000])
+
+
+def main():
+    if MODUS == "pool":
+        main_pool()
+    elif MODUS == "shard":
+        main_shard(sys.argv[3], int(sys.argv[4]), int(sys.argv[5]))
+    else:
+        main_kies(sys.argv[3:])
 
 
 if __name__ == "__main__":
