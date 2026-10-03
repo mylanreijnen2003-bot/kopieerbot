@@ -1,0 +1,112 @@
+name: brede
+
+# Brede scan over ALLE Hyperliquid-wallets: universum (3 mnd+, 100+ trades, 2+/week), vaste-inzet-statistieken t/m 18-8,
+# kiezen op meeste geld per risico, toetsen 19-8 t/m gisteren. Uitkomst: results/brede/.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy huggingface_hub requests
+      - run: python -m bt.scan ${{ matrix.shard }} 12 scan
+      - uses: actions/upload-artifact@v4
+        with: {name: "brede-scan-${{ matrix.shard }}", path: scan, retention-days: 30}
+
+  universum:
+    needs: scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {pattern: "brede-scan-*", path: scan}
+      - run: mkdir -p uni && python -m bt.scan_combine scan uni/universe.parquet
+      - uses: actions/upload-artifact@v4
+        with: {name: brede-uni, path: uni, retention-days: 30}
+
+  extract:
+    needs: universum
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy huggingface_hub requests
+      - uses: actions/download-artifact@v4
+        with: {name: brede-uni, path: uni}
+      - run: python -m bt.extract ${{ matrix.shard }} 12 part && rm -f part/bars_*.parquet
+        env: {UNIVERSE: uni/universe.parquet}
+      - uses: actions/upload-artifact@v4
+        with: {name: "brede-part-${{ matrix.shard }}", path: part, retention-days: 30}
+
+  stats:
+    needs: extract
+    if: always() && needs.extract.result != 'cancelled'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: brede-uni, path: uni}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "brede-part-*", path: dat}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - run: python -m bt.brede_stats ${{ matrix.shard }} 12 uni/universe.parquet dat beurs out
+      - uses: actions/upload-artifact@v4
+        with: {name: "brede-stats-${{ matrix.shard }}", path: out, retention-days: 30}
+
+  select:
+    needs: stats
+    if: always() && needs.stats.result != 'cancelled'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "brede-stats-*", path: stats}
+      - uses: actions/download-artifact@v4
+        with: {name: brede-uni, path: uni}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: mkdir -p res/brede && cp uni/universe.parquet res/brede/ && python -m bt.brede_select stats res/brede
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A brede
+          git commit -qm "brede scan $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
