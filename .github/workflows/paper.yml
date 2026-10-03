@@ -1,0 +1,45 @@
+name: paper
+
+# Papieren kopieerbot H3b (zie REGELS.md). Dagelijks; stand en rapport op branch results, map paper/.
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths: ["bot/sim.py", "bot/paper.py", "bot/report.py", "REGELS.md", ".github/workflows/paper.yml"]
+
+permissions:
+  contents: write
+
+concurrency: {group: results, cancel-in-progress: false}
+
+jobs:
+  paper:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin results; then
+            git fetch origin results && git worktree add -B results res origin/results
+          else
+            git worktree add --detach res && cd res && git checkout --orphan results && git rm -rfq . && cd ..
+          fi
+      - run: python -m bot.paper res/paper
+      - run: python -m bot.report res/paper
+      - name: Tussenstand als annotatie
+        if: always()
+        run: |
+          python -c "import json; r=json.load(open('res/paper/rapport.json')); [r.pop(k,None) for k in ('beste5','slechtste5')]; print('::notice title=H3b::'+json.dumps(r,default=str))" || echo "::error::geen rapport"
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A paper
+          git commit -qm "paper H3b $(date -u +%F) [skip ci]" || true
+          git push origin HEAD:results
