@@ -1,0 +1,34 @@
+name: live-select
+
+# Live-selectie: 5 nu actieve, met de hand na te doen traders (zie bt/live_select.py).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  h4b:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "h4-sim-*", path: sim, run-id: "37133019648", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: dat, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: python -m bt.live_select sim dat res/live
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A live
+          git commit -qm "live selectie $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
