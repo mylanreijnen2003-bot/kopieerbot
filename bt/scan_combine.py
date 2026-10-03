@@ -1,5 +1,5 @@
 """Brede scan stap 2: universum bepalen (alleen data t/m 18-8-2026).
-Eisen: >= 90 dagen tussen eerste en laatste trade, >= 100 trades, gemiddeld >= 2 trades/week over die periode,
+Eisen (aanpasbaar via env MIN_SPAN, MIN_TRADES, MIN_TPW, MAX_TPW): >= 90 dagen tussen eerste en laatste trade, >= 100 trades, gemiddeld >= 2 trades/week,
 mediaan <= 150 fills per actieve dag, maker-aandeel < 90% (geen market maker), <= 150.000 fills totaal.
 Gebruik: python -m bt.scan_combine <scanmap> <uit.parquet>
 """
@@ -24,7 +24,8 @@ def main():
     w["spanne_dagen"] = w.laatste - w.eerste
     w["trades_per_week"] = w.trades / (w.spanne_dagen.clip(lower=1) / 7)
     print("wallets met perps-fills", len(w))
-    u = w[(w.spanne_dagen >= 90) & (w.trades >= int(os.environ.get("MIN_TRADES", "100"))) & (w.trades_per_week >= 2) & (w.fills_dag_mediaan <= 150)
+    u = w[(w.spanne_dagen >= int(os.environ.get("MIN_SPAN", "90"))) & (w.trades >= int(os.environ.get("MIN_TRADES", "100")))
+          & (w.trades_per_week >= float(os.environ.get("MIN_TPW", "2"))) & (w.trades_per_week <= float(os.environ.get("MAX_TPW", "1e9"))) & (w.fills_dag_mediaan <= 150)
           & (w.maker / w.fills < 0.9) & (w.fills <= 150_000)].reset_index()
     u["median_av"] = 0.0
     print("universum", len(u))

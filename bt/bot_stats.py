@@ -68,7 +68,7 @@ def main():
             fl = [{"time": int(t), "coin": c, "start": s, "after": af, "px": p}
                   for t, c, s, af, p in zip(x.ts, x.coin, x.start, x.after, x.px)]
             bt_ = bot_trades(fl)
-            if len(bt_) < 30:
+            if len(bt_) < int(os.environ.get("MIN_TRADES", "30")):
                 continue
             hun = [(c, o, cl, r * (po / pv - 1) - KOSTEN) for c, o, cl, r, p1, pv, po, q, ad in bt_]
             bot = [(c, o, cl, r * (po / p1 - 1) - KOSTEN) for c, o, cl, r, p1, pv, po, q, ad in bt_]
