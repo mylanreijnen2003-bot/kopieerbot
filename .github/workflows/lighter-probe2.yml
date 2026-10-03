@@ -1,0 +1,34 @@
+name: lighter-probe2
+
+# Lighter probe 2 (lighter/probe2.py): pnl-semantiek, trades-retentie, leaderboard, websocket.
+# Repo is publiek: logs alleen aantallen, bestanden alleen afgekorte adressen.
+on:
+  workflow_dispatch:
+  push:
+    branches: [lighter]
+    paths: ["lighter/probe2.py", ".github/workflows/lighter-probe2.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests websockets
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          mkdir -p res/lighter/probe
+      - run: python -m lighter.probe2 res res/lighter/probe
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A lighter
+          git commit -qm "lighter probe2 $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

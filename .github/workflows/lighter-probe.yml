@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: [lighter]
-    paths: ["lighter/**", ".github/workflows/lighter-probe.yml"]
+    paths: ["lighter/probe.py", ".github/workflows/lighter-probe.yml"]
 
 permissions:
   contents: write
