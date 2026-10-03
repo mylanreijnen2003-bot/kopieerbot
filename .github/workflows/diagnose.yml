@@ -1,0 +1,41 @@
+name: diagnose
+
+# Eenmalig: speelt de oude papieren bot (H3) na voor de 5 slechtste wallets. Uitkomst op branch results, map diagnose/.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths: ["bot/diagnose.py", "bot/hl.py", ".github/workflows/diagnose.yml"]
+
+permissions:
+  contents: write
+
+concurrency: {group: results, cancel-in-progress: false}
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin results; then
+            git fetch origin results && git worktree add -B results res origin/results
+          else
+            git worktree add --detach res && cd res && git checkout --orphan results && git rm -rfq . && cd ..
+          fi
+      - run: python -m bot.diagnose res/diagnose
+      - name: Samenvatting als annotatie
+        if: always()
+        run: python -c "import json; [print('::notice title=diagnose::'+json.dumps(s,default=str)) for s in json.load(open('res/diagnose/samenvatting.json'))]" || echo "::error::geen samenvatting"
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A diagnose
+          git commit -qm "diagnose $(date -u +%F) [skip ci]" || true
+          git push origin HEAD:results
