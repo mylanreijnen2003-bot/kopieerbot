@@ -1,0 +1,100 @@
+name: backtest
+
+# Strenge backtest (zie BACKTEST.md): kiezen op train (t/m feb 2026), testen op mrt-aug 2026.
+# Uitkomst op branch results, map backtest/.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths: ["bt/**", "BACKTEST.md", ".github/workflows/backtest.yml"]
+
+permissions:
+  contents: write
+
+concurrency: {group: backtest, cancel-in-progress: true}
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy huggingface_hub requests
+      - run: python -m bt.extract ${{ matrix.shard }} 12 part
+      - uses: actions/upload-artifact@v4
+        with: {name: "bt-part-${{ matrix.shard }}", path: part, retention-days: 30}
+
+  prep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        what: [av, funding, beurzen]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy huggingface_hub requests
+      - run: python -m bt.prep ${{ matrix.what }} prep
+      - uses: actions/upload-artifact@v4
+        with: {name: "bt-prep-${{ matrix.what }}", path: prep, retention-days: 30}
+
+  simulate:
+    needs: [extract, prep]
+    if: always() && needs.extract.result != 'cancelled'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-*", path: dat}
+      - run: python -m bt.simulate ${{ matrix.shard }} 6 dat train
+      - uses: actions/upload-artifact@v4
+        with: {name: "sim-train-${{ matrix.shard }}", path: train, retention-days: 30}
+
+  test:
+    needs: simulate
+    if: always() && needs.simulate.result != 'cancelled'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-*", path: dat}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "sim-train-*", path: train}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin results; then
+            git fetch origin results && git worktree add -B results res origin/results
+          else
+            git worktree add --detach res && cd res && git checkout --orphan results && git rm -rfq . && cd ..
+          fi
+      - run: python -m bt.select_test dat train res/backtest
+      - name: Uitslag als annotatie
+        if: always()
+        run: python -c "import json; r=json.load(open('res/backtest/uitslag.json')); print('::notice title=backtest::'+json.dumps(r,default=str))" || echo "::error::geen uitslag"
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A backtest
+          git commit -qm "backtest $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
