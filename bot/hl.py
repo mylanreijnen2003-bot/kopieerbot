@@ -72,7 +72,8 @@ def fills(addr: str, s: int, e: int) -> list[dict]:
         start = float(f.get("startPosition") or 0.0)
         out.append({"time": int(f["time"]), "tid": int(f.get("tid") or 0), "coin": f["coin"], "px": float(f["px"]),
                     "signed": signed, "start": start, "after": start + signed, "dir": f.get("dir", ""),
-                    "kind": kind(f["coin"]), "liq": bool(f.get("liquidation"))})
+                    "kind": kind(f["coin"]), "liq": bool(f.get("liquidation")),
+                    "pnl": float(f.get("closedPnl") or 0.0), "fee": float(f.get("fee") or 0.0)})
     out.sort(key=lambda x: (x["time"], x["tid"]))
     return out
 
