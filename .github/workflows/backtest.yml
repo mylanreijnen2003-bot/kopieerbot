@@ -4,17 +4,21 @@ name: backtest
 # Uitkomst op branch results, map backtest/.
 on:
   workflow_dispatch:
+    inputs:
+      reuse_run: {description: "run-id waarvan data (bt-*) hergebruikt wordt; leeg = opnieuw ophalen", required: false, default: ""}
   push:
     branches: ["main"]
     paths: ["bt/**", "BACKTEST.md", ".github/workflows/backtest.yml"]
 
 permissions:
   contents: write
+  actions: read
 
 concurrency: {group: backtest, cancel-in-progress: true}
 
 jobs:
   extract:
+    if: inputs.reuse_run == '' || inputs.reuse_run == null
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     strategy:
@@ -31,6 +35,7 @@ jobs:
         with: {name: "bt-part-${{ matrix.shard }}", path: part, retention-days: 30}
 
   prep:
+    if: inputs.reuse_run == '' || inputs.reuse_run == null
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     strategy:
@@ -48,7 +53,7 @@ jobs:
 
   simulate:
     needs: [extract, prep]
-    if: always() && needs.extract.result != 'cancelled'
+    if: always() && needs.extract.result != 'cancelled' && needs.extract.result != 'failure'
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     strategy:
@@ -61,7 +66,7 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy requests
       - uses: actions/download-artifact@v4
-        with: {pattern: "bt-*", path: dat}
+        with: {pattern: "bt-*", path: dat, run-id: "${{ inputs.reuse_run || github.run_id }}", github-token: "${{ github.token }}"}
       - run: python -m bt.simulate ${{ matrix.shard }} 6 dat train
       - uses: actions/upload-artifact@v4
         with: {name: "sim-train-${{ matrix.shard }}", path: train, retention-days: 30}
@@ -77,7 +82,7 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy requests
       - uses: actions/download-artifact@v4
-        with: {pattern: "bt-*", path: dat}
+        with: {pattern: "bt-*", path: dat, run-id: "${{ inputs.reuse_run || github.run_id }}", github-token: "${{ github.token }}"}
       - uses: actions/download-artifact@v4
         with: {pattern: "sim-train-*", path: train}
       - name: Resultatenbranch klaarzetten

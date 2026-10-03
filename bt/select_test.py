@@ -100,7 +100,7 @@ def main():
                "n_combinaties_GO": int(tab.GO.sum()), "n_combinaties": len(tab)}
     json.dump(uitslag, open(f"{out}/uitslag.json", "w"), indent=1, default=str)
     tab.to_csv(f"{out}/tabel.csv", index=False)
-    pd.DataFrame(per_wallet).merge(elig[["address", "sharpe", "rendement", "maxdd", "fills_per_dag_mediaan", "maker_aandeel",
+    pd.DataFrame(per_wallet).merge(elig[["address", "sharpe", "rendement", "maxdd", "fills_per_dag_mediaan", "trades", "maker_aandeel",
                                          "liquidaties"]].rename(columns=lambda c: c if c == "address" else f"train_{c}"),
                                    on="address", how="left").to_csv(f"{out}/per_wallet_test_P.csv", index=False)
     pd.DataFrame(curves).to_csv(f"{out}/curves.csv", index=False)

@@ -1,4 +1,4 @@
-# Strenge backtest kopieerbot, vooraf vastgelegd (3 okt 2026)
+# Strenge backtest kopieerbot, vooraf vastgelegd (3 okt 2026, geschiktheid aangepast 15:25 vóór enige uitkomst)
 
 Na de start niets aanpassen. Wat niet in dit document staat, is beschrijvend.
 
@@ -18,7 +18,8 @@ Gelijk aan H3b (`REGELS.md`):
 
 ## Wallets kiezen (alleen train)
 - Geschikt:
-  - ≥ 60 actieve dagen
+  - ≥ 100 afgeronde trades (positie terug naar 0 of van richting gewisseld), ongeacht hoe lang de wallet actief is
+  - ≥ 30 actieve dagen (genoeg dagrendementen om te meten)
   - mediaan ≤ 150 fills per actieve dag
   - ≥ 50 gekopieerde fills
   - potje in train niet gestopt
