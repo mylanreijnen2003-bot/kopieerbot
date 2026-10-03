@@ -1,2 +1,6 @@
 __pycache__/
 res/
+.env
+live/data/
+.pytest_cache/
+.venv/

@@ -1,0 +1,16 @@
+[Unit]
+Description=Papieren kopieerbot (Hyperliquid -> Kraken Futures)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/kopieerbot
+ExecStart=/home/ubuntu/kopieerbot/.venv/bin/python -m live.main
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

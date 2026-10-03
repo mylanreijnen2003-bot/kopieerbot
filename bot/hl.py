@@ -59,6 +59,17 @@ def _window(addr, s, e, depth=0):
     return out
 
 
+def parse(f: dict) -> dict:
+    """Ruwe API-fill -> dict. Positie na fill = startPosition + sz (B) of - sz (A)."""
+    sz = float(f["sz"])
+    signed = sz if f.get("side") == "B" else -sz
+    start = float(f.get("startPosition") or 0.0)
+    return {"time": int(f["time"]), "tid": int(f.get("tid") or 0), "coin": f["coin"], "px": float(f["px"]),
+            "signed": signed, "start": start, "after": start + signed, "dir": f.get("dir", ""),
+            "kind": kind(f["coin"]), "liq": bool(f.get("liquidation")),
+            "pnl": float(f.get("closedPnl") or 0.0), "fee": float(f.get("fee") or 0.0)}
+
+
 def fills(addr: str, s: int, e: int) -> list[dict]:
     """Alle fills in [s, e], ontdubbeld en op tijd gesorteerd. API: max 10.000 recentste fills per wallet."""
     seen, out = set(), []
@@ -67,13 +78,7 @@ def fills(addr: str, s: int, e: int) -> list[dict]:
         if key in seen:
             continue
         seen.add(key)
-        sz = float(f["sz"])
-        signed = sz if f.get("side") == "B" else -sz
-        start = float(f.get("startPosition") or 0.0)
-        out.append({"time": int(f["time"]), "tid": int(f.get("tid") or 0), "coin": f["coin"], "px": float(f["px"]),
-                    "signed": signed, "start": start, "after": start + signed, "dir": f.get("dir", ""),
-                    "kind": kind(f["coin"]), "liq": bool(f.get("liquidation")),
-                    "pnl": float(f.get("closedPnl") or 0.0), "fee": float(f.get("fee") or 0.0)})
+        out.append(parse(f))
     out.sort(key=lambda x: (x["time"], x["tid"]))
     return out
 
