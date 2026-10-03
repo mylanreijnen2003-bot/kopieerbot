@@ -19,13 +19,15 @@ from bt.delay_test import trades_detail
 EIND = pd.Timestamp("2026-08-19").value // 10**6
 HOUR = 3_600_000
 KOSTEN = 0.002
-VERTRAGING = 15 * 60_000
+VERTRAGING = int(os.environ.get("VERTRAGING_MIN", "15")) * 60_000
 
 
 def kandidaten(path):
     s = pd.read_csv(path)
-    return s[(s.maanden >= 3) & (s.handelbaar_pct >= 70) & (s.laatste_trade >= EIND - 30 * 86_400_000)
-             & (s.gem_maand_pct > 0)]
+    k = s[(s.maanden >= 3) & (s.handelbaar_pct >= 70) & (s.laatste_trade >= EIND - 30 * 86_400_000)]
+    if os.environ.get("ALLE") != "1":
+        k = k[k.gem_maand_pct > 0]
+    return k
 
 
 def laad_bars(path):
@@ -46,10 +48,11 @@ def main():
     os.makedirs(out, exist_ok=True)
     kand = kandidaten(spath).sort_values("address").iloc[shard::n]
     bars = laad_bars(bpath)
-    f = data.fills(d, set(kand.address))
-    f = f[f.ts < EIND]
     rows = []
-    for _, w in kand.iterrows():
+    for chunk in np.array_split(kand, max(1, len(kand) // 300)):
+      f = data.fills(d, set(chunk.address))
+      f = f[f.ts < EIND]
+      for _, w in chunk.iterrows():
         x = f[f.address == w.address]
         fl = [{"time": int(t), "coin": c, "start": s, "after": a, "px": p}
               for t, c, s, a, p in zip(x.ts, x.coin, x.start, x.after, x.px)]
@@ -61,6 +64,7 @@ def main():
         st = pot_stats(tr, "d_")
         rows.append({"address": w.address, "handelbaar_pct": w.handelbaar_pct, "laatste_trade": w.laatste_trade,
                      "K": w.K, "gem_maand_pct_origineel": w.gem_maand_pct, **st})
+      print(len(rows), "wallets", flush=True)
     pd.DataFrame(rows).to_parquet(f"{out}/dstats_{shard}.parquet", index=False)
     print(len(rows), "wallets")
 
