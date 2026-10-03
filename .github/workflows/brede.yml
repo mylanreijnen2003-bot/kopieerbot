@@ -4,6 +4,8 @@ name: brede
 # kiezen op meeste geld per risico, toetsen 19-8 t/m gisteren. Uitkomst: results/brede/.
 on:
   workflow_dispatch:
+    inputs:
+      scan_run: {description: "run-id met brede-scan-* artefacten om te hergebruiken; leeg = opnieuw scannen", required: false, default: ""}
 
 permissions:
   contents: write
@@ -11,6 +13,7 @@ permissions:
 
 jobs:
   scan:
+    if: inputs.scan_run == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     strategy:
@@ -28,6 +31,7 @@ jobs:
 
   universum:
     needs: scan
+    if: ${{ !cancelled() && (needs.scan.result == 'success' || needs.scan.result == 'skipped') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -36,13 +40,14 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy
       - uses: actions/download-artifact@v4
-        with: {pattern: "brede-scan-*", path: scan}
+        with: {pattern: "brede-scan-*", path: scan, run-id: "${{ inputs.scan_run || github.run_id }}", github-token: "${{ github.token }}"}
       - run: mkdir -p uni && python -m bt.scan_combine scan uni/universe.parquet
       - uses: actions/upload-artifact@v4
         with: {name: brede-uni, path: uni, retention-days: 30}
 
   extract:
     needs: universum
+    if: ${{ !cancelled() && needs.universum.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     strategy:
@@ -62,8 +67,8 @@ jobs:
         with: {name: "brede-part-${{ matrix.shard }}", path: part, retention-days: 30}
 
   stats:
-    needs: extract
-    if: always() && needs.extract.result != 'cancelled'
+    needs: [universum, extract]
+    if: ${{ !cancelled() && needs.universum.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     strategy:
@@ -86,8 +91,8 @@ jobs:
         with: {name: "brede-stats-${{ matrix.shard }}", path: out, retention-days: 30}
 
   select:
-    needs: stats
-    if: always() && needs.stats.result != 'cancelled'
+    needs: [universum, stats]
+    if: ${{ !cancelled() && needs.universum.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
