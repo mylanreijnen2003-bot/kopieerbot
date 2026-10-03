@@ -1,0 +1,110 @@
+name: lighter-selectie
+
+# Lighter stap 2-7: alle accounts aflopen (pool), trades reconstrueren, kiezen op knip 1-8-2026, testen tot nu,
+# zelfde regel op vandaag + open posities. Start door lighter/START te wijzigen.
+# Repo is publiek: logs alleen aantallen; ruwe data en volledige adressen alleen VERSLEUTELD
+# (artifacts + branch lighter-data) met secret LIGHTER_DATA_KEY. Openbare uitslag (afgekorte adressen) op results/lighter/selectie.
+on:
+  push:
+    branches: [lighter]
+    paths: ["lighter/START"]
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  KEY: ${{ secrets.LIGHTER_DATA_KEY }}
+
+jobs:
+  max:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      slices: ${{ steps.m.outputs.slices }}
+    steps:
+      - name: Sleutel aanwezig?
+        run: |
+          if [ ${#KEY} -lt 20 ]; then echo "Secret LIGHTER_DATA_KEY ontbreekt of is te kort"; exit 1; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow
+      - id: m
+        run: python -m lighter.scan max
+        env: {JOBS: "20"}
+
+  scan:
+    needs: max
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        slice: ${{ fromJSON(needs.max.outputs.slices) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow
+      - run: python -m lighter.scan slice ${{ matrix.slice[0] }} ${{ matrix.slice[1] }} part
+        env: {BUDGET_S: "19800"}
+      - name: Versleutelen
+        if: always()
+        run: |
+          [ -d part ] || exit 0
+          tar czf - part | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out part.tgz.enc
+          rm -rf part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighter-part-${{ matrix.slice[0] }}
+          path: part.tgz.enc
+          retention-days: 90
+          if-no-files-found: ignore
+
+  analyse:
+    needs: [max, scan]
+    if: always() && needs.max.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {pattern: "lighter-part-*", path: enc}
+      - name: Ontsleutelen
+        run: |
+          mkdir -p dat
+          for f in enc/*/part.tgz.enc; do
+            d=dat/$(basename $(dirname $f)); mkdir -p $d
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in $f | tar xzf - -C $d
+          done
+          echo "delen: $(ls dat | wc -l)"
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          rm -rf res/lighter/selectie && mkdir -p res/lighter/selectie
+      - run: python -m lighter.selectie dat res/vast/kraken.json res/lighter/selectie prive
+      - name: Privé-uitkomst versleuteld naar branch lighter-data
+        if: always()
+        run: |
+          [ -d prive ] || exit 0
+          f=selectie-$(date -u +%F).tgz.enc
+          tar czf - prive | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out /tmp/$f
+          if git fetch -q origin lighter-data; then
+            git worktree add -B lighter-data ld origin/lighter-data
+          else
+            git worktree add --detach ld HEAD && cd ld && git checkout -q --orphan lighter-data && git rm -rfq . && cd ..
+          fi
+          cp /tmp/$f ld/ && cd ld && git add $f && git commit -qm "lighter versleuteld $(date -u +%F) [skip ci]" && git push -q origin HEAD:lighter-data
+      - name: Openbare uitslag opslaan
+        if: always()
+        run: |
+          cd res && git add -A lighter
+          git commit -qm "lighter selectie $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
