@@ -1,0 +1,38 @@
+name: orderly-select
+
+# Orderly stap 2-7 (orderly/select.py). Uitkomst op branch results, map orderly/select (proef: orderly/select_proef)
+on:
+  workflow_dispatch:
+  push:
+    branches: [orderly]
+    paths: ["orderly/select.py", "orderly/RUN", ".github/workflows/orderly-select.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  select:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - name: Instellingen
+        run: cat orderly/RUN >> "$GITHUB_ENV"
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          mkdir -p "res/orderly/$UIT"
+          echo "gestart $(date -u) LIMIT=$LIMIT" > "res/orderly/$UIT/status.txt"
+          cd res && git add -A orderly && git commit -qm "orderly select gestart [skip ci]" && git push -q origin HEAD:results || true
+      - run: python -m orderly.select "res/orderly/$UIT"
+      - name: Opslaan
+        if: always()
+        run: |
+          echo "klaar $(date -u) status ${{ job.status }}" >> "res/orderly/$UIT/status.txt"
+          cd res && git add -A orderly
+          git commit -qm "orderly select $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
