@@ -3,9 +3,6 @@ name: orderly-probe
 # Orderly stap 0 + 1 (orderly/probe.py), uitkomst op branch results, map orderly/
 on:
   workflow_dispatch:
-  push:
-    branches: [orderly]
-    paths: ["orderly/**", ".github/workflows/orderly-probe.yml"]
 
 permissions:
   contents: write
