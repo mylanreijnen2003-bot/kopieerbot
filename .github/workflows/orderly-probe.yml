@@ -13,7 +13,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-24.04
-    timeout-minutes: 150
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,14 +23,14 @@ jobs:
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
           git fetch origin results && git worktree add -B results res origin/results
-          rm -rf res/orderly/probe && mkdir -p res/orderly/probe
-          echo "gestart $(date -u)" > res/orderly/probe/status.txt
+          mkdir -p res/orderly/probe2
+          echo "gestart $(date -u)" > res/orderly/probe2/status.txt
           cd res && git add -A orderly && git commit -qm "orderly probe gestart [skip ci]" && git push -q origin HEAD:results || true
-      - run: python -m orderly.probe res/orderly/probe
+      - run: python -m orderly.probe2 res/orderly/probe2 orderly/top_rows_probe1.csv
       - name: Opslaan
         if: always()
         run: |
-          echo "klaar $(date -u) status ${{ job.status }}" >> res/orderly/probe/status.txt
+          echo "klaar $(date -u) status ${{ job.status }}" >> res/orderly/probe2/status.txt
           cd res && git add -A orderly
           git commit -qm "orderly probe $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
