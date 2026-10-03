@@ -3,9 +3,6 @@ name: diagnose
 # Eenmalig: speelt de oude papieren bot (H3) na voor de 5 slechtste wallets. Uitkomst op branch results, map diagnose/.
 on:
   workflow_dispatch:
-  push:
-    branches: ["main"]
-    paths: ["bot/diagnose.py", "bot/hl.py", ".github/workflows/diagnose.yml"]
 
 permissions:
   contents: write
