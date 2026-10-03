@@ -1,0 +1,38 @@
+name: vast-select
+
+# Kiezen op vaste inzet per trade (bt/vast_select.py), uitkomst in res/vast/
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  profiel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-part-*", path: dat/oud, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "h4-part-*", path: dat/nieuw, run-id: "37133019648", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "h4-sim-*", path: sim, run-id: "37133019648", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: dat/beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: python -m bt.vast_select dat sim dat res/vast
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A vast
+          git commit -qm "vaste inzet selectie $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
