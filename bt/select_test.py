@@ -55,7 +55,8 @@ def main():
     elig = sim[(sim.gekopieerd >= 50) & (~sim.gestopt.astype(bool))].sort_values("sharpe", ascending=False)
     n_q = max(1, min(100, len(elig) // 5))
     sets = {"kwintiel": list(elig.address[:n_q]), "top10": list(elig.address[:10]), "top30": list(elig.address[:30]),
-            "breed": list(elig.address[elig.gem > 0]), "controle_onderste_kwintiel": list(elig.address[-n_q:])}
+            "breed": list(elig.address[elig.gem > 0]),
+            "geverifieerd": list(elig.address[elig.verdict_train == "geverifieerd"]), "controle_onderste_kwintiel": list(elig.address[-n_q:])}
     union = sorted(set().union(*sets.values()))
     print("trechter", {"universum": len(st), "gesimuleerd": len(sim), "geschikt": len(elig)}, {k: len(v) for k, v in sets.items()}, flush=True)
 

@@ -29,7 +29,11 @@ Gelijk aan H3b (`REGELS.md`):
   - top 10
   - top 30
   - breed: alle geschikte met positief gemiddelde
+  - geverifieerd: geschikte wallets die in train ook de strenge toets haalden (≥ 6 mnd, ≥ 60% winstmaanden, geen winst uit één maand/dag)
   - controle: onderste 20%
+
+## Afwijking (3 okt 16:30, vóór enige uitkomst)
+- Funding niet meegenomen: het ophalen duurde > 75 min. In H3b was funding klein (−$39 op 54 potjes).
 
 ## Varianten (test)
 - **P (hoofdtoets)**: alleen munten op Kraken, max 2× hefboom, stop −35%, kosten 5 bp slippage + 5 bp fee, funding aan.
