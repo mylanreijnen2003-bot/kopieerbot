@@ -2,7 +2,8 @@
 Rendement per trade = richting x (gem. uitstapprijs / gem. instapprijs - 1) - 0,2% kosten (Kraken taker 2x + slippage).
 Kiezen op de keuzeperiode (t/m 18-8-2026), eerlijk testen op 19-8 t/m gisteren.
 Eisen: >= 1 trade laatste 7 d, >= 4 laatste 14 d, <= 3 trades/dag (30 d), mediane houdtijd >= 2 u, >= 70% trades in Kraken-munten,
->= 50 trades in de keuzeperiode. Rangorde: t-waarde van het gemiddelde rendement per trade in de keuzeperiode. Top 5.
+>= 50 trades en winst-% > 50 in de keuzeperiode. Top 30 op gemiddeld rendement per trade (keuzeperiode);
+daarvan de 5 met het hoogste aandeel winstmaanden (gelijk: hoogste gemiddelde winst per maand).
 Gebruik: python -m bt.vast_select <datamap> <h4-sim-map> <beurzen-map> <uitmap>
 """
 
@@ -56,16 +57,26 @@ def trades_pct(fl):
     return out
 
 
+def maanden(tr):
+    """Winst per maand bij vaste inzet van 100 per trade (som van de trade-rendementen)."""
+    if not tr:
+        return pd.Series(dtype=float)
+    m = pd.Series([x[3] * 100 for x in tr], index=[pd.Timestamp(x[2], unit="ms").strftime("%Y-%m") for x in tr])
+    return m.groupby(level=0).sum()
+
+
 def stats(tr):
     r = np.array([x[3] for x in tr])
     if len(r) == 0:
         return {"trades": 0}
+    m = maanden(tr)
     w, l = r[r > 0], r[r <= 0]
     return {"trades": len(r), "winst_pct_trades": round(100 * len(w) / len(r), 1),
             "gem_rendement_pct": round(100 * r.mean(), 2), "gem_winst_pct": round(100 * w.mean(), 2) if len(w) else 0.0,
             "gem_verlies_pct": round(100 * l.mean(), 2) if len(l) else 0.0,
             "t": round(float(r.mean() / (r.std(ddof=1) / np.sqrt(len(r)))), 2) if len(r) > 2 and r.std() > 0 else 0.0,
-            "som_pct": round(100 * r.sum(), 1)}
+            "som_pct": round(100 * r.sum(), 1), "maanden": len(m), "winstmaanden_pct": round(100 * (m > 0).mean(), 1),
+            "verliesmaanden": int((m <= 0).sum()), "gem_per_maand_per_100": round(float(m.mean()), 1)}
 
 
 def main():
@@ -100,12 +111,16 @@ def main():
         k, te = stats(keuze), stats(test)
         uren = [(t[2] - t[1]) / 3.6e6 for t in keuze + test]
         munten = pd.Series([t[0] for t in keuze + test]).value_counts(normalize=True).head(4)
+        pd.DataFrame(keuze + test, columns=["coin", "open", "sluit", "rendement"]).assign(address=a).to_csv(
+            f"{out}/trades.csv", mode="a", header=not os.path.exists(f"{out}/trades.csv"), index=False)
         rows.append({"address": a, **{f"keuze_{n}": v for n, v in k.items()}, **{f"test_{n}": v for n, v in te.items()},
                      "houdtijd_mediaan_uur": round(float(np.median(uren)), 1) if uren else None,
                      "munten": ", ".join(f"{c} {100 * v:.0f}%" for c, v in munten.items()),
                      "median_av": float(cand.set_index("address").median_av[a])})
     tab = pd.DataFrame(rows)
-    tab = tab[tab.keuze_trades >= 50].sort_values("keuze_t", ascending=False)
+    tab = tab[(tab.keuze_trades >= 50) & (tab.keuze_winst_pct_trades > 50)]
+    tab = tab.sort_values("keuze_gem_rendement_pct", ascending=False).head(30)
+    tab = tab.sort_values(["keuze_winstmaanden_pct", "keuze_gem_per_maand_per_100"], ascending=False)
     tab["gekozen"] = False
     tab.loc[tab.index[:TOP], "gekozen"] = True
     tab.to_csv(f"{out}/overzicht.csv", index=False)
@@ -114,7 +129,7 @@ def main():
                "wallets": sel[["address", "median_av"]].to_dict("records")}, open(f"{out}/selection.json", "w"), indent=1)
     json.dump(sorted(kraken), open(f"{out}/kraken.json", "w"))
     pd.set_option("display.width", 250)
-    print(tab.head(12).T.to_string())
+    print(tab.T.to_string())
 
 
 if __name__ == "__main__":
