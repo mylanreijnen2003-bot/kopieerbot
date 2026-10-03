@@ -118,6 +118,17 @@ def test_te_klein(cop):
     book = Book({"PF_XBTUSD": 1_000_000})                         # 25 / 1M = 0,000025 < 0,0001
     rows = run(cop, book, [fill("BTC", 0, 1, 1_000_000, 1_000)])
     assert rows[0]["status"] == "te klein" and rows[0]["fee"] == 0
+    # potje / K * (0,0001 / 0,000025) => minimaal potje ~ 400 (ask iets boven 1M)
+    assert rows[0]["min_potje"] == pytest.approx(400, rel=0.01)
+
+
+def test_trade_is_plat_tot_plat(cop):
+    from live.report import round_trips
+    book = Book({"PF_ETHUSD": 2000})
+    rows = run(cop, book, [fill("ETH", 0, 10, 2000, 1_000), fill("ETH", 10, 10, 2000, 10_000),
+                           fill("ETH", 20, -20, 2000, 20_000)])
+    rt = round_trips(rows)
+    assert len(rt) == 1 and rt[0] == pytest.approx(sum(r["resultaat"] for r in rows))
 
 
 def test_niet_op_kraken(cop):

@@ -16,7 +16,7 @@ from . import report
 from .coins import fetch_instruments, map_coin
 from .config import DATA, Config, short
 from .engine import Copier
-from .feeds import KRAKEN_TICKERS, now_ms
+from .feeds import KRAKEN_TICKERS, account_values, now_ms
 from .signals import group_history
 from .store import Store
 
@@ -103,6 +103,7 @@ def run(cfg: Config, hours: float) -> None:
         log.info("overgeslagen: %s x%d", k, v)
     book.t = end
     text, _ = report.build(cfg, copier, book, store.read("own"), store.read("shadow"), start, end,
-                           f"Replay {hours:.0f} uur (prijzen: Kraken 1m-kaarsen + huidige spread)")
+                           f"Replay {hours:.0f} uur (prijzen: Kraken 1m-kaarsen + huidige spread)",
+                           account_values(cfg.traders))
     print("\n" + text)
     print(f"\nCSV's: {folder}")

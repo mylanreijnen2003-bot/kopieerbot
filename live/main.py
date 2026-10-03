@@ -14,7 +14,7 @@ from . import replay, report
 from .coins import fetch_instruments, map_coin
 from .config import DATA, load, short
 from .engine import Copier
-from .feeds import HLListener, KrakenBook, now_ms
+from .feeds import HLListener, KrakenBook, account_values, now_ms
 from .notify import Notifier, trade_text
 from .signals import Grouper
 from .store import Store
@@ -89,8 +89,8 @@ class Bot:
 
     def report_text(self) -> str:
         text, _ = report.build(self.cfg, self.copier, self.book, self.store.read("own"), self.store.read("shadow"),
-                               self.state["start_ms"], now_ms(),
-                               f"Dagrapport {datetime.now(NL):%d-%m-%Y}")
+                               self.state["start_ms"], now_ms(), f"Dagrapport {datetime.now(NL):%d-%m-%Y}",
+                               account_values(self.cfg.traders))
         return text
 
     async def report_loop(self) -> None:
@@ -102,7 +102,7 @@ class Bot:
             await asyncio.sleep((nxt - nu).total_seconds())
             try:
                 await asyncio.to_thread(self.book.refresh_rest)
-                text = self.report_text()
+                text = await asyncio.to_thread(self.report_text)
                 (DATA / f"rapport_{nxt:%Y-%m-%d}.txt").write_text(text, encoding="utf-8")
                 self.notifier.send(text, "Dagrapport")
             except Exception as exc:  # noqa: BLE001

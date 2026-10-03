@@ -4,3 +4,8 @@ res/
 live/data/
 .pytest_cache/
 .venv/
+# alles met volledige adressen blijft lokaal
+.env.*
+!.env.example
+*.adressen.*
+context/*-volledig*

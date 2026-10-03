@@ -15,10 +15,10 @@ from .signals import Signal
 
 FIELDS = ["tijd_trader", "tijd_eigen", "vertraging_s", "trader", "munt", "symbool", "richting", "actie",
           "hoeveelheid", "prijs_trader", "eigen_prijs", "slippage_pct", "slippage_eur", "fee", "inzet",
-          "resultaat", "status"]
+          "resultaat", "status", "min_potje"]
 
 UITGEVOERD, TE_KLEIN, NIET_OP_KRAKEN, GEPAUZEERD = "uitgevoerd", "te klein", "niet op Kraken", "gepauzeerd"
-TE_LAAT, GEEN_PRIJS = "te laat", "geen prijs"
+TE_LAAT, GEEN_PRIJS, MAX_HEFBOOM = "te laat", "geen prijs", "max hefboom"
 
 
 def iso(ms: int) -> str:
@@ -60,6 +60,7 @@ class Copier:
         kind = classify(c)
         if kind != "perp":
             return [], [], [], f"{c} overgeslagen ({kind})"
+        tr["last_signal"] = max(tr.get("last_signal", 0), sig.t_last)   # voor de vervangregel (7 dagen stil)
         opening = start == 0 and after != 0
         flip = start * after < 0
         if not tr["armed"].get(c):
@@ -95,15 +96,21 @@ class Copier:
                 else:
                     room = max(0.0, self.cfg.max_leverage * self.equity(sig.trader, book) - self.gross(sig.trader, book))
                     add = round_down(min(target - cur, room / q), step)
-                    if add < step * 0.999:
-                        self._skip(ctx, "bijkopen", sign, TE_KLEIN, c, sym)
+                    if target - cur <= 1e-12:
+                        pass                               # al op of boven het doel
+                    elif add < step * 0.999 and room / q < step <= target - cur:
+                        self._skip(ctx, "bijkopen", sign, MAX_HEFBOOM, c, sym)
+                    elif add < step * 0.999:
+                        self._skip(ctx, "bijkopen", sign, TE_KLEIN, c, sym, self._min_pot(step, target - cur))
                     else:
                         self._exec(ctx, sig.trader, c, sym, sign * add, "bijkopen", tp, q)
+            elif cur <= target + 1e-12:
+                pass                                   # eigen positie (door plafond) al kleiner dan het doel
             else:
                 new = round_down(target, step)
                 cut = cur if new < step * 0.999 else cur - new
                 if cut < step * 0.999:
-                    self._skip(ctx, "afbouwen", sign, TE_KLEIN, c, sym)
+                    self._skip(ctx, "afbouwen", sign, TE_KLEIN, c, sym, self._min_pot(step, cur - target))
                 else:
                     self._exec(ctx, sig.trader, c, sym, -sign * cut, "sluiten" if cut >= cur else "afbouwen", tp)
 
@@ -123,8 +130,10 @@ class Copier:
                     stake = self.cfg.pot / self.cfg.traders[sig.trader]
                     room = max(0.0, self.cfg.max_leverage * self.equity(sig.trader, book) - self.gross(sig.trader, book))
                     qty = round_down(min(stake, room) / q, step)
-                    if qty < step * 0.999:
-                        self._skip(ctx, actie, sign, TE_KLEIN, c, sym)
+                    if qty < step * 0.999 and room < stake and stake / q >= step:
+                        self._skip(ctx, actie, sign, MAX_HEFBOOM, c, sym)
+                    elif qty < step * 0.999:
+                        self._skip(ctx, actie, sign, TE_KLEIN, c, sym, self._min_pot(step, stake / q))
                     else:
                         self._exec(ctx, sig.trader, c, sym, sign * qty, actie, tp, q)
                         tr["pos"][c]["ratio"] = qty / after_k
@@ -152,6 +161,10 @@ class Copier:
                                  f"alle posities gesloten")
         return ctx["rows"], ctx["shadow"], ctx["alerts"]
 
+    def _min_pot(self, step: float, raw_qty: float) -> float | str:
+        """Potje waarbij deze hoeveelheid precies het Kraken-minimum haalt (hoeveelheid schaalt lineair met het potje)."""
+        return round(self.cfg.pot * step / raw_qty, 2) if raw_qty > 0 else ""
+
     # ---------- uitvoering ----------
     @staticmethod
     def _quote(book, sym: str, sign: int) -> float | None:
@@ -166,10 +179,11 @@ class Copier:
                 "vertraging_s": round((ctx["t_own"] - sig.t_last) / 1000, 2), "trader": short(sig.trader),
                 "munt": coin, "symbool": sym, "richting": "long" if sign > 0 else "short", "actie": actie,
                 "hoeveelheid": 0.0, "prijs_trader": sig.px, "eigen_prijs": "", "slippage_pct": "",
-                "slippage_eur": 0.0, "fee": 0.0, "inzet": 0.0, "resultaat": 0.0, "status": status}
+                "slippage_eur": 0.0, "fee": 0.0, "inzet": 0.0, "resultaat": 0.0, "status": status, "min_potje": ""}
 
-    def _skip(self, ctx, actie, sign, status, coin, sym):
+    def _skip(self, ctx, actie, sign, status, coin, sym, min_pot: float | str = ""):
         r = self._row(ctx, actie, sign, status, coin, sym)
+        r["min_potje"] = min_pot
         ctx["rows"].append(r)
         ctx["shadow"].append(dict(r, tijd_eigen=r["tijd_trader"], vertraging_s=0.0))
 

@@ -170,3 +170,15 @@ class HLListener:
                     self._fill(a, raw_f, "backup")
                 self.last_poll[a] = end
             await asyncio.sleep(60)
+
+
+def account_values(traders) -> dict[str, float]:
+    """Perps-accountwaarde per trader (vervangregel: < $100). Ontbreekt bij een fout."""
+    out = {}
+    for a in traders:
+        try:
+            d = hl.info({"type": "clearinghouseState", "user": a}, weight=2)
+            out[a] = float(d["marginSummary"]["accountValue"])
+        except Exception as exc:  # noqa: BLE001
+            log.warning("accountwaarde %s faalt: %s", short(a), exc)
+    return out
