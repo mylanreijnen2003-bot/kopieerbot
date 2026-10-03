@@ -180,10 +180,48 @@ def trechter(tab):
     return out
 
 
-def kies(tab):
+def overzicht(tr, fl_acc, p_acc, acc, nu):
+    """Extra kolommen voor de lijst van vandaag: % per maand (vaste inzet), 3 en 6 mnd, dalingen, posities."""
+    eerste = int(fl_acc.ts.min())
+    maand_nu = pd.Timestamp(nu, unit="ms").to_period("M")
+    maanden_lijst = [(maand_nu - k).strftime("%Y-%m") for k in range(6, -1, -1)]
+    start_maand = pd.Timestamp(eerste, unit="ms").strftime("%Y-%m")
+    per_m = maanden(tr)
+    out = {"data_vanaf": pd.Timestamp(eerste, unit="ms").strftime("%Y-%m-%d"),
+           "laatste_trade": pd.Timestamp(max(t[2] for t in tr), unit="ms").strftime("%Y-%m-%d")}
+    for m in maanden_lijst:
+        out[f"pct_{m}"] = round(float(per_m.get(m, 0.0)), 1) if m >= start_maand else None
+    for naam, dagen in (("3m", 91), ("6m", 182)):
+        r = [t for t in tr if t[2] >= nu - dagen * DAG]
+        rr = np.array([t[3] for t in r])
+        out[f"som_{naam}_pct"] = round(100 * rr.sum(), 1) if len(rr) else 0.0
+        out[f"winstgevend_{naam}"] = bool(len(rr) and rr.sum() > 0)
+        out[f"volledig_{naam}"] = eerste <= nu - dagen * DAG
+        out[f"trades_{naam}"] = len(rr)
+        out[f"gem_rendement_{naam}_pct"] = round(100 * rr.mean(), 2) if len(rr) else None
+        out[f"winst_pct_trades_{naam}"] = round(100 * (rr > 0).mean(), 1) if len(rr) else None
+        out[f"trader_pnl_{naam}_usd"] = round(pnl_delta(p_acc, nu - dagen * DAG, nu) or 0)
+    r6 = sorted([t for t in tr if t[2] >= nu - 182 * DAG], key=lambda t: t[2])
+    cum = np.cumsum([100 * t[3] for t in r6]) if r6 else np.array([0.0])
+    out["max_daling_6m_pct"] = round(float((cum - np.maximum.accumulate(np.r_[0, cum])[1:]).min()), 1)
+    out["slechtste_trade_6m_pct"] = round(100 * min(t[3] for t in r6), 1) if r6 else None
+    mnd_data = [m for m in maanden_lijst if out[f"pct_{m}"] is not None and (maand_nu - 6).strftime("%Y-%m") <= m < maand_nu.strftime("%Y-%m")]
+    out["verliesmaanden_6m"] = sum(1 for m in mnd_data if out[f"pct_{m}"] < 0)
+    eq = (acc or {}).get("equity") or 0
+    ps = (acc or {}).get("posities") or []
+    out["equity_usd"] = round(eq)
+    out["open_posities"] = len(ps)
+    upnl = sum(float(p.get("unrealized_pnl") or 0) for p in ps)
+    out["ongerealiseerd_usd"] = round(upnl)
+    out["hefboom_nu"] = round(sum(abs(float(p.get("position_value") or 0)) for p in ps) / eq, 2) if eq else None
+    return out
+
+
+def kies(tab, zonder=()):
     if not len(tab):
         return tab.assign(gekozen=pd.Series(dtype=bool), keuze_som_pct=pd.Series(dtype=float), test_som_pct=pd.Series(dtype=float))
-    g = tab[tab.geschikt].sort_values("keuze_som_pct", ascending=False)
+    eisen = [c for c in TRECHTER if c not in zonder]
+    g = tab[tab[eisen].all(axis=1)].sort_values("keuze_som_pct", ascending=False)
     g = g.assign(gekozen=False)
     g.loc[g.index[:TOP], "gekozen"] = True
     return g
@@ -226,6 +264,7 @@ def main():
             rijen_knip.append(a)
         b = beoordeel(idx, tr, f, p, NU, kraken)
         if b:
+            b.update(overzicht(tr, f, p, accs.get(int(idx)), NU))
             rijen_nu.append(b)
     dekking["positie_mismatches"] = mis_tot
 
@@ -276,8 +315,17 @@ def main():
            "test_maanden", "test_pnl_dag_usd", "test_pnl_dag_maanden", "gekozen"]
     kk = [c for c in kol if c in gk.columns]
     gk.head(30)[kk].to_csv(f"{uit}/knip_top30.csv", index=False)
-    kn = [c for c in kol if c in gn.columns and not c.startswith("test_")]
-    gn.head(30)[kn].to_csv(f"{uit}/vandaag_top30.csv", index=False)
+    vk = ["adres", "data_vanaf", "laatste_trade", "keuze_trades", "keuze_som_pct"] + \
+        [c for c in nu.columns if c.startswith("pct_20")] + \
+        ["som_3m_pct", "winstgevend_3m", "volledig_3m", "trades_3m", "gem_rendement_3m_pct", "winst_pct_trades_3m",
+         "som_6m_pct", "winstgevend_6m", "volledig_6m", "trades_6m", "gem_rendement_6m_pct", "winst_pct_trades_6m",
+         "verliesmaanden_6m", "max_daling_6m_pct", "slechtste_trade_6m_pct", "trader_pnl_3m_usd", "trader_pnl_6m_usd",
+         "equity_usd", "open_posities", "ongerealiseerd_usd", "hefboom_nu", "trades_per_dag_30d", "houdtijd_mediaan_uur",
+         "gelijktijdig_p90", "kraken_pct", "lighter_only_pct", "keuze_maker_pct", "munten", "eis_handmatig", "gekozen"]
+    gn.head(30)[[c for c in vk if c in gn.columns]].to_csv(f"{uit}/vandaag_top30.csv", index=False)
+    gb = kies(nu, zonder=("eis_handmatig",))
+    gb.head(30)[[c for c in vk if c in gb.columns]].to_csv(f"{uit}/vandaag_top30_bot.csv", index=False)
+    uitslag["trechter_nu_bot(zonder handmatig-eis)"] = int(len(gb))
     pd.DataFrame(pos).to_csv(f"{uit}/vandaag_top5_posities.csv", index=False)
     json.dump(uitslag, open(f"{uit}/uitslag.json", "w"), indent=1, ensure_ascii=False)
 
