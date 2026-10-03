@@ -5,6 +5,7 @@ Gebruik: python -m bt.scan_combine <scanmap> <uit.parquet>
 """
 
 import glob
+import os
 import sys
 
 import pandas as pd
@@ -23,7 +24,7 @@ def main():
     w["spanne_dagen"] = w.laatste - w.eerste
     w["trades_per_week"] = w.trades / (w.spanne_dagen.clip(lower=1) / 7)
     print("wallets met perps-fills", len(w))
-    u = w[(w.spanne_dagen >= 90) & (w.trades >= 100) & (w.trades_per_week >= 2) & (w.fills_dag_mediaan <= 150)
+    u = w[(w.spanne_dagen >= 90) & (w.trades >= int(os.environ.get("MIN_TRADES", "100"))) & (w.trades_per_week >= 2) & (w.fills_dag_mediaan <= 150)
           & (w.maker / w.fills < 0.9) & (w.fills <= 150_000)].reset_index()
     u["median_av"] = 0.0
     print("universum", len(u))

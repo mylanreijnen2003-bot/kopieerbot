@@ -1,6 +1,6 @@
 name: ronde3
 
-# Ronde 3 (>= 1 uur vertraging, alle traders): kiezen op cijfers na vertraging (t/m 18-8), testen 19-8 t/m gisteren met 15 min vertraging.
+# Ronde 3: alle traders (>= 3 mnd, >= 30 trades, >= 2/week), >= 1 uur vertraging, rangorde op winst per maand.
 on:
   workflow_dispatch:
 
@@ -8,13 +8,8 @@ permissions:
   contents: write
   actions: read
 
-env:
-  BREDE_RUN: "37142561295"
-  BARS_RUN: "37124999519"
-
 jobs:
-  bars:
-    if: false
+  universum:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -23,44 +18,61 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy
       - uses: actions/download-artifact@v4
-        with: {pattern: "bt-part-*", path: dat, run-id: "${{ env.BARS_RUN }}", github-token: "${{ github.token }}"}
-      - run: |
-          mkdir -p hb && python - <<'PY'
-          import glob, pandas as pd
-          b = pd.concat([pd.read_parquet(p) for p in glob.glob("dat/**/bars_*.parquet", recursive=True)], ignore_index=True)
-          b = b.sort_values("t_first").groupby(["coin", "hour"], as_index=False).o.first()
-          b.to_parquet("hb/bars.parquet", index=False)
-          print(len(b), b.coin.nunique())
-          PY
+        with: {pattern: "brede-scan-*", path: scan, run-id: "37141862920", github-token: "${{ github.token }}"}
+      - run: mkdir -p uni && python -m bt.scan_combine scan uni/universe.parquet
+        env: {MIN_TRADES: "30"}
       - uses: actions/upload-artifact@v4
-        with: {name: hl-bars, path: hb, retention-days: 30}
+        with: {name: r3-uni, path: uni, retention-days: 30}
 
-  dstats:
+  extract:
+    needs: universum
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy huggingface_hub requests
+      - uses: actions/download-artifact@v4
+        with: {name: r3-uni, path: uni}
+      - run: python -m bt.extract ${{ matrix.shard }} 12 part && rm -f part/bars_*.parquet
+        env: {UNIVERSE: uni/universe.parquet}
+      - uses: actions/upload-artifact@v4
+        with: {name: "r3-part-${{ matrix.shard }}", path: part, retention-days: 30}
+
+  stats:
+    needs: [universum, extract]
+    if: ${{ !cancelled() && needs.universum.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy requests
       - uses: actions/download-artifact@v4
-        with: {pattern: "brede-part-*", path: dat, run-id: "${{ env.BREDE_RUN }}", github-token: "${{ github.token }}"}
+        with: {name: r3-uni, path: uni}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "r3-part-*", path: dat}
       - uses: actions/download-artifact@v4
         with: {name: hl-bars, path: hb, run-id: "37145468918", github-token: "${{ github.token }}"}
-      - run: git fetch origin results && git show origin/results:brede/alle_stats.csv > alle_stats.csv
-      - run: python -m bt.delay_stats ${{ matrix.shard }} 12 alle_stats.csv dat hb/bars.parquet out
-        env: {VERTRAGING_MIN: "60", ALLE: "1"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - run: python -m bt.r3_stats ${{ matrix.shard }} 12 uni/universe.parquet dat hb/bars.parquet beurs out
       - uses: actions/upload-artifact@v4
-        with: {name: "r3-dstats-${{ matrix.shard }}", path: out, retention-days: 30}
+        with: {name: "r3-stats-${{ matrix.shard }}", path: out, retention-days: 30}
 
   select:
-    needs: dstats
-    if: ${{ !cancelled() }}
+    needs: [universum, stats]
+    if: ${{ !cancelled() && needs.universum.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
@@ -69,15 +81,17 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy requests
       - uses: actions/download-artifact@v4
-        with: {pattern: "r3-dstats-*", path: ds}
+        with: {pattern: "r3-stats-*", path: st}
+      - uses: actions/download-artifact@v4
+        with: {name: r3-uni, path: uni}
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
           git fetch origin results && git worktree add -B results res origin/results
-      - run: python -m bt.hand3_select ds res/brede/universe.parquet res/brede
+      - run: mkdir -p res/ronde3 && python -m bt.hand3_select st uni/universe.parquet res/ronde3
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A brede
+          cd res && git add -A ronde3
           git commit -qm "ronde3 $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

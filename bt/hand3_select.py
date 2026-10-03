@@ -1,8 +1,9 @@
-"""Ronde 3 (vooraf vastgelegd 3 okt 21:30): alle 43.258 traders, >= 3 mnd, >= 50 trades, >= 2 trades/week,
-munten op Kraken/Bitvavo >= 70%, actief in de 30 dagen voor 18-8. Trades doorgerekend met >= 1 uur vertraging
-(uurkaarsen: 1-2 uur). Eisen na vertraging: >= 3 maanden, gem. maandrendement > 0, gem. rendement/trade < 50% (koersfouten).
+"""Ronde 3 (vooraf vastgelegd 3 okt 21:30): alle Hyperliquid-traders met >= 3 mnd geschiedenis, >= 30 trades,
+>= 2 trades/week, >= 70% trades in munten op Kraken/Bitvavo, actief in de 30 dagen voor 18-8.
+Trades doorgerekend met >= 1 uur vertraging (uurkaarsen: 1-2 uur). Eisen na vertraging: >= 3 maanden,
+gem. maandrendement > 0, gem. rendement/trade < 50% (koersfouten eruit).
 Rangorde: meeste winst per maand op het potje (na vertraging). Test 19-8 t/m gisteren met 60 min vertraging (15m-kaarsen).
-Gebruik: python -m bt.hand3_select <dstatsmap> <universe.parquet> <uitmap>
+Gebruik: python -m bt.hand3_select <r3map> <universe.parquet> <uitmap>
 """
 
 import glob
@@ -19,17 +20,19 @@ from bt.delay_test import EIND, KOSTEN, NU, prijs_na, trades_detail
 def main():
     ddir, upath, out = sys.argv[1:4]
     os.makedirs(out, exist_ok=True)
-    d = pd.concat([pd.read_parquet(p) for p in glob.glob(f"{ddir}/**/dstats_*.parquet", recursive=True)])
+    d = pd.concat([pd.read_parquet(p) for p in glob.glob(f"{ddir}/**/r3_*.parquet", recursive=True)])
     u = pd.read_parquet(upath)[["address", "trades_per_week"]]
     m = d.merge(u, on="address")
-    ok = m[(m.trades_per_week >= 2) & (m.d_maanden >= 3) & (m.d_gem_maand_pct > 0) & (m.d_gem_r_pct < 50)].copy()
-    print("trechter", {"met_vertraagde_stats": len(m), "door_eisen": len(ok)}, flush=True)
+    m.to_csv(f"{out}/ronde3_alle.csv", index=False)
+    ok = m[(m.trades_per_week >= 2) & (m.handelbaar_pct >= 70) & (m.laatste_trade >= EIND - 30 * hl.DAY)
+           & (m.d_maanden >= 3) & (m.d_gem_maand_pct > 0) & (m.d_gem_r_pct < 50)].copy()
+    print("trechter", {"universum": len(u), "met_stats": len(m), "door_eisen": len(ok)}, flush=True)
     top = ok.sort_values("d_gem_maand_pct", ascending=False).head(30).reset_index(drop=True)
     cache, rows = {}, []
     for _, w in top.iterrows():
         fl = [f for f in hl.fills(w.address, EIND, NU) if f["kind"] == "perp"]
         tr = [t for t in trades_detail(fl) if t[1] >= EIND]
-        k = int(w.K)
+        k = int(w.d_K)
         o_r, v_r = [], []
         for coin, o, c, richting, pin, pout in tr:
             o_r.append(richting * (pout / pin - 1) - KOSTEN)
