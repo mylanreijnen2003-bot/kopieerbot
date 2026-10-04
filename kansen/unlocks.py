@@ -73,7 +73,7 @@ def events(tot: dict):
             continue
         inc = tot[b] - tot[a]
         if inc / tot[a] >= DREMPEL:
-            out.append({"day": b, "pct": inc / tot[a], "age_days": (b - first) / DAY if first else None})
+            out.append({"day": b, "pct": inc / tot[a], "age_days": (b - first) / DAY if first is not None else None})
     return out
 
 
