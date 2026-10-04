@@ -1,0 +1,33 @@
+name: kansen-probe
+
+# Probe databronnen voor de kansen-tests (kansen/probe.py). Uitkomst: branch results, map kansen/probe.
+# Repo is publiek: logs alleen aantallen, bestanden alleen afgekorte adressen.
+on:
+  push:
+    branches: [kansen]
+    paths: ["kansen/probe.py", ".github/workflows/kansen-probe.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          rm -rf res/kansen/probe && mkdir -p res/kansen/probe
+      - run: python -m kansen.probe res/kansen/probe
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A kansen
+          git commit -qm "kansen probe $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
