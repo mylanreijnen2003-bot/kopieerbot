@@ -254,15 +254,42 @@ def rapport(d, state, mids, alle_trades):
             fh.write(f"{pd.to_datetime(NU, unit='ms'):%Y-%m-%d %H:%M} {m}\n")
     print("\n".join(regels_md))
     topic = os.environ.get("NTFY_TOPIC")
-    dagelijks = pd.to_datetime(NU, unit="ms").hour < 6
+    dagelijks = pd.to_datetime(NU, unit="ms").hour == 6
     if topic and (MELDINGEN or dagelijks):
-        tekst = " | ".join(f"{h['versie']}: {h['pct']:+.1f}%" for h in hist) + f" | BTC {btc:+.1f}%"
-        if MELDINGEN:
-            tekst += "\n" + "\n".join(MELDINGEN)
         try:
-            requests.post(f"https://ntfy.sh/{topic}", data=tekst.encode(), headers={"Title": "Papier v2"}, timeout=20)
+            requests.post(f"https://ntfy.sh/{topic}", data=dagbericht(d, state, hist, alle_trades, btc, dagelijks).encode(),
+                          headers={"Title": "Kopieerbot papier: dagupdate" if dagelijks else "Kopieerbot papier: wijziging"},
+                          timeout=20)
         except Exception:  # noqa: BLE001
             pass
+
+
+def dagbericht(d, state, hist, alle_trades, btc, dagelijks):
+    """Kort bericht: per versie waarde, vandaag, trades laatste 24 u, beste/slechtste trader; plus wijzigingen."""
+    regels = []
+    tr = pd.DataFrame(alle_trades)
+    g = pd.read_csv(f"{d}/geschiedenis.csv") if os.path.exists(f"{d}/geschiedenis.csv") else pd.DataFrame()
+    for h in hist:
+        v, vs = h["versie"], state["versies"][h["versie"]]
+        oud = g[(g.versie == v) & (g.ts <= NU - 23 * UUR)].tail(1) if len(g) else g
+        dag = h["waarde"] - float(oud.waarde.iloc[0]) if len(oud) else 0.0
+        regel = f"{v}: €{h['waarde']:.0f} ({h['pct']:+.1f}% totaal, {dag:+.2f} € 24u)"
+        if len(tr) and "sluit" in tr:
+            x = tr[(tr.versie == v) & (tr.status == "dicht") & (tr.sluit >= NU - 24 * UUR) & (tr.kraken)]
+            if len(x):
+                regel += f" | {len(x)} trades, {100 * (x.r > 0).mean():.0f}% winst"
+            o = tr[(tr.versie == v) & (tr.status == "open") & (tr.kraken)]
+            regel += f" | {len(o)} open"
+        act = [t for t in vs["traders"] if t["status"] == "actief"]
+        if act:
+            b = max(act, key=lambda t: t["pnl"])
+            w = min(act, key=lambda t: t["pnl"])
+            regel += f" | beste {kort(b['address'])} €{b['pnl']:+.1f}, slechtste {kort(w['address'])} €{w['pnl']:+.1f}"
+        regels.append(regel)
+    regels.append(f"BTC sinds start {btc:+.1f}%")
+    if MELDINGEN:
+        regels += ["Wijzigingen:"] + MELDINGEN
+    return "\n".join(regels)
 
 
 if __name__ == "__main__":
