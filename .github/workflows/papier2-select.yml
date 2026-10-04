@@ -85,13 +85,15 @@ jobs:
           git fetch origin results && git worktree add -B results res origin/results
       - name: Kraken-lijst (artifact of eerdere kopie)
         run: |
-          if ! ls beurs/**/beurzen.json beurs/beurzen.json >/dev/null 2>&1; then
-            mkdir -p beurs && python -c "import json;json.dump({'kraken':json.load(open('res/papier2/kraken.json'))},open('beurs/beurzen.json','w'))"
+          mkdir -p beurs res/papier2
+          if [ -z "$(find beurs -name beurzen.json)" ]; then
+            python -c "import json;json.dump({'kraken':json.load(open('res/papier2/kraken.json'))},open('beurs/beurzen.json','w'))"
           fi
+          find beurs -name beurzen.json
       - run: mkdir -p res/papier2 && python -m bt.p2_select kies api dat beurs res/papier2
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A papier2
+          mkdir -p res/papier2 && cd res && git add -A papier2
           git commit -qm "papier2 selectie $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
