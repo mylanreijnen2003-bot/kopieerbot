@@ -1,0 +1,40 @@
+name: volg
+
+# Elke 5 minuten: nieuwe trades van gevolgde traders als telefoonmelding (ntfy).
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: volg
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas requests
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - name: Controleren
+        run: |
+          if [ ! -f res/papier2/volg.json ]; then echo "geen volglijst"; exit 0; fi
+          python -m bt.volg res/papier2 res/papier2/kraken.json
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A papier2/volg_state.json 2>/dev/null || true
+          git commit -qm "volg $(date -u +%F-%H%M) [skip ci]" || exit 0
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 5; done

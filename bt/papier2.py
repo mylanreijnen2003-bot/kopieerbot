@@ -31,9 +31,9 @@ from bt.p2_common import DAG, KOSTEN, UUR, trades_open
 NU = int(time.time() * 1000)
 REGELS = {"A": {"stop": 0.20, "daling": 0.25, "inactief_d": 7, "vorm30": -0.10, "herbalans_d": 14, "top_houden": 16},
           "B": {"stop": 0.15, "daling": 0.20, "inactief_d": 14, "vorm30": -0.05, "herbalans_d": 30, "top_houden": 10},
-          "C": None, "D": None}
+          "C": None, "D": None, "E": None}
 NAMEN = {"A": "A — max rendement", "B": "B — laag risico", "C": "C — controle: recent top 30, geen regels",
-         "D": "D — controle: willekeurig 30, geen regels"}
+         "D": "D — controle: willekeurig 30, geen regels", "E": "E — eigen experiment: 0x2555 met €50"}
 CAP_CONTROLE = 40.0
 POT = 100.0
 TRADE_STOP = 0.10
@@ -73,11 +73,11 @@ def px_later(coin, ts, start):
     return k[0] if k else None
 
 
-def bereken(tr, mids, kraken, cap, start):
+def bereken(tr, mids, kraken, cap, start, pot=POT):
     """Herberekent één actieve trader vanaf toevoegen. Geeft dict met pnl, open, trades."""
     fl = [f for f in hl.fills(tr["address"], tr["toegevoegd"], NU) if f["kind"] == "perp"]
     dicht, open_ = trades_open(fl, tr["toegevoegd"])
-    stake = min(POT / tr["K"], cap)
+    stake = min(pot / tr["K"], cap)
     rows = []
     for t in dicht:
         kr = to_base(t["coin"]) in kraken
@@ -185,11 +185,11 @@ def main():
             state["versies"][v] = {"kapitaal_start": n * POT, "cap": 0.05 * n * POT, "gepauzeerd": False,
                                    "laatste_herbalans": NU, "traders": []}
             voeg_toe(state["versies"][v], sel, v, n)
-    for v in ["C", "D"]:
+    for v in ["C", "D", "E"]:
         if v in sel and v not in state["versies"]:
-            n = sel[v]["n_actief"]
-            state["versies"][v] = {"kapitaal_start": n * POT, "cap": CAP_CONTROLE, "gepauzeerd": False,
-                                   "laatste_herbalans": NU, "traders": [], "start": NU}
+            n, pot = sel[v]["n_actief"], float(sel[v].get("pot", POT))
+            state["versies"][v] = {"kapitaal_start": n * pot, "cap": float(sel[v].get("cap", CAP_CONTROLE)), "pot": pot,
+                                   "gepauzeerd": False, "laatste_herbalans": NU, "traders": [], "start": NU}
             voeg_toe(state["versies"][v], sel, v, n)
             MELDINGEN.append(f"{v}: controlegroep gestart met {n} traders")
     alle_trades = []
@@ -200,7 +200,7 @@ def main():
         if regels is None:
             for tr in vs["traders"]:
                 try:
-                    res = bereken(tr, mids, kraken, vs["cap"], state["start"])
+                    res = bereken(tr, mids, kraken, vs["cap"], state["start"], vs.get("pot", POT))
                 except Exception as exc:  # noqa: BLE001
                     print(v, kort(tr["address"]), "fout", exc, flush=True)
                     continue
