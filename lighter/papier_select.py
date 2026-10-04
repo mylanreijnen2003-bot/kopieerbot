@@ -53,7 +53,13 @@ def main():
                       "potje_3m": round(float(r.potje_3m), 4), "equity": round(float(r.equity)), "kraken": round(float(r.kraken), 2),
                       "winst_pct": round(float(r.winst_pct), 3), "slechtste_r": round(float(r.slechtste_r), 4),
                       "tpd30": round(float(r.tpd30), 2), "houd_u": round(float(r.houd_u), 1)})
-    json.dump({"gemaakt": NU, "regel": regel, "lijst": lijst}, open(f"{prive}/selectie.json", "w"), indent=1)
+    pool = [{"idx": int(r.idx), "l1": (accs.get(int(r.idx)) or {}).get("l1"), "K": max(1, int(r.p90))}
+            for r in df[m].itertuples()]
+    seed = NU % 100000
+    import random
+    rnd = random.Random(seed).sample(pool, min(20, len(pool)))
+    json.dump({"gemaakt": NU, "regel": regel, "lijst": lijst, "pool_n": len(pool), "seed": seed, "random20": rnd},
+              open(f"{prive}/selectie.json", "w"), indent=1)
     kortlijst = pd.DataFrame([{**{k: v for k, v in x.items() if k not in ("idx", "l1")}, "trader": kort(x["l1"])} for x in lijst])
     kortlijst.to_csv(f"{openbaar}/selectie_kort.csv", index=False)
     print(f"geschikt {int(m.sum())}, lijst {len(lijst)}", flush=True)
