@@ -82,15 +82,19 @@ def beoordeel(acc, tr, fills_ts, maker, knip, eind):
 EISEN = ["eis_historie", "eis_100", "eis_rendement", "eis_actief", "eis_handmatig", "eis_geen_mm", "eis_posities"]
 
 
-def rapport(naam: str, data: dict, resdir: str, privdir: str, notities: list[str] = ()):
+def rapport(naam: str, data: dict, resdir: str, privdir: str, notities: list[str] = (), knip: int | None = None,
+            eind: int | None = None, robuust=("2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01", "2026-07-01"),
+            vandaag: bool = True):
     """data: account -> {"trades":[...], "fills_ts":[...], "maker": float|None}"""
     nu = int(time.time() * 1000)
+    knip = knip or KNIP
+    eind = eind or nu
     Path(resdir).mkdir(parents=True, exist_ok=True)
     Path(privdir).mkdir(parents=True, exist_ok=True)
-    rows = [r for a, d in data.items() if (r := beoordeel(a, d["trades"], d["fills_ts"], d.get("maker"), KNIP, nu))]
+    rows = [r for a, d in data.items() if (r := beoordeel(a, d["trades"], d["fills_ts"], d.get("maker"), knip, eind))]
     tab = pd.DataFrame(rows)
     L = [f"# {naam} — uitslag ({pd.Timestamp(nu, unit='ms'):%Y-%m-%d})", "", *notities, "",
-         f"Accounts met trades vóór de knip (1-8-2026): {len(tab)}", "", "| Eis | Over |", "|---|---|"]
+         f"Accounts met trades vóór de knip ({pd.Timestamp(knip, unit='ms'):%Y-%m-%d}): {len(tab)}", "", "| Eis | Over |", "|---|---|"]
     if not len(tab):
         (Path(resdir) / "report.md").write_text("\n".join(L) + "\nGeen data.\n", encoding="utf-8")
         return
@@ -114,13 +118,13 @@ def rapport(naam: str, data: dict, resdir: str, privdir: str, notities: list[str
         for j, r in enumerate(top.itertuples(), 1):
             L.append(f"| {j} | {kort(r.account)} | {r.keuze_trades} | {r.keuze_gem_pct:+.2f}% | {r.keuze_potje_pct:+.1f}% | "
                      f"{r.houdtijd_uur} u | {r.p90_posities} | {r.test_trades} | {r.test_potje_pct:+.1f}% |")
-        L += ["", f"- Top 5 test (potje-%, 1-8 t/m nu): gem. {mean_top:+.1f}%, {pos} van {len(top)} positief",
+        L += ["", f"- Top 5 test (potje-%, {pd.Timestamp(knip, unit='ms'):%d-%m-%Y} t/m {pd.Timestamp(eind, unit='ms'):%d-%m-%Y}): gem. {mean_top:+.1f}%, {pos} van {len(top)} positief",
               f"- Mediaan alle geschikten: {med_all:+.1f}%; top 5 zit op percentiel {pct:.0f} van willekeurige 5-tallen",
               f"- **Oordeel: {'GO' if go else 'NO-GO'}** (eis: gem. > 0, ≥ 3 van 5 positief, > mediaan)", ""]
     # beschrijvend (niet vooraf vastgelegd): zelfde regel op eerdere knips, telkens 2 maanden test
     L += ["Robuustheid (beschrijvend): zelfde regel op eerdere knips, test 2 maanden", "",
           "| Knip | Geschikt | Top 5 gem. | Top 5 positief | Mediaan geschikt |", "|---|---|---|---|---|"]
-    for k in ("2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01", "2026-07-01"):
+    for k in robuust:
         kn = int(pd.Timestamp(k).value // 10**6)
         rr = [r for a, d in data.items() if (r := beoordeel(a, d["trades"], d["fills_ts"], d.get("maker"), kn, kn + 61 * DAG))]
         tk = pd.DataFrame(rr)
@@ -133,9 +137,9 @@ def rapport(naam: str, data: dict, resdir: str, privdir: str, notities: list[str
                  f"{gk.test_potje_pct.median():+.1f}% |")
     L.append("")
     # keuze vandaag: zelfde regel met knip = nu
-    rows2 = [r for a, d in data.items() if (r := beoordeel(a, d["trades"], d["fills_ts"], d.get("maker"), nu, nu))]
+    rows2 = [] if not vandaag else [r for a, d in data.items() if (r := beoordeel(a, d["trades"], d["fills_ts"], d.get("maker"), nu, nu))]
     t2 = pd.DataFrame(rows2)
-    if len(t2):
+    if vandaag and len(t2):
         g2 = t2[t2.geschikt].sort_values("keuze_potje_pct", ascending=False)
         L += [f"## Volgbaar vandaag: {len(g2)}", "", "| # | Account | Trades | Gem./trade | Winst-% | Potje-% | Verliesmnd | Houdtijd | Munten |",
               "|---|---|---|---|---|---|---|---|---|"]

@@ -1,0 +1,71 @@
+name: kansen-drift
+
+# V5 Drift-traders historisch (kansen/drift.py). Publiek: report.md met afgekorte accounts; data versleuteld.
+on:
+  push:
+    branches: [kansen]
+    paths: ["kansen/drift.py", ".github/workflows/kansen-drift.yml"]
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  KEY: ${{ secrets.LIGHTER_DATA_KEY }}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    steps:
+      - run: if [ ${#KEY} -lt 20 ]; then echo "Secret LIGHTER_DATA_KEY ontbreekt"; exit 1; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow numpy
+      - run: python -m kansen.drift fetch ${{ matrix.shard }} 6 part
+      - name: Versleutelen
+        if: always()
+        run: |
+          [ -d part ] || exit 0
+          tar czf - part | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out part.tgz.enc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "drift-part-${{ matrix.shard }}", path: part.tgz.enc, retention-days: 90, if-no-files-found: ignore}
+
+  analyse:
+    needs: fetch
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {pattern: "drift-part-*", path: enc}
+      - run: |
+          mkdir -p dat
+          for f in enc/*/part.tgz.enc; do openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in $f | tar xzf - -C dat; done
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          rm -rf res/kansen/drift && mkdir -p res/kansen/drift
+      - run: python -m kansen.drift analyse dat res/kansen/drift priv
+      - name: Opslaan
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -d priv ]; then tar czf - priv | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out res/kansen/drift/priv.tgz.enc; fi
+          cd res
+          for i in 1 2 3 4 5; do
+            git fetch -q origin results && git reset -q --soft origin/results
+            git add -A kansen/drift
+            git commit -qm "kansen drift $(date -u +%F) [skip ci]" || true
+            git push -q origin HEAD:results && break; sleep 10
+          done
