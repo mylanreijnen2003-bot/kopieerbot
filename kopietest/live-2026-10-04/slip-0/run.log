@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/kopieerbot/kopieerbot/kopietest/live.py", line 24, in <module>
+    from orderly import probe as P  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/kopieerbot/kopieerbot/orderly/probe.py", line 18, in <module>
+    from bt.vast_select import stats, trades_pct
+  File "/home/runner/work/kopieerbot/kopieerbot/bt/vast_select.py", line 23, in <module>
+    from bt import data
+  File "/home/runner/work/kopieerbot/kopieerbot/bt/data.py", line 10, in <module>
+    import pyarrow as pa
+ModuleNotFoundError: No module named 'pyarrow'
