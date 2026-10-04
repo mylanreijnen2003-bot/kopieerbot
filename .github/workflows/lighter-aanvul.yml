@@ -1,11 +1,12 @@
-name: lighter-analyse
+name: lighter-aanvul
 
-# Alleen de analyse (lighter/selectie.py) opnieuw, op de versleutelde scan-artifacts van een eerdere lighter-selectie-run.
-# Start door het run-id in lighter/ANALYSE te zetten. Zelfde privacyregels als lighter-selectie.
+# Lighter: de bereiken die in een eerdere scan niet af kwamen (lighter/AANVUL.json) alsnog scannen,
+# daarna analyse op alle delen (runs in lighter/ANALYSE + deze run). Start door lighter/AANVUL.json te wijzigen.
+# Repo is publiek: logs alleen aantallen; data alleen versleuteld (secret LIGHTER_DATA_KEY).
 on:
   push:
     branches: [lighter]
-    paths: ["lighter/ANALYSE"]
+    paths: ["lighter/AANVUL.json"]
 
 permissions:
   contents: write
@@ -15,7 +16,51 @@ env:
   KEY: ${{ secrets.LIGHTER_DATA_KEY }}
 
 jobs:
+  lijst:
+    runs-on: ubuntu-24.04
+    outputs:
+      slices: ${{ steps.l.outputs.slices }}
+    steps:
+      - name: Sleutel aanwezig?
+        run: |
+          if [ ${#KEY} -lt 20 ]; then echo "Secret LIGHTER_DATA_KEY ontbreekt"; exit 1; fi
+      - uses: actions/checkout@v4
+      - id: l
+        run: echo "slices=$(cat lighter/AANVUL.json)" >> $GITHUB_OUTPUT
+
+  scan:
+    needs: lijst
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        slice: ${{ fromJSON(needs.lijst.outputs.slices) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow
+      - run: python -m lighter.scan slice ${{ matrix.slice[0] }} ${{ matrix.slice[1] }} part
+        env: {BUDGET_S: "19800"}
+      - name: Versleutelen
+        if: always()
+        run: |
+          [ -d part ] || exit 0
+          tar czf - part | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out part.tgz.enc
+          rm -rf part
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighter-part-${{ matrix.slice[0] }}
+          path: part.tgz.enc
+          retention-days: 90
+          if-no-files-found: ignore
+
   analyse:
+    needs: [lijst, scan]
+    if: always() && needs.lijst.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
@@ -23,10 +68,10 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install requests pandas pyarrow numpy
-      - name: Versleutelde delen ophalen (alle runs in lighter/ANALYSE)
+      - name: Versleutelde delen ophalen (alle runs in lighter/ANALYSE + deze run)
         env: {GH_TOKEN: "${{ github.token }}"}
         run: |
-          for id in $(cat lighter/ANALYSE); do
+          for id in $(cat lighter/ANALYSE 2>/dev/null) ${{ github.run_id }}; do
             mkdir -p enc/$id && gh run download $id -R ${{ github.repository }} -p 'lighter-part-*' -D enc/$id || true
           done
       - name: Ontsleutelen

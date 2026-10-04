@@ -50,6 +50,10 @@ def lees(d):
                        and len(pd.read_parquet(f"{r}/fills.parquet"))], ignore_index=True)
     pnl = [pd.read_parquet(f"{r}/pnl.parquet") for r in roots]
     pnl = pd.concat([p for p in pnl if len(p)], ignore_index=True) if any(len(p) for p in pnl) else pd.DataFrame()
+    scan = scan.drop_duplicates("idx", keep="last")
+    fills = fills.drop_duplicates(["idx", "tid", "ts", "market_id"])
+    if len(pnl):
+        pnl = pnl.drop_duplicates(["idx", "ts"], keep="last")
     accs, meta = {}, []
     for r in roots:
         accs.update({int(k): v for k, v in json.load(open(f"{r}/accounts.json")).items()})
@@ -107,6 +111,17 @@ def pnl_delta(p: pd.DataFrame, van, tot):
     return float(b[-1] - (a[-1] if len(a) else 0.0))
 
 
+def equity_op(p: pd.DataFrame, t):
+    """Accountwaarde op tijdstip t = netto stortingen + PnL incl. ongerealiseerd (Lighter `pnl`, ignore_transfers=false)."""
+    if p is None or not len(p):
+        return None
+    q = p[p.ts <= t]
+    if not len(q):
+        return None
+    r = q.sort_values("ts").iloc[-1]
+    return float(r.inflow - r.outflow + r.trade_pnl)
+
+
 def pnl_maanden(p: pd.DataFrame, van, tot):
     if p is None or not len(p):
         return {}
@@ -156,6 +171,12 @@ def beoordeel(idx, tr, fl_acc, p_acc, knip, kraken):
     rij["eis_actief"] = rij["trades_7d"] >= 1 and rij["trades_14d"] >= 4
     rij["eis_handmatig"] = rij["trades_per_dag_30d"] <= 3 and rij["houdtijd_mediaan_uur"] >= 2
     rij["eis_geen_mm"] = (rij["keuze_maker_pct"] or 0) < 80 and rij["fills_per_dag_30d"] <= 150
+    rij["equity_knip_usd"] = equity_op(p_acc, knip)
+    rij["eis_equity"] = (rij["equity_knip_usd"] or 0) >= MIN_EQUITY
+    rij["eis_posities"] = rij["gelijktijdig_p90"] <= MAX_POS
+    pot = max(1, rij["gelijktijdig_p90"])
+    rij["keuze_potje_pct"] = round(k.get("som_pct", 0) / pot, 1)
+    rij["keuze_potje_per_maand_pct"] = round(rij["keuze_potje_pct"] / max(1, k.get("maanden", 1)), 1)
     rij["geschikt"] = all(rij[c] for c in rij if c.startswith("eis_"))
     if test:
         te = stats(test)
@@ -164,12 +185,16 @@ def beoordeel(idx, tr, fl_acc, p_acc, knip, kraken):
     else:
         rij["test_trades"] = 0
         rij["test_som_pct"] = 0.0
+    rij["test_potje_pct"] = round(rij["test_som_pct"] / pot, 1)
     rij["test_pnl_dag_usd"] = pnl_delta(p_acc, knip, NU)
     rij["test_pnl_dag_maanden"] = json.dumps(pnl_maanden(p_acc, knip, NU))
     return rij
 
 
-TRECHTER = ["eis_historie", "eis_100", "eis_rendement", "eis_pnl_dag", "eis_actief", "eis_handmatig", "eis_geen_mm"]
+TRECHTER = ["eis_historie", "eis_100", "eis_rendement", "eis_pnl_dag", "eis_actief", "eis_handmatig", "eis_geen_mm",
+            "eis_equity", "eis_posities"]
+MIN_EQUITY = 5000
+MAX_POS = 10
 
 
 def trechter(tab):
@@ -221,7 +246,7 @@ def kies(tab, zonder=()):
     if not len(tab):
         return tab.assign(gekozen=pd.Series(dtype=bool), keuze_som_pct=pd.Series(dtype=float), test_som_pct=pd.Series(dtype=float))
     eisen = [c for c in TRECHTER if c not in zonder]
-    g = tab[tab[eisen].all(axis=1)].sort_values("keuze_som_pct", ascending=False)
+    g = tab[tab[eisen].all(axis=1)].sort_values("keuze_potje_pct", ascending=False)
     g = g.assign(gekozen=False)
     g.loc[g.index[:TOP], "gekozen"] = True
     return g
@@ -277,18 +302,24 @@ def main():
     # ---- stap 5-6: kiezen op knipdatum, meten in de test ----
     gk = kies(knip)
     top = gk[gk.gekozen]
-    test_som = gk.test_som_pct.fillna(0).values
-    rnd = [test_som[RNG.choice(len(test_som), size=min(TOP, len(test_som)), replace=False)].mean()
-           for _ in range(2000)] if len(test_som) >= TOP else []
+    tp = gk.test_potje_pct.fillna(0).values if "test_potje_pct" in gk else np.array([])
+
+    def groep(n):
+        if len(tp) < n:
+            return None
+        echt = float(tp[:n].mean())
+        rnd = np.array([tp[RNG.choice(len(tp), size=n, replace=False)].mean() for _ in range(2000)])
+        return {"test_potje_pct_gem": round(echt, 1), "winstgevend": int((tp[:n] > 0).sum()),
+                "willekeurig_gem": round(float(rnd.mean()), 1), "percentiel_vs_willekeurig": round(float(100 * (rnd < echt).mean()))}
+
     uitslag = {
         "knip": "2026-08-01", "test_tot": pd.Timestamp(NU, unit="ms").strftime("%Y-%m-%d"),
+        "eisen_extra": {"min_equity_usd": MIN_EQUITY, "max_posities_p90": MAX_POS, "rangschikking": "potje-% = som / p90 posities"},
         "trechter_knip": trechter(knip) if len(knip) else {},
-        "top5_test_som_pct_gem_per_trader": round(float(top.test_som_pct.fillna(0).mean()), 1) if len(top) else None,
-        "top5_test_gem_rendement_pct": round(float(top.test_gem_rendement_pct.fillna(0).mean()), 2) if "test_gem_rendement_pct" in top and len(top) else None,
-        "top5_met_test_trades": int((top.test_trades.fillna(0) > 0).sum()) if len(top) else 0,
-        "geschikt_alle_test_som_pct_gem": round(float(np.mean(test_som)), 1) if len(test_som) else None,
-        "willekeurig5_test_som_pct_gem": round(float(np.mean(rnd)), 1) if rnd else None,
-        "top5_percentiel_vs_willekeurig5": round(float(100 * np.mean(np.array(rnd) < top.test_som_pct.fillna(0).mean())), 0) if rnd else None,
+        "geschikt_knip": int(len(gk)),
+        "test_alle_geschikt": {"potje_pct_gem": round(float(tp.mean()), 1) if len(tp) else None,
+                               "winstgevend": int((tp > 0).sum()), "van": int(len(tp))},
+        "test_top5": groep(5), "test_top10": groep(10), "test_top20": groep(20),
     }
 
     # ---- vandaag: zelfde regel op alle data t/m nu + open posities ----
@@ -308,23 +339,23 @@ def main():
     uitslag["trechter_nu"] = trechter(nu) if len(nu) else {}
     uitslag["dekking"] = dekking
 
-    kol = ["adres", "historie_dagen", "keuze_trades", "keuze_som_pct", "keuze_gem_rendement_pct", "keuze_winst_pct_trades",
+    kol = ["adres", "historie_dagen", "equity_knip_usd", "keuze_trades", "keuze_potje_pct", "keuze_potje_per_maand_pct", "keuze_som_pct", "keuze_gem_rendement_pct", "keuze_winst_pct_trades",
            "keuze_verliesmaanden", "keuze_maanden", "keuze_pnl_dag_usd", "trades_per_dag_30d", "houdtijd_mediaan_uur",
            "gelijktijdig_p90", "kraken_pct", "lighter_only_pct", "keuze_maker_pct", "munten",
-           "test_trades", "test_som_pct", "test_gem_rendement_pct", "test_winst_pct_trades", "test_verliesmaanden",
+           "test_trades", "test_potje_pct", "test_som_pct", "test_gem_rendement_pct", "test_winst_pct_trades", "test_verliesmaanden",
            "test_maanden", "test_pnl_dag_usd", "test_pnl_dag_maanden", "gekozen"]
     kk = [c for c in kol if c in gk.columns]
-    gk.head(30)[kk].to_csv(f"{uit}/knip_top30.csv", index=False)
-    vk = ["adres", "data_vanaf", "laatste_trade", "keuze_trades", "keuze_som_pct"] + \
+    gk[kk].to_csv(f"{uit}/knip_geschikt.csv", index=False)
+    vk = ["adres", "data_vanaf", "laatste_trade", "keuze_trades", "keuze_potje_pct", "keuze_potje_per_maand_pct", "keuze_som_pct"] + \
         [c for c in nu.columns if c.startswith("pct_20")] + \
         ["som_3m_pct", "winstgevend_3m", "volledig_3m", "trades_3m", "gem_rendement_3m_pct", "winst_pct_trades_3m",
          "som_6m_pct", "winstgevend_6m", "volledig_6m", "trades_6m", "gem_rendement_6m_pct", "winst_pct_trades_6m",
          "verliesmaanden_6m", "max_daling_6m_pct", "slechtste_trade_6m_pct", "trader_pnl_3m_usd", "trader_pnl_6m_usd",
          "equity_usd", "open_posities", "ongerealiseerd_usd", "hefboom_nu", "trades_per_dag_30d", "houdtijd_mediaan_uur",
          "gelijktijdig_p90", "kraken_pct", "lighter_only_pct", "keuze_maker_pct", "munten", "eis_handmatig", "gekozen"]
-    gn.head(30)[[c for c in vk if c in gn.columns]].to_csv(f"{uit}/vandaag_top30.csv", index=False)
+    gn[[c for c in vk if c in gn.columns]].to_csv(f"{uit}/vandaag_geschikt.csv", index=False)
     gb = kies(nu, zonder=("eis_handmatig",))
-    gb.head(30)[[c for c in vk if c in gb.columns]].to_csv(f"{uit}/vandaag_top30_bot.csv", index=False)
+    gb[[c for c in vk if c in gb.columns]].to_csv(f"{uit}/vandaag_geschikt_bot.csv", index=False)
     uitslag["trechter_nu_bot(zonder handmatig-eis)"] = int(len(gb))
     pd.DataFrame(pos).to_csv(f"{uit}/vandaag_top5_posities.csv", index=False)
     json.dump(uitslag, open(f"{uit}/uitslag.json", "w"), indent=1, ensure_ascii=False)
