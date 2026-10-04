@@ -1,0 +1,88 @@
+name: kansen-nado
+
+# V2 Nado-traders (kansen/nado.py). Publiek: report.md met afgekorte adressen; data versleuteld (LIGHTER_DATA_KEY).
+on:
+  push:
+    branches: [kansen]
+    paths: ["kansen/nado.py", ".github/workflows/kansen-nado.yml"]
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  KEY: ${{ secrets.LIGHTER_DATA_KEY }}
+
+jobs:
+  pool:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - run: if [ ${#KEY} -lt 20 ]; then echo "Secret LIGHTER_DATA_KEY ontbreekt"; exit 1; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow numpy
+      - run: python -m kansen.nado pool pool
+      - run: tar czf - pool | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out pool.tgz.enc
+      - uses: actions/upload-artifact@v4
+        with: {name: nado-pool, path: pool.tgz.enc, retention-days: 90}
+
+  fetch:
+    needs: pool
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {name: nado-pool, path: enc}
+      - run: openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in enc/pool.tgz.enc | tar xzf -
+      - run: python -m kansen.nado fetch ${{ matrix.shard }} 8 pool part
+      - name: Versleutelen
+        if: always()
+        run: |
+          [ -d part ] || exit 0
+          tar czf - part | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out part.tgz.enc
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "nado-part-${{ matrix.shard }}", path: part.tgz.enc, retention-days: 90, if-no-files-found: ignore}
+
+  analyse:
+    needs: fetch
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {pattern: "nado-part-*", path: enc}
+      - run: |
+          mkdir -p dat
+          for f in enc/*/part.tgz.enc; do openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in $f | tar xzf - -C dat; done
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          rm -rf res/kansen/nado && mkdir -p res/kansen/nado
+      - run: python -m kansen.nado analyse dat res/kansen/nado priv
+      - name: Opslaan
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -d priv ]; then tar czf - priv | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out res/kansen/nado/priv.tgz.enc; fi
+          cd res
+          for i in 1 2 3 4 5; do
+            git fetch -q origin results && git reset -q --soft origin/results
+            git add -A kansen/nado
+            git commit -qm "kansen nado $(date -u +%F) [skip ci]" || true
+            git push -q origin HEAD:results && break; sleep 10
+          done

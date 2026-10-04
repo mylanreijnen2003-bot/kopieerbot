@@ -22,6 +22,9 @@ TOP = 5
 
 def kort(a: str) -> str:
     a = str(a)
+    if "/" in a:
+        x, n = a.split("/", 1)
+        return kort(x) + "/" + n[:12]
     return f"{a[:6]}…{a[-4:]}" if len(a) > 12 else a
 
 
