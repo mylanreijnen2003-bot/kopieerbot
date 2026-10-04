@@ -69,6 +69,20 @@ def hl_data(a):
                                  "trigger": bool(x.get("isTrigger")), "tpsl": bool(x.get("isPositionTpsl")),
                                  "reduce": bool(x.get("reduceOnly")), "status": o.get("status"), "px": float(x.get("limitPx") or 0),
                                  "coin": x.get("coin"), "side": x.get("side")}
+    onbekend = sorted({f["oid"] for f in fl if f["maker"] and f["oid"] not in od})
+    import random
+    random.seed(1)
+    for oid in random.sample(onbekend, min(400, len(onbekend))):
+        try:
+            j = hl.info({"type": "orderStatus", "user": a, "oid": int(oid)}, weight=3)
+            x = (j.get("order") or {}).get("order") or {}
+            if x:
+                od[oid] = {"created": int(x.get("timestamp") or 0), "type": x.get("orderType"), "tif": x.get("tif"),
+                           "trigger": bool(x.get("isTrigger")), "tpsl": bool(x.get("isPositionTpsl")), "reduce": bool(x.get("reduceOnly")),
+                           "status": (j.get("order") or {}).get("status"), "px": float(x.get("limitPx") or 0), "coin": x.get("coin"),
+                           "side": x.get("side")}
+        except Exception:  # noqa: BLE001
+            pass
     openo = hl.info({"type": "frontendOpenOrders", "user": a}, weight=20) or []
     stt = hl.info({"type": "clearinghouseState", "user": a}, weight=2) or {}
     av = float((stt.get("marginSummary") or {}).get("accountValue") or 0)
@@ -122,11 +136,44 @@ def ord_data(a):
                                       "reduce": bool(o.get("reduce_only")), "status": o.get("status"), "px": float(o.get("price") or 0),
                                       "coin": o.get("symbol"), "side": o.get("side")}
     openo = P.rows_cursor(P.q("openOrders", address=a))[0]
-    pf, _ = P.alle("portfolio", max_pag=2, address=a, start_time=VAN - DAG, limit=40)
-    pts = sorted((int(r["timestamp"]), float(r["account_value"])) for r in pf)
     av = sum(v["av"] for v in staat.values())
+    dw, _ = P.alle("userDepositsWithdrawals", max_pag=5, address=a)
+    pts = equity_terug(fl, av, dw)
     lev = [float(p.get("leverage") or 0) for v in staat.values() for p in v["pos"].values()]
     return fl, od, openo, {"account_value": av, "lev_open": lev, "n_open_pos": sum(len(v["pos"]) for v in staat.values())}, pts
+
+
+def equity_terug(fl, e_nu, dw):
+    """Equity terugrekenen vanaf nu: E(t) = E_nu - gerealiseerde winst na t + fees na t - netto stortingen na t."""
+    pos, ev = {}, []
+    for f in fl:
+        c = f["coin"]
+        q, avg = pos.get(c, (f["start"], f["px"]))
+        d = f["after"] - f["start"]
+        pnl = 0.0
+        if q != 0 and q * d < 0:                       # afbouwen
+            dicht = min(abs(d), abs(q))
+            pnl = dicht * (f["px"] - avg) * (1 if q > 0 else -1)
+        nq = f["after"]
+        if nq != 0 and (q == 0 or q * nq < 0):
+            avg = f["px"]
+        elif abs(nq) > abs(q):
+            avg = (abs(q) * avg + (abs(nq) - abs(q)) * f["px"]) / abs(nq)
+        pos[c] = (nq, avg)
+        ev.append((f["t"], pnl - f["fee"]))
+    for x in dw:
+        if str(x.get("status")).upper() == "COMPLETED":
+            amt = float(x.get("amount") or 0) * (1 if str(x.get("side")).lower() == "deposit" else -1)
+            ev.append((int(x.get("created_time") or 0), ("dep", amt)))
+    ev.sort(key=lambda x: x[0])
+    pts, e = [], e_nu
+    for t, v in reversed(ev):
+        if t < VAN:
+            break
+        pts.append((t, e))
+        e -= v[1] if isinstance(v, tuple) else v
+    pts.append((VAN, e))
+    return sorted(pts)
 
 
 def ord_candles(syms):

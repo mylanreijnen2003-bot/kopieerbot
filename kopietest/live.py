@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import collections
-import gzip
 import json
 import os
 import sys
@@ -70,8 +69,9 @@ class Rec:
     def w(self, naam, obj):
         f = self.files.get(naam)
         if f is None:
-            f = self.files[naam] = gzip.open(f"{OUT}/{naam}.jsonl.gz", "at")
+            f = self.files[naam] = open(f"{OUT}/{naam}.jsonl", "a")
         f.write(json.dumps(obj, default=str) + "\n")
+        f.flush()
 
     def close(self):
         for f in self.files.values():
@@ -126,7 +126,7 @@ def mirror_check(coin, t, px):
 def mirror_sluit(force=False):
     for k, m in list(MIRROR.items()):
         if force or (m.get("t_eind_leider") and nu() > m["t_eind_leider"] + 300):
-            b = BOEK.op(m["coin"], m["t_eind_leider"] + 300)
+            b = BOEK.op(m["coin"], m["t_eind_leider"] + 300) if m.get("t_eind_leider") else None
             if b:
                 m["koers_5m_na_eind_bps"] = round(m["side"] * (((b[1] + b[2]) / 2) / m["px"] - 1) * 1e4, 3)
             REC.w("spiegel", m)
@@ -145,6 +145,7 @@ async def hl_markt(coins):
         try:
             async with websockets.connect(HL_WS, ping_interval=20, max_size=2**24) as ws:
                 HL_WS_CONN["markt"] = ws
+                asyncio.create_task(ping(ws))
                 for c in sorted(coins | HL_COINS):
                     await ws.send(json.dumps({"method": "subscribe", "subscription": {"type": "bbo", "coin": c}}))
                     await ws.send(json.dumps({"method": "subscribe", "subscription": {"type": "trades", "coin": c}}))
@@ -204,16 +205,28 @@ async def hl_sub_coin(c):
 HL_LEIDERS = set()
 
 
+async def ping(ws):
+    """Hyperliquid sluit een verbinding na 60 s zonder bericht van ons ('Inactive')."""
+    try:
+        while True:
+            await asyncio.sleep(30)
+            await ws.send(json.dumps({"method": "ping"}))
+    except Exception:  # noqa: BLE001
+        return
+
+
 async def hl_leider(a):
     while nu() - START < DUUR:
         try:
             async with websockets.connect(HL_WS, ping_interval=20, max_size=2**24) as ws:
+                asyncio.create_task(ping(ws))
                 await ws.send(json.dumps({"method": "subscribe", "subscription": {"type": "userFills", "user": a}}))
                 await ws.send(json.dumps({"method": "subscribe", "subscription": {"type": "orderUpdates", "user": a}}))
                 while nu() - START < DUUR:
                     msg = json.loads(await asyncio.wait_for(ws.recv(), 90))
                     ch = msg.get("channel")
                     t_zien = nu()
+                    TELLER["leider_" + str(ch)] += 1
                     if ch == "userFills":
                         d = msg["data"]
                         if d.get("isSnapshot"):
@@ -345,7 +358,7 @@ async def onderhoud():
         verwerk_pend()
         mirror_sluit()
         if int(nu() - START) % 600 < 1:
-            log("loopt", round((nu() - START) / 60), "min, spiegel open", len(MIRROR))
+            log("loopt", round((nu() - START) / 60), "min, spiegel open", len(MIRROR), dict(TELLER))
         await asyncio.sleep(1)
 
 
