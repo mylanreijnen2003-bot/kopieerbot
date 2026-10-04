@@ -1,3 +1,6 @@
 pandas
 numpy
 requests
+websockets>=12
+tzdata
+pytest

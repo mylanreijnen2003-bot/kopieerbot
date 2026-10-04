@@ -1,0 +1,69 @@
+name: recent
+
+# Achteraf-ranglijst 19-8 t/m gisteren: winstgevende, kopieerbare traders (>= 30 trades), top 20.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  lb:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - run: python -m bt.recent lb kand
+      - uses: actions/upload-artifact@v4
+        with: {name: rc-kand, path: kand, retention-days: 30}
+
+  stats:
+    needs: lb
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: rc-kand, path: kand}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - run: python -m bt.recent stats ${{ matrix.shard }} 20 kand/kandidaten.parquet beurs out
+      - uses: actions/upload-artifact@v4
+        with: {name: "rc-stats-${{ matrix.shard }}", path: out, retention-days: 30}
+
+  select:
+    needs: stats
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "rc-stats-*", path: st}
+      - uses: actions/download-artifact@v4
+        with: {name: rc-kand, path: kand}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: mkdir -p res/recent && cp kand/lb_telling.csv res/recent/ && python -m bt.recent_select st res/recent
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A recent
+          git commit -qm "recent $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

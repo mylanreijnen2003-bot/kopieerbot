@@ -1,0 +1,116 @@
+name: varianten
+
+# Van weinig naar veel trades (0,5-50/week), >= 180 dagen, per groep hoogste winst op bot-basis. Toets 19-8 t/m gisteren.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  universum:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {pattern: "brede-scan-*", path: scan, run-id: "37141862920", github-token: "${{ github.token }}"}
+      - run: mkdir -p uni && python -m bt.scan_combine scan uni/universe.parquet
+        env: {MIN_TRADES: "20", MIN_TPW: "0.5", MAX_TPW: "50", MIN_SPAN: "180"}
+      - uses: actions/upload-artifact@v4
+        with: {name: var-uni, path: uni, retention-days: 30}
+
+  extract:
+    needs: universum
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy huggingface_hub requests
+      - uses: actions/download-artifact@v4
+        with: {name: var-uni, path: uni}
+      - run: python -m bt.extract ${{ matrix.shard }} 12 part && rm -f part/bars_*.parquet
+        env: {UNIVERSE: uni/universe.parquet}
+      - uses: actions/upload-artifact@v4
+        with: {name: "var-part-${{ matrix.shard }}", path: part, retention-days: 30}
+
+  stats:
+    needs: [universum, extract]
+    if: ${{ !cancelled() && needs.universum.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: var-uni, path: uni}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "var-part-*", path: dat}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - run: python -m bt.bot_stats ${{ matrix.shard }} 12 uni/universe.parquet dat beurs out
+        env: {MIN_TRADES: "20"}
+      - uses: actions/upload-artifact@v4
+        with: {name: "var-stats-${{ matrix.shard }}", path: out, retention-days: 30}
+
+  select:
+    needs: [universum, stats]
+    if: ${{ !cancelled() && needs.universum.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        groep: [weinig, swing, actief, veel]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "var-stats-*", path: st}
+      - uses: actions/download-artifact@v4
+        with: {name: var-uni, path: uni}
+      - run: python -m bt.var_select ${{ matrix.groep }} st uni/universe.parquet out
+      - uses: actions/upload-artifact@v4
+        with: {name: "var-sel-${{ matrix.groep }}", path: out, retention-days: 30}
+
+  opslaan:
+    needs: select
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas
+      - uses: actions/download-artifact@v4
+        with: {pattern: "var-sel-*", path: sel, merge-multiple: true}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: mkdir -p res/varianten && cp sel/* res/varianten/ && python -m bt.var_summary res/varianten
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A varianten
+          git commit -qm "varianten $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

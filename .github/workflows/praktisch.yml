@@ -1,0 +1,61 @@
+name: praktisch
+
+# Selectie op wat een bot echt kan pakken (eerste fill, 0,32% kosten). Hergebruikt data van ronde 3.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  R3: "37147974538"
+
+jobs:
+  stats:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: r3-uni, path: uni, run-id: "${{ env.R3 }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "r3-part-*", path: dat, run-id: "${{ env.R3 }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - run: python -m bt.bot_stats ${{ matrix.shard }} 12 uni/universe.parquet dat beurs out
+      - uses: actions/upload-artifact@v4
+        with: {name: "pr-stats-${{ matrix.shard }}", path: out, retention-days: 30}
+
+  select:
+    needs: stats
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "pr-stats-*", path: st}
+      - uses: actions/download-artifact@v4
+        with: {name: r3-uni, path: uni, run-id: "${{ env.R3 }}", github-token: "${{ github.token }}"}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: mkdir -p res/praktisch && python -m bt.bot_select st uni/universe.parquet res/praktisch
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A praktisch
+          git commit -qm "praktisch $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
