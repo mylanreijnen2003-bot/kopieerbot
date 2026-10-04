@@ -1,0 +1,35 @@
+name: papier-hl
+
+# Papier-HL: 16 Hyperliquid-traders proportioneel kopiëren op Hyperliquid zelf (op papier). Code: branch orderly, kopietest/papierhl.py.
+# Elke 6 uur; dagbericht via ntfy rond 08:40 NL. Rapport: branch results, map papier-hl/.
+on:
+  schedule:
+    - cron: "41 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: {group: papier-hl, cancel-in-progress: false}
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: orderly}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas numpy requests
+      - name: Draaien en opslaan
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          FORCEER_BERICHT: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          python -m kopietest.papierhl res/papier-hl
+          cd res && git add -A papier-hl
+          git commit -qm "papier-hl $(date -u +%F_%H%M) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
