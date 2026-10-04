@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install pandas pyarrow numpy
+      - run: pip install pandas pyarrow numpy requests
       - uses: actions/download-artifact@v4
         with: {pattern: "bt-part-*", path: dat, run-id: "${{ env.BT }}", github-token: "${{ github.token }}"}
       - name: Uurkaarsen maken
