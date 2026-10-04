@@ -35,7 +35,7 @@ jobs:
         with: {python-version: "3.12"}
       - if: steps.d.outputs.aan == '1'
         run: |
-          pip install pandas numpy requests websockets
+          pip install pandas numpy requests websockets pyarrow
           git fetch origin results && python3 bt/kluis.py show papier-hl/selectie.json > selectie.json
           mkdir -p out/s${{ matrix.i }}
           DUUR_MIN=290 TRADERS_JSON=selectie.json SHARD=${{ matrix.i }} NSHARD=2 timeout 18300 python -m kopietest.live out/s${{ matrix.i }} > out/s${{ matrix.i }}/run.log 2>&1 || true
