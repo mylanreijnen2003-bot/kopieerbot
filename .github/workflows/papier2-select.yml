@@ -1,0 +1,97 @@
+name: papier2-select
+
+# Selectie papier v2 (A max rendement 90 d, B laag risico over het jaar). Wekelijks opnieuw voor de herbalans.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  kand:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - run: git fetch origin results && git show origin/results:recent/alle_winstgevend.csv > alle.csv && python -m bt.p2_select kand alle.csv k
+      - uses: actions/upload-artifact@v4
+        with: {name: p2-kand, path: k, retention-days: 30}
+
+  api:
+    needs: kand
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: p2-kand, path: k}
+      - run: python -m bt.p2_select api ${{ matrix.shard }} 4 k/kand.parquet out
+      - uses: actions/upload-artifact@v4
+        with: {name: "p2-api-${{ matrix.shard }}", path: out, retention-days: 30}
+
+  extract:
+    needs: kand
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy huggingface_hub requests
+      - uses: actions/download-artifact@v4
+        with: {name: p2-kand, path: k}
+      - run: python -m bt.extract ${{ matrix.shard }} 8 part && rm -f part/bars_*.parquet
+        env: {UNIVERSE: k/kand.parquet}
+      - uses: actions/upload-artifact@v4
+        with: {name: "p2-part-${{ matrix.shard }}", path: part, retention-days: 30}
+
+  kies:
+    needs: [api, extract]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "p2-api-*", path: api}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "p2-part-*", path: dat}
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - name: Kraken-lijst (artifact of eerdere kopie)
+        run: |
+          if ! ls beurs/**/beurzen.json beurs/beurzen.json >/dev/null 2>&1; then
+            mkdir -p beurs && python -c "import json;json.dump({'kraken':json.load(open('res/papier2/kraken.json'))},open('beurs/beurzen.json','w'))"
+          fi
+      - run: mkdir -p res/papier2 && python -m bt.p2_select kies api dat beurs res/papier2
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A papier2
+          git commit -qm "papier2 selectie $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
