@@ -363,9 +363,15 @@ async def onderhoud():
 
 
 async def main():
-    tr = pd.read_csv(os.path.join(os.path.dirname(__file__), "traders.csv"))
-    hl_l = [a for a, v in zip(tr.address, tr.venue) if v == "hl"]
-    ord_l = [a for a, v in zip(tr.address, tr.venue) if v == "orderly"]
+    if os.environ.get("TRADERS_JSON"):
+        # papier-HL-traders, verdeeld over runners (max 10 traders per IP voor userFills)
+        alle = [t["address"] for t in json.load(open(os.environ["TRADERS_JSON"]))["traders"]]
+        i, n = int(os.environ.get("SHARD", "0")), int(os.environ.get("NSHARD", "1"))
+        hl_l, ord_l = alle[i::n], []
+    else:
+        tr = pd.read_csv(os.path.join(os.path.dirname(__file__), "traders.csv"))
+        hl_l = [a for a, v in zip(tr.address, tr.venue) if v == "hl"]
+        ord_l = [a for a, v in zip(tr.address, tr.venue) if v == "orderly"]
     HL_LEIDERS.update(a.lower() for a in hl_l)
     coins = set()
     for a in hl_l:

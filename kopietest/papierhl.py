@@ -149,11 +149,19 @@ def main():
         start_tot += s["start_potje"]
     rij["totaal"] = round(tot, 2)
     pd.DataFrame([rij]).to_csv(f"{MAP}/geschiedenis.csv", mode="a", header=not os.path.exists(f"{MAP}/geschiedenis.csv"), index=False)
+    # groepen (bv. top 5): totaal per groep
+    groep_regels, groep_tekst = [], []
+    for naam, leden in (sel.get("groepen") or {}).items():
+        gt = sum(st["traders"][x].get("equity", st["traders"][x]["potje"]) for x in leden if x in st["traders"])
+        gs = sum(st["traders"][x]["start_potje"] for x in leden if x in st["traders"])
+        if gs:
+            groep_regels.append(f"- Groep **{naam}** ({len(leden)}): ${gt:,.0f} van ${gs:,.0f} ({100 * (gt / gs - 1):+.1f}%)")
+            groep_tekst.append(f"{naam}: {100 * (gt / gs - 1):+.1f}%")
     # rapport
     dagen = max((NU - st["start"]) / 86_400_000, 1e-9)
     regels = [f"# Papier-HL (proportioneel kopiëren op Hyperliquid zelf)", "",
               f"Start {pd.Timestamp(st['start'], unit='ms'):%d-%m %H:%M} UTC, bijgewerkt {pd.Timestamp(NU, unit='ms'):%d-%m %H:%M} UTC ({dagen:.1f} dagen).",
-              f"**Totaal: ${tot:,.0f} van ${start_tot:,.0f} ({100 * (tot / start_tot - 1):+.1f}%)**", "",
+              f"**Totaal: ${tot:,.0f} van ${start_tot:,.0f} ({100 * (tot / start_tot - 1):+.1f}%)**", *groep_regels, "",
               "| Trader | Potje | Rendement | Trader zelf | Trades | Open | Fees | Te klein | Status |", "|---|---|---|---|---|---|---|---|---|"]
     for a, s in sorted(st["traders"].items(), key=lambda x: -x[1].get("equity", 0)):
         e = s.get("equity", s["potje"])
@@ -166,7 +174,7 @@ def main():
     uur = pd.Timestamp(NU, unit="ms").hour
     if topic and (os.environ.get("FORCEER_BERICHT") or 6 <= uur < 8):
         top = sorted(st["traders"].items(), key=lambda x: -x[1].get("equity", 0))
-        tekst = f"Papier-HL: ${tot:,.0f} ({100 * (tot / start_tot - 1):+.1f}%) na {dagen:.1f} d\n" + "\n".join(
+        tekst = f"Papier-HL: ${tot:,.0f} ({100 * (tot / start_tot - 1):+.1f}%) na {dagen:.1f} d\n" + "".join(x + "\n" for x in groep_tekst) + "\n".join(
             f"{kort(a)}: {100 * (s.get('equity', s['potje']) / s['start_potje'] - 1):+.1f}%{'' if s['actief'] else ' (gestopt)'}" for a, s in top)
         try:
             requests.post(f"https://ntfy.sh/{topic}", data=tekst.encode(), headers={"Title": "Papier-HL dagupdate"}, timeout=20)
