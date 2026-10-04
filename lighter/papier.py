@@ -4,9 +4,10 @@ Regels (vooraf vastgelegd 4 okt 2026):
 - €100 papierpotje per trader; inzet per trade = min(100 / K, 5% van het startkapitaal). K = p90 posities tegelijk.
 - Alleen posities die de trader ná toevoegen vanuit plat opent (Lighter geeft de positie vóór elke fill).
 - Alle munten tellen mee (ook alleen-Lighter); per trade gelabeld of hij op Kraken kan.
-- Bot-basis: instap = eerste fill van de trader, uitstap = zijn gem. uitstapprijs, 0,32% kosten per rondje.
-  Daarnaast 'met de hand': in- en uitstap 1 uur later (15m-candles), zelfde kosten.
-- Stop per trade: -10% tegen de instap (uurcandles) -> eruit op -10%.
+- Proportioneel kopiëren (sinds 4 okt 20:00, na kopiemethode-test): bijkopen en afbouwen naar verhouding meedoen.
+  Factor f = inzet / typische grootste positie van de trader (mediaan laatste 60 d); eigen positie max 3x inzet.
+  Kosten 0,16% per kant over alle omzet. Vergelijking in de kolom 'alleen 1e instap' (oude methode, vaste inzet).
+- Geen stop per trade meer (die verkocht precies op het moment dat deze traders bijkopen); wel trader-/portefeuille-stops.
 - Trader eruit bij: potje <= €80 | potje <= piek x 0,75 | 7 dagen geen fill | laatste 30 d (>= 15 trades) < -10% |
   > 10 posities open | accountwaarde < $1000 of < 50% van bij toevoegen. Vervanger: volgende uit de selectie, vers €100.
 - Portefeuille-stop: waarde <= 85% van start -> alles stil.
@@ -24,6 +25,7 @@ import os
 import sys
 import time
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -35,6 +37,7 @@ from lighter.selectie import basis, kort, reconstrueer
 NU = int(time.time() * 1000)
 DAG, UUR, KW = api.DAG, 3_600_000, 15 * 60_000
 POT, N_ACTIEF, TRADE_STOP, PORT_STOP, CAP = 100.0, 5, 0.10, 0.85, 25.0
+KANT, MAX_X = 0.0016, 3.0
 GROEPEN = {"C": {"n": 5, "vast": False, "state": "state.json", "map": ""},
            "top20": {"n": 20, "vast": True, "state": "state_top20.json", "map": "top20"},
            "rnd20": {"n": 20, "vast": True, "state": "state_rnd20.json", "map": "rnd20"}}
@@ -99,35 +102,84 @@ def laatste_koers(m, start):
     return c[max(c)][3] if c else None
 
 
+def trades_prop(fl):
+    """Plat -> plat met volledige omzet (bijkopen/afbouwen). Geeft (gesloten, open)."""
+    st, uit = {}, []
+
+    def nieuw(c, a, px, t):
+        st[c] = {"dir": 1 if a > 0 else -1, "in_q": abs(a), "in_c": abs(a) * px, "uit_q": 0.0, "uit_c": 0.0,
+                 "open": t, "px0": px, "max_c": abs(a) * px}
+    for f in fl:
+        c, s, a, px, t = f["coin"], f["start"], f["after"], f["px"], f["time"]
+        if s == 0 and a != 0:
+            nieuw(c, a, px, t)
+            continue
+        if c not in st:
+            continue
+        p = st[c]
+        flip = a != 0 and a * s < 0
+        if abs(a) > abs(s) and not flip:
+            p["in_q"] += abs(a) - abs(s)
+            p["in_c"] += (abs(a) - abs(s)) * px
+            p["max_c"] = max(p["max_c"], abs(a) * px)
+        else:
+            q = abs(s) if (a == 0 or flip) else abs(s) - abs(a)
+            p["uit_q"] += q
+            p["uit_c"] += q * px
+        if a == 0 or flip:
+            uit.append({"coin": c, **p, "sluit": t})
+            st.pop(c)
+            if flip:
+                nieuw(c, a, px, t)
+    return uit, st
+
+
+def typische_max(idx):
+    """Mediaan van de grootste positie (USD) per trade over de laatste 60 dagen."""
+    f = fills_sinds(idx, NU - 60 * DAG)
+    if not len(f):
+        return None
+    fl, _ = reconstrueer(f, api.markten())
+    dicht, _ = trades_prop(fl)
+    v = [t["max_c"] for t in dicht]
+    return float(np.median(v)) if v else None
+
+
+def eur(t, k, mid=None):
+    """PnL in € bij factor k (eigen = k x trader), incl. 0,16% per kant over de omzet."""
+    gin = t["in_c"] / t["in_q"]
+    gerealiseerd = t["dir"] * (t["uit_c"] - gin * t["uit_q"])
+    q_open = t["in_q"] - t["uit_q"]
+    open_deel = t["dir"] * (mid - gin) * q_open if (mid and q_open > 0) else 0.0
+    return k * (gerealiseerd + open_deel) - KANT * k * (t["in_c"] + t["uit_c"])
+
+
 def bereken(tr, sym, sym_inv, kraken, cap, start):
     f = fills_sinds(tr["idx"], tr["toegevoegd"])
     fl, _ = reconstrueer(f, sym) if len(f) else ([], 0)
-    dicht, open_ = trades_open(fl, tr["toegevoegd"])
+    dicht, open_ = trades_prop(fl)
     stake = min(POT / tr["K"], cap)
+    typ = tr.get("typ_max")
     rows = []
-    for t in dicht:
-        m = sym_inv.get(t["coin"])
+    for t in dicht + [{"coin": c, **t, "sluit": None} for c, t in open_.items()]:
         kr = basis(t["coin"]) in kraken or basis(t["coin"]) + "X" in kraken
-        r, gestopt = t["dir"] * (t["po"] / t["p1"] - 1) - KOSTEN, False
-        if m is not None and stop_tijd(m, t, start) is not None:
-            r, gestopt = -TRADE_STOP - KOSTEN, True
-        a = px_later(m, t["open"], start) if m is not None else None
-        b = px_later(m, t["sluit"], start) if m is not None else None
-        hand = t["dir"] * (b / a - 1) - KOSTEN if (a and b and t["sluit"] + UUR < NU) else None
-        rows.append({**t, "kraken": kr, "r": r, "stop": gestopt, "hand_r": hand, "status": "dicht"})
-    for c, t in open_.items():
-        m = sym_inv.get(c)
-        kr = basis(c) in kraken or basis(c) + "X" in kraken
-        mid = laatste_koers(m, start) if m is not None else None
-        r = t["dir"] * (mid / t["p1"] - 1) - KOSTEN if mid else 0.0
-        gestopt = False
-        if m is not None and stop_tijd(m, {**t, "sluit": None}, start) is not None:
-            r, gestopt = -TRADE_STOP - KOSTEN, True
-        rows.append({"coin": c, **t, "sluit": None, "kraken": kr, "r": r, "stop": gestopt, "hand_r": None, "status": "open"})
+        mid = None
+        if t["sluit"] is None:
+            m = sym_inv.get(t["coin"])
+            mid = laatste_koers(m, start) if m is not None else None
+        k = (stake / typ) if typ else stake / t["max_c"]
+        if k * t["max_c"] > MAX_X * stake:
+            k = MAX_X * stake / t["max_c"]
+        p = eur(t, k, mid)
+        guit = t["uit_c"] / t["uit_q"] if t["uit_q"] else (mid or t["px0"])
+        eerste = stake * (t["dir"] * (guit / t["px0"] - 1) - 2 * KANT) if t["sluit"] is not None else 0.0
+        rows.append({"coin": t["coin"], "dir": t["dir"], "open": t["open"], "sluit": t["sluit"], "kraken": kr,
+                     "eigen_max_eur": round(k * t["max_c"], 2), "pnl_eur": p, "r": p / stake, "eerste_eur": eerste,
+                     "status": "dicht" if t["sluit"] is not None else "open"})
     df = pd.DataFrame(rows)
-    pnl = float((df.r * stake).sum()) if len(df) else 0.0
-    hand = float((df.hand_r.dropna() * stake).sum()) if len(df) else 0.0
-    return {"df": df, "stake": stake, "pnl": pnl, "hand_pnl": hand,
+    pnl = float(df.pnl_eur.sum()) if len(df) else 0.0
+    eerste = float(df.eerste_eur.sum()) if len(df) else 0.0
+    return {"df": df, "stake": stake, "pnl": pnl, "hand_pnl": eerste,
             "laatste_fill": int(f.ts.max()) if len(f) else 0}
 
 
@@ -202,6 +254,11 @@ def main():
         for tr in state["traders"]:
             if tr["status"] != "actief":
                 continue
+            if not tr.get("typ_max"):
+                try:
+                    tr["typ_max"] = typische_max(tr["idx"])
+                except Exception:  # noqa: BLE001
+                    tr["typ_max"] = None
             try:
                 res = bereken(tr, sym, sym_inv, kraken, state["cap"], state["start"])
             except Exception as exc:  # noqa: BLE001
@@ -240,9 +297,9 @@ def rapport(d, state, alle, groep="C"):
     dagen = (NU - state["start"]) / DAG
     naam = {"C": "Papier C (Lighter)", "top20": "Controle top 20 (Lighter)", "rnd20": "Controle random 20 (Lighter)"}[groep]
     md = [f"# {naam} — stand {pd.to_datetime(NU, unit='ms'):%Y-%m-%d %H:%M} UTC (dag {dagen:.1f})", "",
-          f"Start €{k:.0f} → nu €{k + pnl:.2f} ({100 * pnl / k:+.1f}%), met de hand 1 u later: {100 * hand / k:+.1f}%"
+          f"Start €{k:.0f} → nu €{k + pnl:.2f} ({100 * pnl / k:+.1f}%), alleen 1e instap (oude methode): {100 * hand / k:+.1f}%"
           f"{' (GEPAUZEERD)' if state['gepauzeerd'] else ''}", "",
-          "| Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |", "|---|---|---|---|---|---|---|---|---|"]
+          "| Trader | K | Inzet | Status | Trades | Open | Resultaat | Alleen 1e instap | Reden |", "|---|---|---|---|---|---|---|---|---|"]
     for t in state["traders"]:
         md.append(f"| {kort(t['l1'])} | {t['K']} | €{t.get('stake', 0):.0f} | {t['status']} | {t.get('trades_dicht', 0)} | "
                   f"{t.get('open', 0)} | €{t['pnl']:+.2f} | €{t.get('hand_pnl', 0):+.2f} | {t.get('reden', '')} |")
@@ -270,17 +327,11 @@ def rapport(d, state, alle, groep="C"):
         g = pd.read_csv(hp)
         oud = g[g.ts <= NU - 23 * UUR].tail(1)
         dag = (k + pnl) - float(oud.waarde.iloc[0]) if len(oud) else 0.0
-        bericht = [f"C (Lighter): €{k + pnl:.0f} ({100 * pnl / k:+.1f}% totaal, {dag:+.2f} € 24u), met de hand {100 * hand / k:+.1f}%"]
+        bericht = [f"C (Lighter): €{k + pnl:.0f} ({100 * pnl / k:+.1f}% totaal, {dag:+.2f} € 24u), alleen 1e instap {100 * hand / k:+.1f}%"]
         act = [t for t in state["traders"] if t["status"] == "actief"]
         if act:
             b, w = max(act, key=lambda t: t["pnl"]), min(act, key=lambda t: t["pnl"])
             bericht.append(f"beste {kort(b['l1'])} €{b['pnl']:+.1f}, slechtste {kort(w['l1'])} €{w['pnl']:+.1f}")
-        for g in ("top20", "rnd20"):
-            gp = os.path.join(d, g, "geschiedenis.csv")
-            if os.path.exists(gp):
-                x = pd.read_csv(gp).tail(1)
-                if len(x):
-                    bericht.append(f"controle {g}: {float(x.pct.iloc[0]):+.1f}% (met de hand {float(x.hand_pct.iloc[0]):+.1f}%)")
         if MELDINGEN:
             bericht += ["Wijzigingen:"] + MELDINGEN
         try:
