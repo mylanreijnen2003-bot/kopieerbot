@@ -31,10 +31,11 @@ from bt.p2_common import DAG, KOSTEN, UUR, trades_open
 NU = int(time.time() * 1000)
 REGELS = {"A": {"stop": 0.20, "daling": 0.25, "inactief_d": 7, "vorm30": -0.10, "herbalans_d": 14, "top_houden": 16},
           "B": {"stop": 0.15, "daling": 0.20, "inactief_d": 14, "vorm30": -0.05, "herbalans_d": 30, "top_houden": 10},
-          "C": None, "D": None, "E": None}
+          "C": None, "D": None, "E": None, "F": "rotatie"}
 NAMEN = {"A": "A — max rendement", "B": "B — laag risico", "C": "C — controle: recent top 30, geen regels",
          "D": "D — controle: willekeurig 30, geen regels",
-         "E": "E — eigen experiment: 0x2555, €50 op Bitvavo (longs, €10/trade, max 5)"}
+         "E": "E — eigen experiment: 0x2555, €50 op Bitvavo (longs, €10/trade, max 5)",
+         "F": "F — constantheid: top 10 op winst-% (84 d, houdtijd ≥ 12 u, ≥ 1%/trade), elke 14 d"}
 CAP_CONTROLE = 40.0
 GEEN_MELDING = {"C", "D"}   # controlegroepen: alleen in het rapport, niet op de telefoon
 POT = 100.0
@@ -99,7 +100,7 @@ def bereken_bitvavo(tr, mids, bitvavo, inzet=10.0, max_open=5, kosten=0.006):
             "laatste_fill": max([f["time"] for f in fl], default=0)}
 
 
-def bereken(tr, mids, kraken, cap, start, pot=POT):
+def bereken(tr, mids, kraken, cap, start, pot=POT, tradestop=True):
     """Herberekent één actieve trader vanaf toevoegen. Geeft dict met pnl, open, trades."""
     fl = [f for f in hl.fills(tr["address"], tr["toegevoegd"], NU) if f["kind"] == "perp"]
     dicht, open_ = trades_open(fl, tr["toegevoegd"])
@@ -109,7 +110,7 @@ def bereken(tr, mids, kraken, cap, start, pot=POT):
         kr = to_base(t["coin"]) in kraken
         r = t["dir"] * (t["po"] / t["p1"] - 1) - KOSTEN
         gestopt = False
-        if kr:
+        if kr and tradestop:
             h = stop_tijd(t["coin"], t, start)
             if h is not None:
                 r, gestopt = -TRADE_STOP - KOSTEN, True
@@ -121,7 +122,7 @@ def bereken(tr, mids, kraken, cap, start, pot=POT):
         mid = mids.get(c)
         r = t["dir"] * (mid / t["p1"] - 1) - KOSTEN if (kr and mid) else 0.0
         gestopt = False
-        if kr and stop_tijd(c, t, start) is not None:
+        if kr and tradestop and stop_tijd(c, t, start) is not None:
             r, gestopt = -TRADE_STOP - KOSTEN, True
         rows.append({"coin": c, **t, "sluit": None, "kraken": kr, "r": r if kr else 0.0, "stop": gestopt,
                      "hand_r": None, "status": "open"})
@@ -189,6 +190,46 @@ def voeg_toe(vs, sel, v, n):
             MELDINGEN.append(f"{v}: nieuw {kort(a)} (K={ks[a]})")
 
 
+def f_vul(vs, selF):
+    """Groep F: aanvullen tot de top 10 van de nieuwste selectie (ook eerder gestopte traders mogen terug, vers potje)."""
+    actief = {t["address"] for t in vs["traders"] if t["status"] == "actief"}
+    for x in selF["lijst"][:selF["n_actief"]]:
+        a = x["address"]
+        if a in actief:
+            continue
+        vs["traders"].append({"address": a, "K": max(1, int(x["K"])), "toegevoegd": NU, "status": "actief", "pnl": 0.0,
+                              "hand_pnl": 0.0, "piek": POT, "av_start": float(x.get("av", 0))})
+        MELDINGEN.append(f"F: nieuw {kort(a)} (K={int(x['K'])}, winst-% {x.get('winst_pct')})")
+
+
+def f_run(v, vs, selF, mids, kraken, start, alle_trades):
+    """Groep F zoals in de rotatie-backtest: geen tradestop, potje -20% -> eruit (geen vervanger tot herbalans),
+    elke 14 dagen: wie niet in de nieuwe top 10 staat eruit, aanvullen."""
+    for tr in vs["traders"]:
+        if tr["status"] != "actief":
+            continue
+        try:
+            res = bereken(tr, mids, kraken, vs["cap"], start, vs.get("pot", POT), tradestop=False)
+        except Exception as exc:  # noqa: BLE001
+            print(v, kort(tr["address"]), "fout", exc, flush=True)
+            continue
+        tr["pnl"], tr["hand_pnl"] = round(res["pnl"], 2), round(res["hand_pnl"], 2)
+        tr["trades_dicht"] = int((res["df"].status == "dicht").sum()) if len(res["df"]) else 0
+        tr["open"] = int((res["df"].status == "open").sum()) if len(res["df"]) else 0
+        tr["stake"] = round(res["stake"], 2)
+        for _, row in res["df"].iterrows():
+            alle_trades.append({"versie": v, "trader": kort(tr["address"]), **row.to_dict()})
+        if POT + tr["pnl"] <= POT * 0.80:
+            stop_trader(v, tr, "potje -20%")
+    if NU - vs["laatste_herbalans"] >= 14 * DAG and selF.get("gemaakt", 0) > vs["laatste_herbalans"]:
+        top = {x["address"] for x in selF["lijst"][:selF["n_actief"]]}
+        for tr in vs["traders"]:
+            if tr["status"] == "actief" and tr["address"] not in top:
+                stop_trader(v, tr, "herbalans: niet meer in top 10")
+        f_vul(vs, selF)
+        vs["laatste_herbalans"] = NU
+
+
 def stop_trader(v, tr, reden):
     tr.update({"status": "gestopt", "reden": reden, "gestopt_op": NU})
     MELDINGEN.append(f"{v}: {kort(tr['address'])} eruit ({reden}), resultaat €{tr['pnl']:+.2f}")
@@ -200,6 +241,8 @@ def main():
     kraken = set(json.load(open(f"{d}/kraken.json")))
     if os.path.exists(f"{d}/controle.json"):
         sel.update(json.load(open(f"{d}/controle.json")))
+    if os.path.exists(f"{d}/selectie_F.json"):
+        sel["F"] = json.load(open(f"{d}/selectie_F.json"))
     pad = f"{d}/state.json"
     mids = {k: float(v) for k, v in hl.info({"type": "allMids"}, weight=2).items()}
     if os.path.exists(pad):
@@ -218,10 +261,17 @@ def main():
                                    "gepauzeerd": False, "laatste_herbalans": NU, "traders": [], "start": NU}
             voeg_toe(state["versies"][v], sel, v, n)
             print(f"{v}: controlegroep gestart met {n} traders")
+    if "F" in sel and "F" not in state["versies"]:
+        state["versies"]["F"] = {"kapitaal_start": 10 * POT, "cap": 50.0, "pot": POT, "modus": "rotatie",
+                                 "gepauzeerd": False, "laatste_herbalans": NU, "traders": [], "start": NU}
+        f_vul(state["versies"]["F"], sel["F"])
     alle_trades = []
     for v, vs in state["versies"].items():
         regels, n = REGELS[v], sel[v]["n_actief"]
         if vs["gepauzeerd"]:
+            continue
+        if regels == "rotatie":
+            f_run(v, vs, sel[v], mids, kraken, state["start"], alle_trades)
             continue
         if regels is None:
             for tr in vs["traders"]:

@@ -1,0 +1,67 @@
+name: papier2-f-select
+
+# Selectie groep F (constantheid, 84 d). Elke maandag en donderdag; de papier-engine herbalanceert F elke 14 dagen.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 2 * * 1,4"
+
+permissions:
+  contents: write
+
+jobs:
+  kand:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - run: python -m bt.p2_f kand k
+      - uses: actions/upload-artifact@v4
+        with: {name: f-kand, path: k, retention-days: 7}
+
+  api:
+    needs: kand
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: f-kand, path: k}
+      - run: git fetch origin results && git show origin/results:papier2/kraken.json > kraken.json
+      - run: python -m bt.p2_f api ${{ matrix.shard }} 16 k/kand.parquet kraken.json out
+      - uses: actions/upload-artifact@v4
+        with: {name: "f-api-${{ matrix.shard }}", path: out, retention-days: 7}
+
+  kies:
+    needs: api
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "f-api-*", path: api}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: python -m bt.p2_f kies api res/papier2
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A papier2/selectie_F.json papier2/selectie_F.csv
+          git commit -qm "papier2 F selectie $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
