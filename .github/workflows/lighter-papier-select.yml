@@ -49,12 +49,14 @@ jobs:
       - name: Bot starten (of verder met bestaande stand)
         env: {NTFY_TOPIC: "${{ secrets.NTFY_TOPIC }}"}
         run: |
-          if [ -f res/papierC/state.enc ]; then openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in res/papierC/state.enc -out w/state.json; fi
-          python -m lighter.papier w res/papierC res/vast/kraken.json
+          for s in state state_top20 state_rnd20; do
+            if [ -f res/papierC/$s.enc ]; then openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in res/papierC/$s.enc -out w/$s.json; fi
+          done
+          for g in rnd20 top20 C; do python -m lighter.papier w res/papierC res/vast/kraken.json $g || echo "groep $g fout"; done
       - name: Versleuteld opslaan
         if: always()
         run: |
-          for f in selectie state; do
+          for f in selectie state state_top20 state_rnd20; do
             [ -f w/$f.json ] && openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -in w/$f.json -out res/papierC/$f.enc
           done
           rm -rf w

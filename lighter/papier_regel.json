@@ -1,9 +1,13 @@
 {
- "runs": [37149722132, 37182505178],
+ "runs": [
+  37149722132,
+  37182505178
+ ],
  "min_equity": 1000,
  "max_pos": 10,
  "handmatig": false,
  "rang": "potje_3m",
  "lijst": 20,
- "toelichting": "Meeste winst in edge-test 4 okt (walk-forward 1-6 t/m 1-9): +33 tot +41% potje per maand, top 5 boven 100% van willekeurige trekkingen. Top 5 actief, plekken 6-20 als vervangers."
+ "toelichting": "Meeste winst in edge-test 4 okt (walk-forward 1-6 t/m 1-9): +33 tot +41% potje per maand, top 5 boven 100% van willekeurige trekkingen. Top 5 actief, plekken 6-20 als vervangers.",
+ "controle": "top20 (hele lijst) en rnd20 (20 willekeurig uit dezelfde gefilterde pool), vast, gestart 4 okt"
 }

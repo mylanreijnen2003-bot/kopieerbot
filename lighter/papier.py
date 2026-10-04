@@ -10,7 +10,10 @@ Regels (vooraf vastgelegd 4 okt 2026):
 - Trader eruit bij: potje <= €80 | potje <= piek x 0,75 | 7 dagen geen fill | laatste 30 d (>= 15 trades) < -10% |
   > 10 posities open | accountwaarde < $1000 of < 50% van bij toevoegen. Vervanger: volgende uit de selectie, vers €100.
 - Portefeuille-stop: waarde <= 85% van start -> alles stil.
-Gebruik: python -m lighter.papier <privé-map met selectie.json/state.json> <openbare map> <kraken.json>
+Controlegroepen (vast, geen vervanging, geen trader-/portefeuille-stops, wel stop per trade):
+- top20: de hele selectielijst (20); rnd20: 20 willekeurig uit dezelfde gefilterde pool (vaste seed).
+Inzet voor alle groepen gelijk: min(100 / K, €25), zodat de % per groep vergelijkbaar zijn.
+Gebruik: python -m lighter.papier <privé-map met selectie.json/state*.json> <openbare map> <kraken.json> [C|top20|rnd20]
 Openbaar alleen afgekorte adressen; state.json (met account-indexen) blijft privé en wordt versleuteld opgeslagen.
 """
 from __future__ import annotations
@@ -31,7 +34,10 @@ from lighter.selectie import basis, kort, reconstrueer
 
 NU = int(time.time() * 1000)
 DAG, UUR, KW = api.DAG, 3_600_000, 15 * 60_000
-POT, N_ACTIEF, TRADE_STOP, PORT_STOP = 100.0, 5, 0.10, 0.85
+POT, N_ACTIEF, TRADE_STOP, PORT_STOP, CAP = 100.0, 5, 0.10, 0.85, 25.0
+GROEPEN = {"C": {"n": 5, "vast": False, "state": "state.json", "map": ""},
+           "top20": {"n": 20, "vast": True, "state": "state_top20.json", "map": "top20"},
+           "rnd20": {"n": 20, "vast": True, "state": "state_rnd20.json", "map": "rnd20"}}
 REGELS = {"stop": 0.20, "daling": 0.25, "inactief_d": 7, "vorm30": -0.10, "max_open": 10}
 MELDINGEN = []
 _cand = {}
@@ -148,20 +154,21 @@ def regels_check(tr, res):
     return r
 
 
-def voeg_toe(state, sel):
+def voeg_toe(state, lijst, n, vast=False):
     gebruikt = {t["idx"] for t in state["traders"]}
-    for x in sel["lijst"]:
-        if sum(t["status"] == "actief" for t in state["traders"]) >= N_ACTIEF:
+    for x in lijst:
+        if sum(t["status"] == "actief" for t in state["traders"]) >= n:
             break
         if x["idx"] in gebruikt:
             continue
         st, acc = api.account(x["idx"])
         av = float(acc.get("total_asset_value") or 0) if acc else 0.0
-        if av < 1000:
+        if av < 1000 and not vast:
             continue
         state["traders"].append({"idx": x["idx"], "l1": x["l1"], "K": x["K"], "toegevoegd": NU, "status": "actief",
                                  "pnl": 0.0, "hand_pnl": 0.0, "piek": POT, "av_start": av})
-        MELDINGEN.append(f"C: nieuw {kort(x['l1'])} (K={x['K']})")
+        if not vast:
+            MELDINGEN.append(f"C: nieuw {kort(x['l1'])} (K={x['K']})")
 
 
 def stop_trader(tr, reden):
@@ -171,18 +178,25 @@ def stop_trader(tr, reden):
 
 def main():
     prive, uit, kraken_p = sys.argv[1:4]
+    groep = sys.argv[4] if len(sys.argv) > 4 else "C"
+    cfg = GROEPEN[groep]
+    uit = os.path.join(uit, cfg["map"]) if cfg["map"] else uit
     os.makedirs(uit, exist_ok=True)
     sel = json.load(open(f"{prive}/selectie.json"))
+    lijst = sel["lijst"] if groep != "rnd20" else sel.get("random20", [])
+    if groep == "top20":
+        lijst = lijst[:20]
     kraken = set(json.load(open(kraken_p)))
     sym = api.markten()
     sym_inv = {v: k for k, v in sym.items()}
-    pad = f"{prive}/state.json"
+    pad = f"{prive}/{cfg['state']}"
     if os.path.exists(pad):
         state = json.load(open(pad))
     else:
-        state = {"start": NU, "kapitaal_start": N_ACTIEF * POT, "cap": 0.05 * N_ACTIEF * POT, "gepauzeerd": False,
-                 "traders": []}
-        voeg_toe(state, sel)
+        state = {"start": NU, "groep": groep, "gepauzeerd": False, "traders": []}
+        voeg_toe(state, lijst, cfg["n"], cfg["vast"])
+        state["kapitaal_start"] = max(1, len(state["traders"])) * POT
+    state["cap"] = CAP
     alle = []
     if not state["gepauzeerd"]:
         for tr in state["traders"]:
@@ -201,28 +215,31 @@ def main():
             tr["stake"] = round(res["stake"], 2)
             for row in df.to_dict("records"):
                 alle.append({"trader": kort(tr["l1"]), **row})
-            reden = regels_check(tr, res)
-            if reden:
-                stop_trader(tr, "; ".join(reden))
-        waarde = state["kapitaal_start"] + sum(t["pnl"] for t in state["traders"])
-        if waarde <= PORT_STOP * state["kapitaal_start"]:
-            for tr in state["traders"]:
-                if tr["status"] == "actief":
-                    stop_trader(tr, "portefeuille-stop")
-            state["gepauzeerd"] = True
-            MELDINGEN.append(f"C: PORTEFEUILLE-STOP bij €{waarde:.0f}")
-        else:
-            voeg_toe(state, sel)
+            if not cfg["vast"]:
+                reden = regels_check(tr, res)
+                if reden:
+                    stop_trader(tr, "; ".join(reden))
+        if not cfg["vast"]:
+            waarde = state["kapitaal_start"] + sum(t["pnl"] for t in state["traders"])
+            if waarde <= PORT_STOP * state["kapitaal_start"]:
+                for tr in state["traders"]:
+                    if tr["status"] == "actief":
+                        stop_trader(tr, "portefeuille-stop")
+                state["gepauzeerd"] = True
+                MELDINGEN.append(f"C: PORTEFEUILLE-STOP bij €{waarde:.0f}")
+            else:
+                voeg_toe(state, lijst, cfg["n"])
     json.dump(state, open(pad, "w"), indent=1)
-    rapport(uit, state, alle)
+    rapport(uit, state, alle, groep)
 
 
-def rapport(d, state, alle):
+def rapport(d, state, alle, groep="C"):
     k = state["kapitaal_start"]
     pnl = sum(t["pnl"] for t in state["traders"])
     hand = sum(t.get("hand_pnl", 0) for t in state["traders"])
     dagen = (NU - state["start"]) / DAG
-    md = [f"# Papier C (Lighter) — stand {pd.to_datetime(NU, unit='ms'):%Y-%m-%d %H:%M} UTC (dag {dagen:.1f})", "",
+    naam = {"C": "Papier C (Lighter)", "top20": "Controle top 20 (Lighter)", "rnd20": "Controle random 20 (Lighter)"}[groep]
+    md = [f"# {naam} — stand {pd.to_datetime(NU, unit='ms'):%Y-%m-%d %H:%M} UTC (dag {dagen:.1f})", "",
           f"Start €{k:.0f} → nu €{k + pnl:.2f} ({100 * pnl / k:+.1f}%), met de hand 1 u later: {100 * hand / k:+.1f}%"
           f"{' (GEPAUZEERD)' if state['gepauzeerd'] else ''}", "",
           "| Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |", "|---|---|---|---|---|---|---|---|---|"]
@@ -249,7 +266,7 @@ def rapport(d, state, alle):
     print("\n".join(md), flush=True)
     topic = os.environ.get("NTFY_TOPIC")
     dagelijks = pd.to_datetime(NU, unit="ms").hour == 6
-    if topic and (MELDINGEN or dagelijks):
+    if groep == "C" and topic and (MELDINGEN or dagelijks):
         g = pd.read_csv(hp)
         oud = g[g.ts <= NU - 23 * UUR].tail(1)
         dag = (k + pnl) - float(oud.waarde.iloc[0]) if len(oud) else 0.0
@@ -258,6 +275,12 @@ def rapport(d, state, alle):
         if act:
             b, w = max(act, key=lambda t: t["pnl"]), min(act, key=lambda t: t["pnl"])
             bericht.append(f"beste {kort(b['l1'])} €{b['pnl']:+.1f}, slechtste {kort(w['l1'])} €{w['pnl']:+.1f}")
+        for g in ("top20", "rnd20"):
+            gp = os.path.join(d, g, "geschiedenis.csv")
+            if os.path.exists(gp):
+                x = pd.read_csv(gp).tail(1)
+                if len(x):
+                    bericht.append(f"controle {g}: {float(x.pct.iloc[0]):+.1f}% (met de hand {float(x.hand_pct.iloc[0]):+.1f}%)")
         if MELDINGEN:
             bericht += ["Wijzigingen:"] + MELDINGEN
         try:

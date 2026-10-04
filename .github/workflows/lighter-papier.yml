@@ -1,6 +1,6 @@
 name: lighter-papier
 
-# Papier C (Lighter): top 5 Lighter-traders op papier bijwerken, elke 6 uur (dagupdate naar telefoon om ~06:53 UTC).
+# Papier C (Lighter) + controlegroepen top20/rnd20: op papier bijwerken, elke 6 uur (dagupdate naar telefoon om ~06:53 UTC).
 # Selectie en stand alleen versleuteld (LIGHTER_DATA_KEY); openbaar rapport met afgekorte adressen in results/papierC.
 on:
   workflow_dispatch:
@@ -36,12 +36,16 @@ jobs:
           if [ ! -f res/papierC/selectie.enc ]; then echo "nog geen selectie"; exit 0; fi
           mkdir -p w
           openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in res/papierC/selectie.enc -out w/selectie.json
-          if [ -f res/papierC/state.enc ]; then openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in res/papierC/state.enc -out w/state.json; fi
-          python -m lighter.papier w res/papierC res/vast/kraken.json
+          for s in state state_top20 state_rnd20; do
+            if [ -f res/papierC/$s.enc ]; then openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in res/papierC/$s.enc -out w/$s.json; fi
+          done
+          for g in rnd20 top20 C; do python -m lighter.papier w res/papierC res/vast/kraken.json $g || echo "groep $g fout"; done
       - name: Versleuteld opslaan
         if: always()
         run: |
-          [ -f w/state.json ] && openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -in w/state.json -out res/papierC/state.enc
+          for s in state state_top20 state_rnd20; do
+            [ -f w/$s.json ] && openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -in w/$s.json -out res/papierC/$s.enc
+          done
           rm -rf w
           cd res && git add -A papierC
           git commit -qm "papier C $(date -u +%F-%H) [skip ci]" || true
