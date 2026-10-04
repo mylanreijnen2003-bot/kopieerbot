@@ -23,7 +23,17 @@ jobs:
       - run: pip install pandas pyarrow numpy
       - uses: actions/download-artifact@v4
         with: {pattern: "bt-part-*", path: dat, run-id: "${{ env.BT }}", github-token: "${{ github.token }}"}
-      - run: find dat -name "fills_*.parquet" -delete; python -m bt.rot_bv bars dat ob
+      - name: Uurkaarsen maken
+        run: |
+          set -o pipefail
+          { echo "bestanden:"; find dat -type f | sed 's/[0-9]*\.parquet$//' | sort | uniq -c | head -20; find dat -name "fills_*.parquet" -delete; python -m bt.rot_bv bars dat ob; } 2>&1 | tee bars_log.txt
+      - name: Log bewaren
+        if: always()
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results && mkdir -p res/rotatie_bv && cp bars_log.txt res/rotatie_bv/ || true
+          cd res && git add -A rotatie_bv && git commit -qm "rot-bv log [skip ci]" || exit 0
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
       - uses: actions/upload-artifact@v4
         with: {name: bv-ohlc, path: ob, retention-days: 30}
 
