@@ -39,7 +39,7 @@ def main():
                 ts = [t for t in ts if t + H * DAG <= EIND]
                 reeks = []
                 for T in ts:
-                    g = ok[(ok.T == T) & (ok.L == L)].sort_values("per_maand_pct", ascending=False)
+                    g = ok[(ok["T"] == T) & (ok["L"] == L)].sort_values("per_maand_pct", ascending=False)
                     top = g.head(N)
                     rij = {"L": L, "N": N, "H": H, "T": pd.to_datetime(T, unit="ms").date(), "kandidaten": len(g),
                            "top_pct": round(top[f"v{H}_pct"].mean(), 2) if len(top) else 0.0,
