@@ -275,12 +275,6 @@ def rapport(d, state, alle, groep="C"):
         if act:
             b, w = max(act, key=lambda t: t["pnl"]), min(act, key=lambda t: t["pnl"])
             bericht.append(f"beste {kort(b['l1'])} €{b['pnl']:+.1f}, slechtste {kort(w['l1'])} €{w['pnl']:+.1f}")
-        for g in ("top20", "rnd20"):
-            gp = os.path.join(d, g, "geschiedenis.csv")
-            if os.path.exists(gp):
-                x = pd.read_csv(gp).tail(1)
-                if len(x):
-                    bericht.append(f"controle {g}: {float(x.pct.iloc[0]):+.1f}% (met de hand {float(x.hand_pct.iloc[0]):+.1f}%)")
         if MELDINGEN:
             bericht += ["Wijzigingen:"] + MELDINGEN
         try:

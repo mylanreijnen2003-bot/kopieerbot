@@ -39,7 +39,8 @@ jobs:
           for s in state state_top20 state_rnd20; do
             if [ -f res/papierC/$s.enc ]; then openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in res/papierC/$s.enc -out w/$s.json; fi
           done
-          for g in rnd20 top20 C; do python -m lighter.papier w res/papierC res/vast/kraken.json $g || echo "groep $g fout"; done
+          for g in rnd20 top20; do NTFY_TOPIC="" python -m lighter.papier w res/papierC res/vast/kraken.json $g || echo "groep $g fout"; done
+          python -m lighter.papier w res/papierC res/vast/kraken.json C || echo "groep C fout"
       - name: Versleuteld opslaan
         if: always()
         run: |
