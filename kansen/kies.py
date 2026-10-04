@@ -114,6 +114,21 @@ def rapport(naam: str, data: dict, resdir: str, privdir: str, notities: list[str
         L += ["", f"- Top 5 test (potje-%, 1-8 t/m nu): gem. {mean_top:+.1f}%, {pos} van {len(top)} positief",
               f"- Mediaan alle geschikten: {med_all:+.1f}%; top 5 zit op percentiel {pct:.0f} van willekeurige 5-tallen",
               f"- **Oordeel: {'GO' if go else 'NO-GO'}** (eis: gem. > 0, ≥ 3 van 5 positief, > mediaan)", ""]
+    # beschrijvend (niet vooraf vastgelegd): zelfde regel op eerdere knips, telkens 2 maanden test
+    L += ["Robuustheid (beschrijvend): zelfde regel op eerdere knips, test 2 maanden", "",
+          "| Knip | Geschikt | Top 5 gem. | Top 5 positief | Mediaan geschikt |", "|---|---|---|---|---|"]
+    for k in ("2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01", "2026-07-01"):
+        kn = int(pd.Timestamp(k).value // 10**6)
+        rr = [r for a, d in data.items() if (r := beoordeel(a, d["trades"], d["fills_ts"], d.get("maker"), kn, kn + 61 * DAG))]
+        tk = pd.DataFrame(rr)
+        if not len(tk) or not tk.geschikt.any():
+            L.append(f"| {k} | 0 | – | – | – |")
+            continue
+        gk = tk[tk.geschikt].sort_values("keuze_potje_pct", ascending=False)
+        t5 = gk.head(TOP)
+        L.append(f"| {k} | {len(gk)} | {t5.test_potje_pct.mean():+.1f}% | {int((t5.test_potje_pct > 0).sum())} van {len(t5)} | "
+                 f"{gk.test_potje_pct.median():+.1f}% |")
+    L.append("")
     # keuze vandaag: zelfde regel met knip = nu
     rows2 = [r for a, d in data.items() if (r := beoordeel(a, d["trades"], d["fills_ts"], d.get("maker"), nu, nu))]
     t2 = pd.DataFrame(rows2)

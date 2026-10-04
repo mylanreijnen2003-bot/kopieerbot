@@ -92,11 +92,7 @@ class Series:
         p = rec["port"].get("allTime") or {}
         av = {int(t): float(x) for t, x in p.get("av", [])}
         pn = {int(t): float(x) for t, x in p.get("pnl", [])}
-        m = rec["port"].get("month") or {}
-        for t, x in m.get("av", []):  # fijnere data laatste maand toevoegen
-            av.setdefault(int(t), float(x))
-        for t, x in m.get("pnl", []):
-            pn.setdefault(int(t), float(x))
+        # let op: pnlHistory van 'month' begint op 0 aan het begin van de maand -> niet mengen met allTime
         ts = sorted(set(av) & set(pn))
         self.t, self.av, self.idx = [], [], []
         idx = 1.0
@@ -208,11 +204,19 @@ def analyse(datadir: str, resdir: str, privdir: str):
         if len(s.t) >= 3:
             series[r["addr"]] = s
             meta[r["addr"]] = r
-    hs = Series(hlp[0]) if hlp else None
+    kids = [Series(r) for r in recs if r.get("rel") == "child"]
+    kids = [k for k in kids if len(k.t) >= 3]
+
+    def hlp_ret(a, b):
+        """HLP = parent; de winst zit in de child-vaults: gewogen naar accountwaarde op a."""
+        w = [(k.av_at(a) or 0.0, k.ret(a, b)) for k in kids]
+        w = [(x, r) for x, r in w if x > 0 and r is not None]
+        tot = sum(x for x, _ in w)
+        return sum(x * r for x, r in w) / tot if tot > 0 else None
     pts = [len(s.t) for s in series.values()]
     lines = ["# V1 Hyperliquid-vaults — uitslag", "",
              f"Vaults in lijst: {len(recs)} (gesloten: {n_closed}); met bruikbare historie: {len(series)}; "
-             f"mediaan punten per vault: {st.median(pts) if pts else 0}", "",
+             f"mediaan punten per vault: {st.median(pts) if pts else 0}; HLP-child-vaults: {len(kids)}", "",
              "| Venster | Basispool | Geschikt | Top 10 gem. | Top 10 mediaan | Pool mediaan | HLP | Top10 − mediaan |",
              "|---|---|---|---|---|---|---|---|"]
     rows = []
@@ -222,7 +226,8 @@ def analyse(datadir: str, resdir: str, privdir: str):
         pool, top, n_el = evaluate(series, t)
         pr = [net(series[a].ret(t, e) or 0.0) for a in pool]
         tr = [net(series[a].ret(t, e) or 0.0) for a in top]
-        h = net(hs.ret(t, e)) if hs and hs.ret(t, e) is not None else float("nan")
+        hr = hlp_ret(t, e)
+        h = net(hr) if hr is not None else float("nan")
         if not pool or not tr:
             lines.append(f"| {FORM[i]} | {len(pool)} | {n_el} | – | – | – | {h:+.1%} | – |")
             continue

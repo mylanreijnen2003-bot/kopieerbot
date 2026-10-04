@@ -4,7 +4,7 @@ name: kansen-gmx
 on:
   push:
     branches: [kansen]
-    paths: ["kansen/gmx.py", "kansen/kies.py", ".github/workflows/kansen-gmx.yml"]
+    paths: [".github/workflows/kansen-gmx.yml"]
 
 permissions:
   contents: write

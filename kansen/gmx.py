@@ -108,8 +108,22 @@ def trades(df: pd.DataFrame):
     return out
 
 
+def markt_namen() -> dict:
+    """marketAddress (eerste 8 tekens, zoals in trades) -> symbool van de index-token."""
+    try:
+        mi = gql("{ marketInfos(limit: 1000) { id indexTokenAddress } }")["marketInfos"]
+        tok = requests.get("https://arbitrum-api.gmxinfra.io/tokens", timeout=60).json()
+        tok = tok.get("tokens", tok) if isinstance(tok, dict) else tok
+        sym = {t["address"].lower(): t["symbol"] for t in tok}
+        return {m["id"][:8].lower(): sym.get((m.get("indexTokenAddress") or "").lower(), m["id"][:8]) for m in mi}
+    except Exception as e:
+        print("marktnamen niet op te halen:", repr(e)[:200])
+        return {}
+
+
 def analyse(datadir: str, res: str, priv: str):
     from kansen.kies import rapport
+    namen = markt_namen()
     files = sorted(Path(datadir).rglob("gmx-*.parquet"))
     df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True).drop_duplicates("id")
     df["orderType"] = df.orderType.astype(int)
@@ -118,7 +132,7 @@ def analyse(datadir: str, res: str, priv: str):
     for acc, g in df.groupby("account", sort=False):
         if len(g) < 150:
             continue
-        tr = trades(g)
+        tr = [(namen.get(c[:8].lower(), c[:8]) + c[8:], a, b, r) for c, a, b, r in trades(g)]
         if len(tr) < 100:
             continue
         data[acc] = {"trades": tr, "fills_ts": (g.timestamp.astype("int64") * 1000).values, "maker": None}

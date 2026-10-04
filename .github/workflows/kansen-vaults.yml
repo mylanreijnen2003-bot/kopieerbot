@@ -5,7 +5,7 @@ name: kansen-vaults
 on:
   push:
     branches: [kansen]
-    paths: ["kansen/vaults.py", ".github/workflows/kansen-vaults.yml"]
+    paths: [".github/workflows/kansen-vaults.yml"]
 
 permissions:
   contents: write
