@@ -1,0 +1,31 @@
+name: kopietest-eq
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [orderly]
+    paths: ["kopietest/RUN_EQ"]
+
+permissions:
+  contents: write
+
+jobs:
+  eq:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - name: Resultatenbranch
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: python -m kopietest.eq res/kopietest/run1/eq res/kopietest/run1/kopietest-hist/fills.csv.gz
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A kopietest
+          git commit -qm "kopietest equity [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
