@@ -24,6 +24,7 @@ from lighter.selectie import lees, reconstrueer
 DAG = api.DAG
 NU = int(time.time() * 1000)
 RNG = np.random.default_rng(2026)
+STOPS = [None, 0.10, 0.20, 0.30, 0.50]
 N_PERM = 1000
 MAAND = 30 * DAG
 CONFIGS = {
@@ -235,21 +236,33 @@ def staartrisico(T, folds, grenzen, sym):
                     m = sym_inv.get(tr["coin"])
                     if m is None:
                         continue
-                    rs, gestopt, door = met_stop(tr, uurkoersen(m, start, cache))
-                    rijen.append({"config": naam, "knip": K, "idx": r.idx, "top5": r.Index in kies(folds[K], c).index,
-                                  "pot": max(1, r.p90), "sluit": tr["sluit"], "r_zonder": tr["r"] - 0.0012,
-                                  "r_met": rs, "gestopt": gestopt, "doorgeschoten": door})
+                    c1h = uurkoersen(m, start, cache)
+                    for stop in STOPS:
+                        if stop is None:
+                            rs, gestopt, door = tr["guit"] / tr["px0"] * 0 + tr["dir"] * (tr["guit"] / tr["px0"] - 1) - 0.0032, False, False
+                        else:
+                            rs, gestopt, door = met_stop(tr, c1h, stop)
+                        rijen.append({"config": naam, "stop": str(stop), "knip": K, "idx": r.idx, "pot": max(1, r.p90),
+                                      "sluit": tr["sluit"], "r_zonder": tr["r"] - 0.0012,
+                                      "r_met": rs, "gestopt": gestopt, "doorgeschoten": door})
     df = pd.DataFrame(rijen)
-    stop_sam = df.groupby("config").agg(trades=("r_met", "size"), gestopt_pct=("gestopt", "mean"),
+    stop_sam = df.groupby(["config", "stop"]).agg(trades=("r_met", "size"), gestopt_pct=("gestopt", "mean"),
                                         doorgeschoten_van_gestopt=("doorgeschoten", "sum"),
                                         slechtste_met_stop_pct=("r_met", "min"), slechtste_zonder_pct=("r_zonder", "min"),
                                         gem_met_pct=("r_met", "mean"), gem_zonder_pct=("r_zonder", "mean")).reset_index()
     for k in ("gestopt_pct", "slechtste_met_stop_pct", "slechtste_zonder_pct", "gem_met_pct", "gem_zonder_pct"):
         stop_sam[k] = (100 * stop_sam[k]).round(2)
     # Monte Carlo: portefeuille van 5 potjes; elk potje = willekeurige waargenomen trader-maand (top 10 per knip)
+    # potje per trader-maand per stopniveau
+    tm = df.assign(bijdrage=df.r_met * np.minimum(100 / df.pot, 25) / 100).groupby(["config", "stop", "knip", "idx"]).bijdrage.sum()
+    stop_maand = tm.groupby(level=[0, 1]).agg(["mean", "median", lambda x: (x > 0).mean(), "min"]).reset_index()
+    stop_maand.columns = ["config", "stop", "potje_gem", "potje_mediaan", "winstgevend", "slechtste_trader_maand"]
+    for k in ("potje_gem", "potje_mediaan", "winstgevend", "slechtste_trader_maand"):
+        stop_maand[k] = (100 * stop_maand[k]).round(1)
+    stop_sam = stop_sam.merge(stop_maand, on=["config", "stop"])
     mc = {}
-    for naam in CONFIGS:
-        x = df[df.config == naam]
+    for naam, stop in itertools.product(CONFIGS, ["None", "0.3"]):
+        x = df[(df.config == naam) & (df.stop == stop)]
         maanden = [g.sort_values("sluit") for _, g in x.groupby(["knip", "idx"])]
         if len(maanden) < 5:
             continue
@@ -267,7 +280,7 @@ def staartrisico(T, folds, grenzen, sym):
             eind.append(eq[-1] - 1)
             dalingen.append(float((eq / np.maximum.accumulate(eq) - 1).min()))
         eind, dalingen = np.array(eind), np.array(dalingen)
-        mc[naam] = {"trader_maanden": len(paden),
+        mc[f"{naam}_stop_{stop}"] = {"trader_maanden": len(paden),
                     "maand_p5_p50_p95_pct": [round(100 * float(np.percentile(eind, q)), 1) for q in (5, 50, 95)],
                     "kans_verliesmaand_pct": round(100 * float((eind < 0).mean()), 1),
                     "daling_p50_p95_pct": [round(100 * float(np.percentile(dalingen, q)), 1) for q in (50, 5)],
@@ -281,7 +294,7 @@ def main():
     os.makedirs(uit, exist_ok=True)
     kraken = set(json.load(open(kraken_p)))
     T, folds, grenzen, sym = laad(d, kraken)
-    rc = reality_check(folds)
+    rc = reality_check(folds) if not os.environ.get("ZONDER_RC") else "overgeslagen (zie eerdere run)"
     hb, corr = houdbaarheid(T, folds, grenzen)
     hb.to_csv(f"{uit}/houdbaarheid.csv", index=False)
     st, mc = staartrisico(T, folds, grenzen, sym)

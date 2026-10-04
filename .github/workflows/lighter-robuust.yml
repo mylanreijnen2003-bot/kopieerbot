@@ -39,8 +39,9 @@ jobs:
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
           git fetch origin results && git worktree add -B results res origin/results
-          rm -rf res/lighter/robuust && mkdir -p res/lighter/robuust
-      - run: python -m lighter.robuust dat res/vast/kraken.json res/lighter/robuust
+          mkdir -p res/lighter/robuust2
+      - run: python -m lighter.robuust dat res/vast/kraken.json res/lighter/robuust22
+        env: {ZONDER_RC: "1"}
       - name: Opslaan
         if: always()
         run: |
