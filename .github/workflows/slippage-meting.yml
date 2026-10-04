@@ -1,0 +1,63 @@
+name: slippage-meting
+
+# Meet 5 uur per dag de echte slippage bij de papier-HL-traders (t/m 14-10). Code: branch orderly, kopietest/live.py.
+# Uitkomst: branch results, kopietest/live-<datum>/ en kopietest/slippage/rapport.md.
+on:
+  schedule:
+    - cron: "7 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  meten:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix: {i: [0, 1]}
+    steps:
+      - name: Datumcheck
+        id: d
+        run: echo "aan=$([ $(date -u +%Y%m%d) -le 20261014 ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.d.outputs.aan == '1'
+        with: {ref: orderly}
+      - uses: actions/setup-python@v5
+        if: steps.d.outputs.aan == '1'
+        with: {python-version: "3.12"}
+      - if: steps.d.outputs.aan == '1'
+        run: |
+          pip install pandas numpy requests websockets
+          git fetch origin results && git show origin/results:papier-hl/selectie.json > selectie.json
+          DUUR_MIN=290 TRADERS_JSON=selectie.json SHARD=${{ matrix.i }} NSHARD=2 timeout 18300 python -m kopietest.live out/s${{ matrix.i }} || true
+      - uses: actions/upload-artifact@v4
+        if: steps.d.outputs.aan == '1'
+        with: {name: "slip-${{ matrix.i }}", path: "out/s${{ matrix.i }}"}
+
+  opslaan:
+    needs: meten
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: orderly}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas numpy requests tabulate
+      - uses: actions/download-artifact@v4
+        with: {pattern: "slip-*", path: out}
+      - name: Opslaan en samenvatten
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          BERICHT: "1"
+        run: |
+          ls out/ >/dev/null 2>&1 || exit 0
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          D=res/kopietest/live-$(date -u +%F); mkdir -p $D; cp -r out/* $D/ || true
+          python -m kopietest.slip_samenvatting res
+          cd res && git add -A kopietest
+          git commit -qm "slippage-meting $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
