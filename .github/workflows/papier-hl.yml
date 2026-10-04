@@ -22,6 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {ref: orderly}
+      - name: kluis.py van main
+        run: git fetch -q origin main && mkdir -p bt && git show FETCH_HEAD:bt/kluis.py > bt/kluis.py
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas numpy requests
