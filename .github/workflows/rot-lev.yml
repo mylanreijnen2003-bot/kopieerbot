@@ -1,0 +1,64 @@
+name: rot-lev
+
+# Constantheid-rotatie (Kraken) met 2x hefboom vs 1x, potjestop -20% / -40%, liquidatie bij 50% tegen.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  ROT: "37197767731"
+  BT: "37124999519"
+  BARS: "37215239671"
+  HEFBOOM: "1"
+
+jobs:
+  stats:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: rot-uni, path: uni, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "rot-part-*", path: dat, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {name: bv-ohlc, path: ob, run-id: "${{ env.BARS }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "${{ env.BT }}", github-token: "${{ github.token }}"}
+      - run: python -m bt.rot_bv stats ${{ matrix.shard }} 12 uni/universe.parquet dat ob/ohlc.parquet beurs out
+      - uses: actions/upload-artifact@v4
+        with: {name: "lev-stats-${{ matrix.shard }}", path: out, retention-days: 30}
+
+  kies:
+    needs: stats
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "lev-stats-*", path: st}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: mkdir -p res/rotatie_lev && python -m bt.rot_bv kies st res/rotatie_lev 2>&1 | tee res/rotatie_lev/log.txt
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A rotatie_lev
+          git commit -qm "rotatie hefboom $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

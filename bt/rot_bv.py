@@ -25,8 +25,13 @@ from bt.rot_stats import DAG, EIND, TS, k90
 
 UUR = 3_600_000
 LS, HS = [42, 84], [14, 28]
-VAR = {"kr0": ("kr", 0.0032, None), "kr10": ("kr", 0.0032, 0.10), "bv0": ("bv", 0.0060, None),
-       "bv20": ("bv", 0.0060, 0.20), "bv10": ("bv", 0.0060, 0.10)}
+# naam: (soort, kosten, tradestop, hefboom, potjestop)
+VAR = {"kr0": ("kr", 0.0032, None, 1, 0.20), "kr10": ("kr", 0.0032, 0.10, 1, 0.20),
+       "bv0": ("bv", 0.0060, None, 1, 0.20), "bv20": ("bv", 0.0060, 0.20, 1, 0.20), "bv10": ("bv", 0.0060, 0.10, 1, 0.20)}
+if os.environ.get("HEFBOOM"):
+    # 2x: liquidatie bij 50% koers tegen (hele inzet van die trade weg); potjestop -20% of -40%
+    VAR = {"kr0": ("kr", 0.0032, None, 1, 0.20), "kr0_2x_p20": ("kr", 0.0032, None, 2, 0.20),
+           "kr0_2x_p40": ("kr", 0.0032, None, 2, 0.40), "kr0_1x_p40": ("kr", 0.0032, None, 1, 0.40)}
 
 
 def bars(src, out):
@@ -94,10 +99,12 @@ def stats(shard, n, upath, d, bpath, vdir, out):
                            "kraken_pct": round(100 * kr[m].mean(), 1), "bv_pct": round(100 * bv[m].mean(), 1),
                            "fills_per_dag": float(pd.Series(fm // DAG).value_counts().median()) if len(fm) else 0.0,
                            "dagen_sinds_laatste": round((T - c[m].max()) / DAG, 1)}
+                    if os.environ.get("HEFBOOM") and L != 84:
+                        continue
                     for H in HS:
                         fw = np.where((o >= T) & (o < T + H * DAG))[0]
                         fw = fw[np.argsort(c[fw])]
-                        for naam, (soort, kost, stop) in VAR.items():
+                        for naam, (soort, kost, stop, lev, pstop) in VAR.items():
                             mag = kr if soort == "kr" else bv
                             tot = 0.0
                             for i in fw:
@@ -106,9 +113,11 @@ def stats(shard, n, upath, d, bpath, vdir, out):
                                 r = raw[i]
                                 if stop and gestopt(co[i], o[i], c[i], p1[i], dr[i], stop):
                                     r = -stop
-                                tot += (r - kost) / k
-                                if tot <= -0.20:
-                                    tot = -0.20
+                                if lev > 1 and gestopt(co[i], o[i], c[i], p1[i], dr[i], 1.0 / lev):
+                                    r = -1.0 / lev
+                                tot += lev * (r - kost) / k
+                                if tot <= -pstop:
+                                    tot = -pstop
                                     break
                             rec[f"v{H}_{naam}"] = round(100 * tot, 3)
                     rows.append(rec)
@@ -129,7 +138,7 @@ def kies(sdir, out):
     sam = []
     for naam in VAR:
         ok = basis[basis.bv_pct >= 50] if naam.startswith("bv") else basis[basis.kraken_pct >= 70]
-        for L in LS:
+        for L in ([84] if os.environ.get("HEFBOOM") else LS):
             for H in HS:
                 ts = [t for t in (TS if H == 14 else TS[::2]) if t + H * DAG <= EIND]
                 for N in [5, 10, 20]:
