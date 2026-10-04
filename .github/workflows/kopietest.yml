@@ -1,0 +1,61 @@
+name: kopietest
+
+# Hoe goed kan een bot traders nadoen? hist = 30 dagen orders/fills/candles, live = 5 uur meten (websocket/polling).
+# Start door orderly/../kopietest/RUN te wijzigen. Uitkomst op branch results, map kopietest/.
+on:
+  workflow_dispatch:
+  push:
+    branches: [orderly]
+    paths: ["kopietest/RUN"]
+
+permissions:
+  contents: write
+
+jobs:
+  hist:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests websockets
+      - run: cat kopietest/RUN >> "$GITHUB_ENV"
+      - run: python -m kopietest.hist out/hist
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: kopietest-hist, path: out/hist}
+
+  live:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests websockets
+      - run: cat kopietest/RUN >> "$GITHUB_ENV"
+      - run: timeout $(( ${DUUR_MIN:-300} * 60 + 600 )) python -m kopietest.live out/live || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: kopietest-live, path: out/live}
+
+  opslaan:
+    needs: [hist, live]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: cat kopietest/RUN >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with: {pattern: "kopietest-*", path: out}
+      - name: Opslaan
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          rm -rf "res/kopietest/$UIT" && mkdir -p "res/kopietest/$UIT"
+          cp -r out/* "res/kopietest/$UIT/" || true
+          echo "klaar $(date -u) run ${{ github.run_id }}" > "res/kopietest/$UIT/status.txt"
+          cd res && git add -A kopietest
+          git commit -qm "kopietest $UIT $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
