@@ -1,13 +1,13 @@
-# Controle random 20 (Lighter) — stand 2026-10-04 16:37 UTC (dag 0.1)
+# Controle random 20 (Lighter) — stand 2026-10-04 21:59 UTC (dag 0.3)
 
-Start €2000 → nu €1999.81 (-0.0%), alleen 1e instap (oude methode): +0.0%
+Start €2000 → nu €2001.08 (+0.1%), alleen 1e instap (oude methode): +0.0%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Alleen 1e instap | Reden |
 |---|---|---|---|---|---|---|---|---|
 | 0x27B7…5F61 | 7 | €14 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x515A…6134 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xA32C…AAFC | 6 | €17 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0xba8C…e403 | 5 | €20 | actief | 0 | 1 | €-0.19 | €+0.00 |  |
+| 0xba8C…e403 | 5 | €20 | actief | 0 | 1 | €-0.54 | €+0.00 |  |
 | 0xc16E…Fc09 | 3 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x5b5A…45a4 | 6 | €17 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x5137…Df65 | 2 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
@@ -17,10 +17,10 @@ Start €2000 → nu €1999.81 (-0.0%), alleen 1e instap (oude methode): +0.0%
 | 0x427E…3038 | 5 | €20 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xfD30…9E8c | 6 | €17 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xA19A…a36B | 8 | €12 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0x80B8…6965 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
+| 0x80B8…6965 | 4 | €25 | actief | 0 | 1 | €+1.51 | €+0.00 |  |
 | 0x19eb…2B89 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x8839…4Fd2 | 1 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xa046…9373 | 1 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x7CBE…B17c | 9 | €11 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0x4fF5…7947 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
+| 0x4fF5…7947 | 4 | €25 | actief | 0 | 3 | €+0.11 | €+0.00 |  |
 | 0x99Bc…2Fd9 | 5 | €20 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
