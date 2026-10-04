@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: volg
@@ -26,15 +27,24 @@ jobs:
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
           git fetch origin results && git worktree add -B results res origin/results
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - name: Bitvavo-lijst bewaren
+        run: |
+          f=$(find beurs -name beurzen.json 2>/dev/null | head -1)
+          if [ -n "$f" ] && [ ! -f res/papier2/bitvavo.json ]; then
+            python -c "import json,sys;json.dump(sorted(json.load(open('$f')).get('bitvavo',[])),open('res/papier2/bitvavo.json','w'))"
+          fi
       - name: Controleren
         run: |
           if [ ! -f res/papier2/volg.json ]; then echo "geen volglijst"; exit 0; fi
-          python -m bt.volg res/papier2 res/papier2/kraken.json
+          python -m bt.volg res/papier2 res/papier2/kraken.json res/papier2/bitvavo.json
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A papier2/volg_state.json 2>/dev/null || true
+          cd res && git add -A papier2/volg_state.json papier2/bitvavo.json 2>/dev/null || true
           git commit -qm "volg $(date -u +%F-%H%M) [skip ci]" || exit 0
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 5; done

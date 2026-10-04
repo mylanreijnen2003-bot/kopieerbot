@@ -33,7 +33,8 @@ REGELS = {"A": {"stop": 0.20, "daling": 0.25, "inactief_d": 7, "vorm30": -0.10, 
           "B": {"stop": 0.15, "daling": 0.20, "inactief_d": 14, "vorm30": -0.05, "herbalans_d": 30, "top_houden": 10},
           "C": None, "D": None, "E": None}
 NAMEN = {"A": "A — max rendement", "B": "B — laag risico", "C": "C — controle: recent top 30, geen regels",
-         "D": "D — controle: willekeurig 30, geen regels", "E": "E — eigen experiment: 0x2555 met €50"}
+         "D": "D — controle: willekeurig 30, geen regels",
+         "E": "E — eigen experiment: 0x2555, €50 op Bitvavo (longs, €10/trade, max 5)"}
 CAP_CONTROLE = 40.0
 POT = 100.0
 TRADE_STOP = 0.10
@@ -71,6 +72,30 @@ def px_later(coin, ts, start):
     c = candles(_c15, coin, start, "15m")
     k = c.get(math.ceil((ts + UUR) / (15 * 60_000)) * 15 * 60_000)
     return k[0] if k else None
+
+
+def bereken_bitvavo(tr, mids, bitvavo, inzet=10.0, max_open=5, kosten=0.006):
+    """Spiegel van de volg-meldingen: alleen longs in Bitvavo-munten, vaste inzet, max N tegelijk, geen tradestop."""
+    fl = [f for f in hl.fills(tr["address"], tr["toegevoegd"], NU) if f["kind"] == "perp"]
+    dicht, open_ = trades_open(fl, tr["toegevoegd"])
+    alle = [dict(t, status="dicht") for t in dicht] + [dict(t, coin=c, sluit=None, status="open") for c, t in open_.items()]
+    alle = sorted([t for t in alle if t["dir"] > 0 and to_base(t["coin"]) in bitvavo], key=lambda t: t["open"])
+    rows, actief = [], []
+    for t in alle:
+        actief = [x for x in actief if x["sluit"] is not None and x["sluit"] > t["open"] or x["sluit"] is None]
+        if len(actief) >= max_open:
+            continue
+        actief.append(t)
+        if t["status"] == "dicht":
+            r = t["po"] / t["p1"] - 1 - kosten
+        else:
+            m = mids.get(t["coin"])
+            r = (m / t["p1"] - 1 - kosten) if m else 0.0
+        rows.append({**t, "kraken": True, "r": r, "stop": False, "hand_r": None})
+    df = pd.DataFrame(rows)
+    pnl = float((df.r * inzet).sum()) if len(df) else 0.0
+    return {"fills": fl, "df": df, "stake": inzet, "pnl": pnl, "hand_pnl": 0.0,
+            "laatste_fill": max([f["time"] for f in fl], default=0)}
 
 
 def bereken(tr, mids, kraken, cap, start, pot=POT):
@@ -200,7 +225,11 @@ def main():
         if regels is None:
             for tr in vs["traders"]:
                 try:
-                    res = bereken(tr, mids, kraken, vs["cap"], state["start"], vs.get("pot", POT))
+                    if vs.get("modus") == "bitvavo":
+                        bv = set(json.load(open(f"{d}/bitvavo.json"))) if os.path.exists(f"{d}/bitvavo.json") else set()
+                        res = bereken_bitvavo(tr, mids, bv, vs.get("inzet", 10.0), vs.get("max_open", 5))
+                    else:
+                        res = bereken(tr, mids, kraken, vs["cap"], state["start"], vs.get("pot", POT))
                 except Exception as exc:  # noqa: BLE001
                     print(v, kort(tr["address"]), "fout", exc, flush=True)
                     continue

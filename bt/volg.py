@@ -2,7 +2,9 @@
 Lijst: <map>/volg.json  {"traders": [{"address": ..., "pot": 50, "K": 3, "naam": "..."}]}
 Staat: <map>/volg_state.json (laatste verwerkte fill per trader, open posities met instapprijs).
 Per munt per run samengevat: OPEN / BIJKOOP / AFBOUW / SLUIT / OMDRAAI. Posities van vóór het volgen: alleen ter info.
-Gebruik: python -m bt.volg <map> <kraken.json>
+Modus "bitvavo" (per trader in volg.json): alleen longs in munten die op Bitvavo staan, vaste inzet `inzet`, max `max_open`
+kopieën tegelijk; waarschuwing als een kopie -25% staat.
+Gebruik: python -m bt.volg <map> <kraken.json> [bitvavo.json]
 """
 
 from __future__ import annotations
@@ -39,6 +41,7 @@ def stuur(titel, tekst, prio="default"):
 def main():
     d, kpad = sys.argv[1:3]
     kraken = set(json.load(open(kpad)))
+    bitvavo = set(json.load(open(sys.argv[3]))) if len(sys.argv) > 3 and os.path.exists(sys.argv[3]) else set()
     cfg = json.load(open(f"{d}/volg.json"))
     spad = f"{d}/volg_state.json"
     state = json.load(open(spad)) if os.path.exists(spad) else {}
@@ -53,6 +56,9 @@ def main():
             state[a] = {"laatste": NU, "pos": {c: {"oud": True} for c in oud}}
             stuur(f"Volgen gestart: {naam}", f"Inzet per trade ~€{inzet:.0f} (pot €{t['pot']:.0f} / {t['K']}). "
                   f"Open posities van vóór nu ({', '.join(oud) or 'geen'}) niet kopiëren.")
+            continue
+        if t.get("modus") == "bitvavo":
+            bitvavo_run(t, a, naam, st, bitvavo)
             continue
         fl = [f for f in hl.fills(a, st["laatste"] + 1, NU) if f["kind"] == "perp"]
         if not fl:
@@ -95,6 +101,52 @@ def main():
                           f"Prijs {px:.6g}. Doe na: verkoop ~{deel:.0f}% van je {sym}-positie.", "default")
         st["laatste"] = max(f["time"] for f in fl)
     json.dump(state, open(spad, "w"), indent=1)
+
+
+def bitvavo_run(t, a, naam, st, bitvavo):
+    inzet, max_open = float(t.get("inzet", 10)), int(t.get("max_open", 5))
+    kopie = st.setdefault("kopie", {})
+    fl = [f for f in hl.fills(a, st["laatste"] + 1, NU) if f["kind"] == "perp"]
+    per = {}
+    for f in fl:
+        per.setdefault(f["coin"], []).append(f)
+    for coin, fs in per.items():
+        s0, s1 = fs[0]["start"], fs[-1]["after"]
+        q = sum(abs(f["signed"]) for f in fs)
+        px = sum(abs(f["signed"]) * f["px"] for f in fs) / q if q else fs[-1]["px"]
+        b = to_base(coin)
+        markt = f"{b}-EUR"
+        heeft = coin in kopie
+        nieuw_long = s1 > 0 and (s0 <= 0)
+        if heeft and (s1 == 0 or s1 < 0):
+            k = kopie.pop(coin)
+            r = px / k["px"] - 1
+            stuur(f"{naam}: VERKOOP {b} ({100 * r:+.1f}%)",
+                  f"Bitvavo {markt}: verkoop alles. Prijs ~{px:.6g} (instap {k['px']:.6g}).", "high")
+        elif heeft and abs(s1) < abs(s0) and s1 > 0:
+            deel = 100 * (abs(s0) - abs(s1)) / abs(s0)
+            stuur(f"{naam}: deels verkopen {b} {deel:.0f}%", f"Bitvavo {markt}: verkoop ~{deel:.0f}% van je {b}. Prijs ~{px:.6g}.")
+        if nieuw_long:
+            if b not in bitvavo:
+                stuur(f"{naam}: long {b} (overslaan)", f"{b} staat niet op Bitvavo.", "min")
+            elif len(kopie) >= max_open:
+                stuur(f"{naam}: long {b} (overslaan)", f"Al {max_open} posities open.", "min")
+            else:
+                kopie[coin] = {"px": px, "open": fs[0]["time"], "gewaarschuwd": False}
+                stuur(f"{naam}: KOOP {b}", f"Bitvavo {markt}: koop voor €{inzet:.0f}. Prijs ~{px:.6g}. "
+                      f"({len(kopie)}/{max_open} posities open)", "high")
+        elif s1 < 0 and s0 >= 0 and not heeft:
+            stuur(f"{naam}: short {b} (overslaan)", "Short kan niet op Bitvavo.", "min")
+    if fl:
+        st["laatste"] = max(f["time"] for f in fl)
+    if kopie:
+        mids = {k: float(v) for k, v in hl.info({"type": "allMids"}, weight=2).items()}
+        for coin, k in kopie.items():
+            m = mids.get(coin)
+            if m and not k.get("gewaarschuwd") and m / k["px"] - 1 <= -0.25:
+                k["gewaarschuwd"] = True
+                stuur(f"{naam}: {to_base(coin)} staat -25%", "Hij houdt vaak vast door dalingen; jouw keuze: houden of verkopen.",
+                      "high")
 
 
 if __name__ == "__main__":
