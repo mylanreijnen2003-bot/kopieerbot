@@ -30,7 +30,11 @@ from bt.p2_common import DAG, KOSTEN, UUR, trades_open
 
 NU = int(time.time() * 1000)
 REGELS = {"A": {"stop": 0.20, "daling": 0.25, "inactief_d": 7, "vorm30": -0.10, "herbalans_d": 14, "top_houden": 16},
-          "B": {"stop": 0.15, "daling": 0.20, "inactief_d": 14, "vorm30": -0.05, "herbalans_d": 30, "top_houden": 10}}
+          "B": {"stop": 0.15, "daling": 0.20, "inactief_d": 14, "vorm30": -0.05, "herbalans_d": 30, "top_houden": 10},
+          "C": None, "D": None}
+NAMEN = {"A": "A — max rendement", "B": "B — laag risico", "C": "C — controle: recent top 30, geen regels",
+         "D": "D — controle: willekeurig 30, geen regels"}
+CAP_CONTROLE = 40.0
 POT = 100.0
 TRADE_STOP = 0.10
 PORT_STOP = 0.85
@@ -155,7 +159,8 @@ def voeg_toe(vs, sel, v, n):
             av = 0.0
         vs["traders"].append({"address": a, "K": ks[a], "toegevoegd": NU, "status": "actief", "pnl": 0.0,
                               "hand_pnl": 0.0, "piek": POT, "av_start": av})
-        MELDINGEN.append(f"{v}: nieuw {kort(a)} (K={ks[a]})")
+        if v in ("A", "B"):
+            MELDINGEN.append(f"{v}: nieuw {kort(a)} (K={ks[a]})")
 
 
 def stop_trader(v, tr, reden):
@@ -167,6 +172,8 @@ def main():
     d = sys.argv[1]
     sel = json.load(open(f"{d}/selectie.json"))
     kraken = set(json.load(open(f"{d}/kraken.json")))
+    if os.path.exists(f"{d}/controle.json"):
+        sel.update(json.load(open(f"{d}/controle.json")))
     pad = f"{d}/state.json"
     mids = {k: float(v) for k, v in hl.info({"type": "allMids"}, weight=2).items()}
     if os.path.exists(pad):
@@ -178,10 +185,31 @@ def main():
             state["versies"][v] = {"kapitaal_start": n * POT, "cap": 0.05 * n * POT, "gepauzeerd": False,
                                    "laatste_herbalans": NU, "traders": []}
             voeg_toe(state["versies"][v], sel, v, n)
+    for v in ["C", "D"]:
+        if v in sel and v not in state["versies"]:
+            n = sel[v]["n_actief"]
+            state["versies"][v] = {"kapitaal_start": n * POT, "cap": CAP_CONTROLE, "gepauzeerd": False,
+                                   "laatste_herbalans": NU, "traders": [], "start": NU}
+            voeg_toe(state["versies"][v], sel, v, n)
+            MELDINGEN.append(f"{v}: controlegroep gestart met {n} traders")
     alle_trades = []
     for v, vs in state["versies"].items():
         regels, n = REGELS[v], sel[v]["n_actief"]
         if vs["gepauzeerd"]:
+            continue
+        if regels is None:
+            for tr in vs["traders"]:
+                try:
+                    res = bereken(tr, mids, kraken, vs["cap"], state["start"])
+                except Exception as exc:  # noqa: BLE001
+                    print(v, kort(tr["address"]), "fout", exc, flush=True)
+                    continue
+                tr["pnl"], tr["hand_pnl"] = round(res["pnl"], 2), round(res["hand_pnl"], 2)
+                tr["trades_dicht"] = int((res["df"].status == "dicht").sum()) if len(res["df"]) else 0
+                tr["open"] = int((res["df"].status == "open").sum()) if len(res["df"]) else 0
+                tr["stake"] = round(res["stake"], 2)
+                for _, row in res["df"].iterrows():
+                    alle_trades.append({"versie": v, "trader": kort(tr["address"]), **row.to_dict()})
             continue
         if NU - vs["laatste_herbalans"] >= regels["herbalans_d"] * DAG and sel["gemaakt"] > vs["laatste_herbalans"]:
             top = set(lijst(sel, v)[0][:regels["top_houden"]])
@@ -230,7 +258,7 @@ def rapport(d, state, mids, alle_trades):
         pnl = sum(t["pnl"] for t in vs["traders"])
         hand = sum(t.get("hand_pnl", 0) for t in vs["traders"])
         k = vs["kapitaal_start"]
-        naam = "A — max rendement" if v == "A" else "B — laag risico"
+        naam = NAMEN[v]
         regels_md += [f"## Versie {naam}{' (GEPAUZEERD)' if vs['gepauzeerd'] else ''}",
                       f"Start €{k:.0f} → nu €{k + pnl:.2f} ({100 * pnl / k:+.1f}%), met de hand 1 u later: {100 * hand / k:+.1f}%", "",
                       "| Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |", "|---|---|---|---|---|---|---|---|---|"]
