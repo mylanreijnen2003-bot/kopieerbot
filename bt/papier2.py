@@ -36,6 +36,7 @@ NAMEN = {"A": "A — max rendement", "B": "B — laag risico", "C": "C — contr
          "D": "D — controle: willekeurig 30, geen regels",
          "E": "E — eigen experiment: 0x2555, €50 op Bitvavo (longs, €10/trade, max 5)"}
 CAP_CONTROLE = 40.0
+GEEN_MELDING = {"C", "D"}   # controlegroepen: alleen in het rapport, niet op de telefoon
 POT = 100.0
 TRADE_STOP = 0.10
 PORT_STOP = 0.85
@@ -216,7 +217,7 @@ def main():
             state["versies"][v] = {"kapitaal_start": n * pot, "cap": float(sel[v].get("cap", CAP_CONTROLE)), "pot": pot,
                                    "gepauzeerd": False, "laatste_herbalans": NU, "traders": [], "start": NU}
             voeg_toe(state["versies"][v], sel, v, n)
-            MELDINGEN.append(f"{v}: controlegroep gestart met {n} traders")
+            print(f"{v}: controlegroep gestart met {n} traders")
     alle_trades = []
     for v, vs in state["versies"].items():
         regels, n = REGELS[v], sel[v]["n_actief"]
@@ -327,6 +328,8 @@ def dagbericht(d, state, hist, alle_trades, btc, dagelijks):
     tr = pd.DataFrame(alle_trades)
     g = pd.read_csv(f"{d}/geschiedenis.csv") if os.path.exists(f"{d}/geschiedenis.csv") else pd.DataFrame()
     for h in hist:
+        if h["versie"] in GEEN_MELDING:
+            continue
         v, vs = h["versie"], state["versies"][h["versie"]]
         oud = g[(g.versie == v) & (g.ts <= NU - 23 * UUR)].tail(1) if len(g) else g
         dag = h["waarde"] - float(oud.waarde.iloc[0]) if len(oud) else 0.0
