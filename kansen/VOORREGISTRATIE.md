@@ -27,3 +27,11 @@ Zelfde regels als Lighter (akkoord Mylan 4 okt):
 - Trade: short op slot dag −30, sluiten op slot dag +1. Tegelijk long BTC met dezelfde inzet (hedge). Kosten 0,1% per kant per been, funding meenemen als beschikbaar, anders 0,01% per 8 uur aannemen.
 - Train: unlocks 2023–2025; test: 2026 t/m vandaag.
 - **GO** als in de test: gemiddeld netto rendement per event > 1%, t ≥ 2, ≥ 55% van de events winstgevend. Minder dan 20 test-events → alleen indicatief.
+
+## V6 Activistische 13D-meldingen (aandelen, toegevoegd 4 okt vóór data)
+- Events: eerste "SC 13D" of "SCHEDULE 13D" (geen /A) van een filer uit de vaste activistenlijst in `kansen/activist13d.py`, per bedrijf maximaal 1 per filer.
+- Bron: SEC EDGAR full-index (form.idx per kwartaal), ticker via SEC `company_tickers.json` (alleen nog genoteerde bedrijven: overlevingsbias, zie uitslag), koersen via Yahoo (yfinance, lokaal).
+- Instap: openingskoers van de eerste handelsdag ná de meldingsdatum. Houden 20, 60 en 120 handelsdagen. Abnormaal = aandeel − SPY (ook IWM gerapporteerd). Kosten 0,2% per rondje.
+- Filter: gemiddelde dagomzet 20 dagen vóór instap ≥ $2 mln en koers ≥ $3.
+- Train 2015–2021, test 2022 t/m vandaag.
+- **GO** als in de test: gem. netto abnormaal rendement over 60 dagen > 1% en t ≥ 2.
