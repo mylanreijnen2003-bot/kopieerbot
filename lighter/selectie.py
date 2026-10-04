@@ -328,6 +328,8 @@ def main():
     uitslag["trechter_nu_bot(zonder handmatig-eis)"] = int(len(gb))
     pd.DataFrame(pos).to_csv(f"{uit}/vandaag_top5_posities.csv", index=False)
     json.dump(uitslag, open(f"{uit}/uitslag.json", "w"), indent=1, ensure_ascii=False)
+    json.dump([{k: m.get(k) for k in ("van", "tot", "gestopt_bij", "gescand")} for m in meta],
+              open(f"{uit}/dekking_slices.json", "w"), indent=1)
 
     # privé (wordt versleuteld): volledige adressen/indexen
     knip.drop(columns=["adres"]).to_parquet(f"{prive}/knip_alle.parquet")
