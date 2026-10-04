@@ -89,7 +89,7 @@ def rapport(naam: str, data: dict, resdir: str, privdir: str, notities: list[str
     L = [f"# {naam} — uitslag ({pd.Timestamp(nu, unit='ms'):%Y-%m-%d})", "", *notities, "",
          f"Accounts met trades vóór de knip (1-8-2026): {len(tab)}", "", "| Eis | Over |", "|---|---|"]
     if not len(tab):
-        (Path(resdir) / "report.md").write_text("\n".join(L) + "\nGeen data.\n")
+        (Path(resdir) / "report.md").write_text("\n".join(L) + "\nGeen data.\n", encoding="utf-8")
         return
     m = pd.Series(True, index=tab.index)
     for c in EISEN:
@@ -125,7 +125,7 @@ def rapport(naam: str, data: dict, resdir: str, privdir: str, notities: list[str
             L.append(f"| {j} | {kort(r.account)} | {r.keuze_trades} | {r.keuze_gem_pct:+.2f}% | {r.keuze_winst_pct_trades}% | "
                      f"{r.keuze_potje_pct:+.1f}% | {r.keuze_verliesmaanden} | {r.houdtijd_uur} u | {r.munten} |")
         g2.to_csv(Path(privdir) / "volgbaar_vandaag.csv", index=False)
-    (Path(resdir) / "report.md").write_text("\n".join(L) + "\n")
+    (Path(resdir) / "report.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     tab.assign(account=tab.account.map(kort)).to_csv(Path(resdir) / "alle_knip.csv", index=False)
     tab.to_csv(Path(privdir) / "alle_knip.csv", index=False)
     print(f"{naam}: {len(tab)} accounts, {len(g)} geschikt")

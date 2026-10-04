@@ -264,8 +264,8 @@ def analyse(datadir: str, resdir: str, privdir: str):
         r6 = s.ret(now - MIN_AGE, now) or 0.0
         lines.append(f"| {j} | {m.get('name')} | {short(a)} | {r6:+.1%} | ${s.av_at(now):,.0f} | {m.get('allow')} |")
         priv.append({"rank": j, "name": m.get("name"), "addr": a, "r6": r6, "av": s.av_at(now), "allow": m.get("allow")})
-    (Path(resdir) / "report.md").write_text("\n".join(lines) + "\n")
-    (Path(privdir) / "keuze_vandaag.json").write_text(json.dumps(priv, indent=1))
+    (Path(resdir) / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (Path(privdir) / "keuze_vandaag.json").write_text(json.dumps(priv, indent=1), encoding="utf-8")
     print(f"analyse klaar: {len(rows)} vensters, hit {hit}, t {t:.2f}")
 
 

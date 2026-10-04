@@ -34,7 +34,7 @@ OUT: Path
 
 
 def log(name: str, text: str):
-    with open(OUT / f"{name}.txt", "a") as f:
+    with open(OUT / f"{name}.txt", "a", encoding="utf-8") as f:
         f.write(text + "\n")
 
 
