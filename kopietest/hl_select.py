@@ -185,13 +185,10 @@ def main_ruw(i, n):
             print("fout", a[:10], e)
             continue
         uit = {"address": a}
-        for naam, keys in (("perp", ("perpAllTime", "perpMonth", "perpWeek")), ("tot", ("allTime", "month", "week"))):
+        # per venster apart bewaren: pnlHistory begint in elk venster (maand/week) opnieuw bij 0
+        for k_ in ("perpAllTime", "perpMonth", "perpWeek", "allTime", "month", "week"):
             for sl in ("accountValueHistory", "pnlHistory"):
-                pts = {}
-                for k_ in keys:
-                    for t, x in per.get(k_, {}).get(sl, []):
-                        pts[int(t)] = float(x)
-                uit[f"{naam}_{sl[:3]}"] = sorted(pts.items())
+                uit[f"{k_}_{sl[:3]}"] = [[int(t), float(x)] for t, x in per.get(k_, {}).get(sl, [])]
         f.write(json.dumps(uit) + "\n")
         if j % 200 == 0:
             print(i, j, "/", len(adr), flush=True)

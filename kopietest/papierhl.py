@@ -128,7 +128,7 @@ def main():
         pnl_pts = []
         try:
             per = dict(hl.info({"type": "portfolio", "user": a}, weight=20))
-            for k in ("perpMonth", "perpWeek"):
+            for k in ("perpMonth",):                    # één venster: pnl begint per venster bij 0
                 pnl_pts += [(int(x), float(y)) for x, y in per.get(k, {}).get("pnlHistory", [])]
             pnl_pts = sorted(set(pnl_pts))
             E0 = hl.av_at(pts, s["start_ms"]) or 0
