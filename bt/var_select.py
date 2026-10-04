@@ -16,6 +16,7 @@ import sys
 import time
 
 import pandas as pd
+import requests
 
 from bot import hl
 from bt.bot_stats import KOSTEN, bot_trades
@@ -28,10 +29,41 @@ Q = 15 * 60_000
 _c = {}
 
 
+def snelle_candles(coin):
+    """15m-openingsprijzen; bij een fout (bijv. verdwenen munt) niet eindeloos opnieuw proberen."""
+    out, cur = {}, EIND - hl.DAY
+    for _ in range(4):
+        for poging in range(3):
+            time.sleep(1.5)
+            try:
+                r = requests.post(hl.URL, json={"type": "candleSnapshot", "req": {"coin": coin, "interval": "15m",
+                                  "startTime": int(cur), "endTime": int(NU + hl.DAY)}}, timeout=30)
+            except requests.RequestException:
+                continue
+            if r.status_code == 429:
+                time.sleep(10)
+                continue
+            break
+        else:
+            return out
+        if r.status_code != 200 or not isinstance(r.json(), list) or not r.json():
+            if r.status_code != 200:
+                print("geen candles", coin, r.status_code, flush=True)
+            return out
+        data = r.json()
+        for c in data:
+            out[int(c["t"])] = float(c["o"])
+        nxt = max(int(c["t"]) for c in data) + 1
+        if nxt <= cur or len(data) < 4000:
+            return out
+        cur = nxt
+    return out
+
+
 def px_later(coin, t, min_=60):
     """Openingsprijs van de eerste 15m-candle >= t + min_ minuten."""
     if coin not in _c:
-        _c[coin] = {k: v[0] for k, v in hl.candles(coin, EIND - hl.DAY, NU + hl.DAY, "15m").items()}
+        _c[coin] = snelle_candles(coin)
     return _c[coin].get(math.ceil((t + min_ * 60_000) / Q) * Q)
 
 
