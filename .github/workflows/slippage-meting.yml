@@ -27,6 +27,9 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.d.outputs.aan == '1'
         with: {ref: orderly}
+      - name: kluis.py van main
+        if: steps.d.outputs.aan == '1'
+        run: git fetch -q origin main && mkdir -p bt && git show FETCH_HEAD:bt/kluis.py > bt/kluis.py
       - uses: actions/setup-python@v5
         if: steps.d.outputs.aan == '1'
         with: {python-version: "3.12"}
@@ -34,7 +37,9 @@ jobs:
         run: |
           pip install pandas numpy requests websockets
           git fetch origin results && python3 bt/kluis.py show papier-hl/selectie.json > selectie.json
-          DUUR_MIN=290 TRADERS_JSON=selectie.json SHARD=${{ matrix.i }} NSHARD=2 timeout 18300 python -m kopietest.live out/s${{ matrix.i }} || true
+          mkdir -p out/s${{ matrix.i }}
+          DUUR_MIN=290 TRADERS_JSON=selectie.json SHARD=${{ matrix.i }} NSHARD=2 timeout 18300 python -m kopietest.live out/s${{ matrix.i }} > out/s${{ matrix.i }}/run.log 2>&1 || true
+          tail -5 out/s${{ matrix.i }}/run.log
       - uses: actions/upload-artifact@v4
         if: steps.d.outputs.aan == '1'
         with: {name: "slip-${{ matrix.i }}", path: "out/s${{ matrix.i }}"}
@@ -46,6 +51,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: {ref: orderly}
+      - name: kluis.py van main
+        run: git fetch -q origin main && mkdir -p bt && git show FETCH_HEAD:bt/kluis.py > bt/kluis.py
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas numpy requests tabulate
