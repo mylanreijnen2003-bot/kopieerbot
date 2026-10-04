@@ -170,8 +170,38 @@ def main_kies(mappen):
     print(json.dumps({x: v for x, v in uit.items() if not x.startswith("vandaag_")}, indent=1))
 
 
+def main_ruw(i, n):
+    """Ruwe portfolio-reeksen (perp én totaal) bewaren voor een kleinere lijst, zodat de analyse lokaal kan."""
+    import gzip
+    d = pd.read_csv("res/hl_select/portfolio_alle.csv.gz")
+    k = d[(d.k_dagen >= 90) & (d.k_actief_14d == True) & (d.k_equity_gem_90 >= 500)]  # noqa: E712
+    v = d[(d.n_dagen >= 90) & (d.n_actief_14d == True) & (d.n_equity_gem_90 >= 1000)]  # noqa: E712
+    adr = sorted(set(k.address) | set(v.address))[i::n]
+    f = gzip.open(f"{OUT}/ruw.jsonl.gz", "wt")
+    for j, a in enumerate(adr):
+        try:
+            per = dict(hl.info({"type": "portfolio", "user": a}, weight=20))
+        except Exception as e:  # noqa: BLE001
+            print("fout", a[:10], e)
+            continue
+        uit = {"address": a}
+        for naam, keys in (("perp", ("perpAllTime", "perpMonth", "perpWeek")), ("tot", ("allTime", "month", "week"))):
+            for sl in ("accountValueHistory", "pnlHistory"):
+                pts = {}
+                for k_ in keys:
+                    for t, x in per.get(k_, {}).get(sl, []):
+                        pts[int(t)] = float(x)
+                uit[f"{naam}_{sl[:3]}"] = sorted(pts.items())
+        f.write(json.dumps(uit) + "\n")
+        if j % 200 == 0:
+            print(i, j, "/", len(adr), flush=True)
+    f.close()
+
+
 if __name__ == "__main__":
-    if MODUS == "shard":
+    if MODUS == "ruw":
+        main_ruw(int(sys.argv[3]), int(sys.argv[4]))
+    elif MODUS == "shard":
         main_shard(int(sys.argv[3]), int(sys.argv[4]))
     else:
         main_kies(sys.argv[3:])

@@ -1,0 +1,44 @@
+name: hl-ruw
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [orderly]
+    paths: ["kopietest/RUN_HLRUW"]
+
+permissions:
+  contents: write
+
+jobs:
+  shard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: {i: [0, 1, 2, 3, 4, 5, 6, 7]}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - run: git fetch origin results && git worktree add res origin/results
+      - run: python -m kopietest.hl_select ruw out/r${{ matrix.i }} ${{ matrix.i }} 8
+      - uses: actions/upload-artifact@v4
+        with: {name: "hlruw-${{ matrix.i }}", path: "out/r${{ matrix.i }}"}
+
+  opslaan:
+    needs: shard
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {pattern: "hlruw-*", path: out}
+      - name: Opslaan
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git clone -q --depth 1 --branch results "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" res
+          mkdir -p res/hl_select/ruw
+          for d in out/hlruw-*; do cp $d/ruw.jsonl.gz res/hl_select/ruw/$(basename $d).jsonl.gz; done
+          cd res && git add -A hl_select
+          git commit -qm "hl ruwe portfolio [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
