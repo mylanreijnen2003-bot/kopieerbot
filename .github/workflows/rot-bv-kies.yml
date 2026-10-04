@@ -1,0 +1,33 @@
+name: rot-bv-kies
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: {required: true, default: "37215239671"}
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  kies:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bv-stats-*", path: st, run-id: "${{ inputs.run_id }}", github-token: "${{ github.token }}"}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: mkdir -p res/rotatie_bv && python -m bt.rot_bv kies st res/rotatie_bv
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A rotatie_bv
+          git commit -qm "rotatie bitvavo split $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

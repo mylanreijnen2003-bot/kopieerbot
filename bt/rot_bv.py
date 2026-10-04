@@ -118,6 +118,12 @@ def stats(shard, n, upath, d, bpath, vdir, out):
 
 def kies(sdir, out):
     os.makedirs(out, exist_ok=True)
+    from bot import hl
+    btc = {t: v[0] for t, v in hl.candles("BTC", TS[0] - DAG, EIND + DAG, "1d").items()}
+
+    def bret(T, H):
+        a, b = btc.get(T), btc.get(T + H * DAG)
+        return (b / a - 1) * 100 if a and b else np.nan
     s = pd.concat([pd.read_parquet(p) for p in glob.glob(f"{sdir}/**/bv_*.parquet", recursive=True)], ignore_index=True)
     basis = s[(s.per_maand_pct > 0) & (s.K <= 5) & (s.fills_per_dag <= 150) & (s.dagen_sinds_laatste <= 7)]
     sam = []
@@ -127,19 +133,26 @@ def kies(sdir, out):
             for H in HS:
                 ts = [t for t in (TS if H == 14 else TS[::2]) if t + H * DAG <= EIND]
                 for N in [5, 10, 20]:
-                    top, alle = [], []
+                    top, alle, br = [], [], []
                     for T in ts:
+                        br.append(bret(T, H))
                         g = ok[(ok["T"] == T) & (ok["L"] == L)].sort_values(["winst_pct", "per_maand_pct"], ascending=False)
                         top.append(g.head(N)[f"v{H}_{naam}"].mean() if len(g) else 0.0)
                         alle.append(g[f"v{H}_{naam}"].mean() if len(g) else 0.0)
-                    top, alle = np.nan_to_num(np.array(top)), np.nan_to_num(np.array(alle))
+                    top, alle, br = np.nan_to_num(np.array(top)), np.nan_to_num(np.array(alle)), np.array(br)
+                    op, neer = br > 0, br <= 0
                     pm = 30.44 / H
                     sam.append({"variant": naam, "L": L, "H": H, "N": N, "perioden": len(ts),
                                 "top_per_maand_pct": round(top.mean() * pm, 2),
                                 "top_positief_pct": round(100 * (top > 0).mean()),
                                 "top_slechtste_pct": round(top.min(), 2),
                                 "top_totaal_pct": round(100 * (np.prod(1 + top / 100) - 1), 1),
-                                "alle_per_maand_pct": round(alle.mean() * pm, 2)})
+                                "alle_per_maand_pct": round(alle.mean() * pm, 2),
+                                "btc_stijgend_n": int(op.sum()),
+                                "top_btc_stijgend_pct": round(top[op].mean(), 2) if op.any() else None,
+                                "top_btc_dalend_pct": round(top[neer].mean(), 2) if neer.any() else None,
+                                "btc_in_stijgende_pct": round(np.nanmean(br[op]), 2) if op.any() else None,
+                                "alle_btc_stijgend_pct": round(alle[op].mean(), 2) if op.any() else None})
     sd = pd.DataFrame(sam)
     sd.to_csv(f"{out}/samenvatting.csv", index=False)
     print(sd.to_string(index=False))
