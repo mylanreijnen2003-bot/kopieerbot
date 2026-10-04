@@ -13,7 +13,7 @@ import pandas as pd  # noqa: E402
 from kopietest import hist as H  # noqa: E402
 
 u = json.load(open(UITSLAG))
-adr = list(dict.fromkeys(u["vandaag_mylan"][:25] + u["vandaag_risico"][:25] + u["vandaag_max"][:15]))
+adr = list(dict.fromkeys(u["vandaag_mylan"][:40] + u.get("vandaag_risico", [])[:25] + u.get("vandaag_max", [])[:15]))
 rows = []
 for a in adr:
     try:

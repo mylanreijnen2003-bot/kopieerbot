@@ -14,26 +14,47 @@ DAG = 86_400_000
 KNIP = int(pd.Timestamp("2026-08-19").value // 10**6)
 
 
+def _interp(pts, t):
+    xs = [x for x, _ in pts]
+    return float(np.interp(t, xs, [y for _, y in pts]))
+
+
 def reeks(w):
-    av = dict(w.get("tot_acc") or w.get("perp_acc") or [])
-    av_p = dict(w.get("perp_acc") or [])
-    pnl = dict(w.get("perp_pnl") or [])
-    ts = sorted(set(av) | set(pnl))
-    if len(ts) < 5:
+    """Equity (accountwaarde, totaal of perp: hoogste) en pnl-stappen uit perp-vensters zonder dat de vensters door elkaar lopen."""
+    eqp = {}
+    for k in ("allTime", "month", "week", "perpAllTime", "perpMonth", "perpWeek"):
+        for t, v in w.get(f"{k}_acc", []):
+            eqp[t] = max(eqp.get(t, 0.0), v)
+    at, mo, we = (sorted(w.get(f"{k}_pnl", [])) for k in ("perpAllTime", "perpMonth", "perpWeek"))
+    if len(at) < 3 or len(eqp) < 3:
         return None
-    a = pd.Series(av, dtype=float).sort_index()
-    ap = pd.Series(av_p, dtype=float).sort_index()
-    p = pd.Series(pnl, dtype=float).sort_index()
-    idx = pd.Index(ts)
-    a = a.reindex(a.index.union(idx)).interpolate(method="index").reindex(idx).ffill().bfill()
-    ap = ap.reindex(ap.index.union(idx)).interpolate(method="index").reindex(idx).ffill().bfill() if len(ap) else a
-    p = p.reindex(p.index.union(idx)).interpolate(method="index").reindex(idx).ffill().bfill()
-    eq = np.maximum(a.values, ap.values)
-    r = np.zeros(len(idx))
-    for i in range(1, len(idx)):
-        if eq[i - 1] > 50:
-            r[i] = (p.values[i] - p.values[i - 1]) / eq[i - 1]
-    return pd.DataFrame({"t": idx, "e": eq, "pnl": p.values, "r": r})
+    m0 = mo[0][0] if len(mo) >= 2 else None
+    w0 = we[0][0] if len(we) >= 2 else None
+    stukken = []
+    eind_at = m0 if m0 else at[-1][0]
+    pts = [p for p in at if p[0] < eind_at] + ([(eind_at, _interp(at, eind_at))] if m0 else [])
+    stukken.append(pts)
+    if m0:
+        eind_mo = w0 if w0 and w0 > m0 else mo[-1][0]
+        stukken.append([p for p in mo if p[0] < eind_mo] + ([(eind_mo, _interp(mo, eind_mo))] if w0 and w0 > m0 else []))
+        if w0 and w0 > m0:
+            stukken.append(we)
+    ts, dp = [], []
+    for st in stukken:
+        for (t0, p0), (t1, p1) in zip(st[:-1], st[1:]):
+            if t1 > t0:
+                ts.append((t0, t1))
+                dp.append(p1 - p0)
+    if not ts:
+        return None
+    ex = sorted(eqp.items())
+    rows, cum = [], 0.0
+    for (t0, t1), d in zip(ts, dp):
+        e0 = _interp(ex, t0)
+        cum += d
+        rows.append((t1, _interp(ex, t1), cum, d / e0 if e0 > 50 else 0.0))
+    df = pd.DataFrame(rows, columns=["t", "e", "pnl", "r"]).drop_duplicates("t").sort_values("t")
+    return df
 
 
 def kenmerken(df, T, van=None):
