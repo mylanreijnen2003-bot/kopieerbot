@@ -94,7 +94,7 @@ jobs:
           [ -d prive ] || exit 0
           f=selectie-$(date -u +%F).tgz.enc
           tar czf - prive | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out /tmp/$f
-          if git fetch -q origin lighter-data; then
+          if git fetch -q origin lighter-data:refs/remotes/origin/lighter-data; then
             git worktree add -B lighter-data ld origin/lighter-data
           else
             git worktree add --detach ld HEAD && cd ld && git checkout -q --orphan lighter-data && git rm -rfq . && cd ..
