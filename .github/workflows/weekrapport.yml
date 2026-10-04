@@ -1,0 +1,33 @@
+name: weekrapport
+
+# Elke zondag ~19:10 NL: weekrapport papier v2 naar de telefoon.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "10 17 * * 0"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas requests
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: python -m bt.weekrapport res/papier2
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A papier2/weekrapport.md
+          git commit -qm "weekrapport $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
