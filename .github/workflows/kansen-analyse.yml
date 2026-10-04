@@ -47,6 +47,10 @@ jobs:
           for v in vaults gmx; do
             if [ -d priv/$v ]; then tar czf - priv/$v | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:KEY -out res/kansen/$v/priv.tgz.enc; fi
           done
-          cd res && git add -A kansen
-          git commit -qm "kansen analyse $(date -u +%F) [skip ci]" || true
-          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
+          cd res
+          for i in 1 2 3 4 5; do
+            git fetch -q origin results && git reset -q --soft origin/results
+            git add -A kansen/vaults kansen/gmx
+            git commit -qm "kansen analyse $(date -u +%F) [skip ci]" || true
+            git push -q origin HEAD:results && break; sleep 10
+          done

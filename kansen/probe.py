@@ -41,14 +41,14 @@ def log(name: str, text: str):
 def req(method, url, name, **kw):
     try:
         r = requests.request(method, url, timeout=60, **kw)
-        log(name, f"== {method} {url} -> {r.status_code} ({len(r.content)} bytes)")
+        log(name, red(f"== {method} {url} -> {r.status_code} ({len(r.content)} bytes)"))
         try:
             return r.status_code, r.json()
         except Exception:
             log(name, red(r.text[:800]))
             return r.status_code, None
     except Exception as e:
-        log(name, f"== {method} {url} -> FOUT {e!r}")
+        log(name, red(f"== {method} {url} -> FOUT {e!r}"))
         return None, None
 
 
