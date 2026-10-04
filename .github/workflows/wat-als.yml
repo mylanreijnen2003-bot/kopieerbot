@@ -19,14 +19,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install pandas numpy requests
+      - run: pip install pandas numpy requests pyarrow
       - uses: actions/download-artifact@v4
         with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
           git fetch origin results && git worktree add -B results res origin/results
-      - run: python -m bt.wat_als ${{ inputs.adres }} ${{ inputs.dagen }} ${{ inputs.pot }} beurs res/wat_als/${{ inputs.adres }}
+      - run: python -m bt.wat_als ${{ inputs.adres }} ${{ inputs.dagen }} ${{ inputs.pot }} beurs res/wat_als/${{ inputs.adres }} 2>&1 | tee log.txt; mkdir -p res/wat_als && cp log.txt res/wat_als/log_${{ inputs.adres }}.txt
       - name: Opslaan
         if: always()
         run: |

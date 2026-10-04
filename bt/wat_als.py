@@ -33,13 +33,13 @@ def main():
     cache = {}
 
     def stop(t):
-        if t["coin"] not in cache:
-            cache[t["coin"]] = hl.candles(t["coin"], start - DAG, nu, "1h")
-        c = cache[t["coin"]]
-        g = t["p1"] * (0.9 if t["dir"] > 0 else 1.1)
-        for h in range((int(t["open"]) // UUR + 1) * UUR, int(t["sluit"]), UUR):
+        if t.coin not in cache:
+            cache[t.coin] = hl.candles(t.coin, start - DAG, nu, "1h")
+        c = cache[t.coin]
+        g = t.p1 * (0.9 if t.dir > 0 else 1.1)
+        for h in range((int(t.open) // UUR + 1) * UUR, int(t.sluit), UUR):
             x = c.get(h)
-            if x and ((t["dir"] > 0 and x[2] <= g) or (t["dir"] < 0 and x[1] >= g)):
+            if x and ((t.dir > 0 and x[2] <= g) or (t.dir < 0 and x[1] >= g)):
                 return True
         return False
 
