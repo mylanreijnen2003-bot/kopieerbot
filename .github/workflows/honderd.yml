@@ -1,0 +1,93 @@
+name: honderd
+
+# Alle wallets met >= 3 trades van +100% (en +50/+20/+10%) koersbeweging, dataset aug 2025 - aug 2026.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  universum:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {pattern: "brede-scan-*", path: scan, run-id: "37141862920", github-token: "${{ github.token }}"}
+      - run: mkdir -p uni && python -m bt.scan_combine scan uni/universe.parquet
+        env: {MIN_TRADES: "3", MIN_TPW: "0", MIN_SPAN: "0", MAX_FILLS: "20000"}
+      - uses: actions/upload-artifact@v4
+        with: {name: h-uni, path: uni, retention-days: 14}
+
+  extract:
+    needs: universum
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy huggingface_hub requests
+      - uses: actions/download-artifact@v4
+        with: {name: h-uni, path: uni}
+      - run: python -m bt.extract ${{ matrix.shard }} 12 part && rm -f part/bars_*.parquet
+        env: {UNIVERSE: uni/universe.parquet}
+      - uses: actions/upload-artifact@v4
+        with: {name: "h-part-${{ matrix.shard }}", path: part, retention-days: 14}
+
+  stats:
+    needs: [universum, extract]
+    if: ${{ !cancelled() && needs.universum.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: h-uni, path: uni}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "h-part-*", path: dat}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "37124999519", github-token: "${{ github.token }}"}
+      - run: python -m bt.honderd stats ${{ matrix.shard }} 12 uni/universe.parquet dat beurs out
+      - uses: actions/upload-artifact@v4
+        with: {name: "h-stats-${{ matrix.shard }}", path: out, retention-days: 14}
+
+  kies:
+    needs: stats
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "h-stats-*", path: st}
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+      - run: mkdir -p res/honderd && python -m bt.honderd kies st res/honderd 2>&1 | tee res/honderd/log.txt
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A honderd
+          git commit -qm "honderd $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

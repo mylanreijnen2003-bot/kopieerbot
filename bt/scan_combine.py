@@ -26,7 +26,7 @@ def main():
     print("wallets met perps-fills", len(w))
     u = w[(w.spanne_dagen >= int(os.environ.get("MIN_SPAN", "90"))) & (w.trades >= int(os.environ.get("MIN_TRADES", "100")))
           & (w.trades_per_week >= float(os.environ.get("MIN_TPW", "2"))) & (w.trades_per_week <= float(os.environ.get("MAX_TPW", "1e9"))) & (w.fills_dag_mediaan <= 150)
-          & (w.maker / w.fills < 0.9) & (w.fills <= 150_000)].reset_index()
+          & (w.maker / w.fills < 0.9) & (w.fills <= int(os.environ.get("MAX_FILLS", "150000")))].reset_index()
     u["median_av"] = 0.0
     print("universum", len(u))
     u.to_parquet(sys.argv[2], index=False)
