@@ -1,0 +1,78 @@
+start 2026-10-03 18:07:40.544901+00:00 {'success': True, 'data': {'limit': 1200, 'remaining': 1200, 'reset': 1791050880000, 'tier': 'default'}, 'ts': 1791050860667}
+symbolen 143
+fout topAddresses  ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='api.orderly.org', port=443): Read timed out. (read timeout=30)"))
+fout topAddresses  ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='api.orderly.org', port=443): Read timed out. (read timeout=30)"))
+fout topAddresses PERP_BTC_USDC ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='api.orderly.org', port=443): Read timed out. (read timeout=30)"))
+pool na topAddresses 2362
+platformPositions rijen 4716 meer pagina's False pool 2846
+pool na marketTrades 3534
+stap1 0x802af775 4640 2026-10-02 18:36:04.885000 365 False
+stap1 0x3a4dccb1 0 None 301 False
+stap1 0xe2359392 0 None 365 False
+sample klaar 100
+stap0 0 / 1844 treffers 0
+treffer vastpool 0xbe10fd36 0 0 None
+treffer overig 0x010cd994 0 0 None
+stap0 200 / 1844 treffers 2
+treffer overig 0x298abe45 0 0 None
+stap0 400 / 1844 treffers 3
+treffer overig 0x31bbab9d 0 0 None
+treffer overig 0x39c67f82 0 0 None
+treffer overig 0x3a55e304 0 0 None
+treffer overig 0x3da3b64e 0 0 None
+treffer overig 0x3e516cf3 0 0 None
+treffer overig 0x44f3abaf 0 0 None
+stap0 600 / 1844 treffers 9
+treffer overig 0x4f2b5981 0 0 None
+treffer overig 0x5272f37e 0 0 None
+treffer overig 0x562aeae4 0 0 None
+treffer overig 0x5df2fed8 0 0 None
+treffer overig 0x606a5570 0 0 None
+treffer overig 0x60f4f145 0 0 None
+treffer overig 0x6608d534 0 0 None
+treffer overig 0x6859da14 0 0 None
+stap0 800 / 1844 treffers 17
+treffer overig 0x71f060a3 0 0 None
+treffer overig 0x71f2864f 0 0 None
+treffer overig 0x7469872d 0 0 None
+treffer overig 0x7afc9ad9 0 0 None
+treffer overig 0x806ea832 0 0 None
+treffer overig 0x844b6ab0 0 0 None
+treffer overig 0x855b77fc 0 0 None
+treffer overig 0x860e468c 0 0 None
+stap0 1000 / 1844 treffers 25
+treffer overig 0x872d3fb7 0 0 None
+treffer overig 0x8997a688 0 0 None
+treffer overig 0x89b78159 0 0 None
+treffer overig 0x8d393bbe 0 0 None
+treffer overig 0x8efa981f 0 0 None
+treffer overig 0x944b5f7d 0 0 None
+treffer overig 0x95d30549 0 0 None
+treffer overig 0x95f45c5e 0 0 None
+treffer overig 0x975f178f 0 0 None
+treffer overig 0x97e93c29 0 0 None
+treffer overig 0x9c972d06 0 0 None
+treffer overig 0x9eb42f01 0 0 None
+stap0 1200 / 1844 treffers 37
+treffer overig 0xa547b34c 0 0 None
+treffer overig 0xa8758904 0 0 None
+treffer overig 0xa930cdef 0 0 None
+treffer overig 0xad68fabb 0 0 None
+treffer overig 0xb96cacfc 0 0 None
+stap0 1400 / 1844 treffers 42
+treffer overig 0xc28e23e7 0 0 None
+treffer overig 0xc69ae428 0 0 None
+treffer overig 0xc9ac2940 0 0 None
+treffer overig 0xcac1f1c3 0 0 None
+treffer overig 0xd10e2b1b 0 0 None
+treffer overig 0xd1b62563 0 0 None
+stap0 1600 / 1844 treffers 48
+treffer overig 0xf4bfb4a4 0 0 None
+treffer overig 0xf53cab0c 0 0 None
+treffer overig 0xf961e5e6 0 0 None
+stap0 1800 / 1844 treffers 51
+treffer overig 0xf9d4f489 0 0 None
+treffer overig 0xfb51e66f 0 0 None
+treffer overig 0xfd423284 0 0 None
+treffer overig 0xffe4e398 0 0 None
+klaar 2026-10-03 18:57:59.439735+00:00 treffers 55 van 1844 pool 3534

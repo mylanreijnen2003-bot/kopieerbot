@@ -1,0 +1,18 @@
+{
+ "trades": 72,
+ "K": 10,
+ "inzet_per_trade": 50.0,
+ "long_pct": 83.3,
+ "op_kraken_pct": 95.8,
+ "op_bitvavo_pct": 76.4,
+ "bitvavo_bruikbaar_pct": 65.3,
+ "houdtijd_mediaan_uur": 53.7,
+ "trades_gestopt": 17,
+ "open_posities_nu": 4,
+ "kraken_eind": 630.1,
+ "kraken_maxdaling_pct": -3.2,
+ "bitvavo_eind": 742.96,
+ "bitvavo_maxdaling_pct": -2.1,
+ "hun_prijs_zonder_kosten_eind": 858.55,
+ "hun_prijs_zonder_kosten_maxdaling_pct": -2.6
+}

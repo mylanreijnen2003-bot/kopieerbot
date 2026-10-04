@@ -1,0 +1,62 @@
+[
+ {
+  "order_id": "67687446",
+  "symbol": "PERP_LTC_USDC",
+  "side": "SELL",
+  "type": "POSITIONAL_TP_SL",
+  "price": null,
+  "quantity": "0.00000000",
+  "total_executed_quantity": "0.00000000",
+  "trigger_price": null,
+  "trigger_status": null,
+  "status": "OPEN",
+  "reduce_only": true,
+  "created_time": 1790962256253,
+  "updated_time": 1790962256264
+ },
+ {
+  "order_id": "67685300",
+  "symbol": "PERP_FET_USDC",
+  "side": "SELL",
+  "type": "POSITIONAL_TP_SL",
+  "price": null,
+  "quantity": "0.00000000",
+  "total_executed_quantity": "0.00000000",
+  "trigger_price": null,
+  "trigger_status": null,
+  "status": "OPEN",
+  "reduce_only": true,
+  "created_time": 1790933418615,
+  "updated_time": 1790933418625
+ },
+ {
+  "order_id": "67685196",
+  "symbol": "PERP_SOL_USDC",
+  "side": "SELL",
+  "type": "POSITIONAL_TP_SL",
+  "price": null,
+  "quantity": "0.00000000",
+  "total_executed_quantity": "0.00000000",
+  "trigger_price": null,
+  "trigger_status": null,
+  "status": "OPEN",
+  "reduce_only": true,
+  "created_time": 1790931644551,
+  "updated_time": 1790931644561
+ },
+ {
+  "order_id": "67675161",
+  "symbol": "PERP_JUP_USDC",
+  "side": "SELL",
+  "type": "POSITIONAL_TP_SL",
+  "price": null,
+  "quantity": "0.00000000",
+  "total_executed_quantity": "0.00000000",
+  "trigger_price": null,
+  "trigger_status": null,
+  "status": "OPEN",
+  "reduce_only": true,
+  "created_time": 1790750291133,
+  "updated_time": 1790750291144
+ }
+]

@@ -1,0 +1,16 @@
+klaar hl 0xc3b1bf1f {'fills': 3190, 'trades': 199, 'maker_pct_fills': 76.0, 'edge_bps_bruto': 34.16, 'lead_med_s': 938.3, 'spiegel_vult_0m_pct': np.float64(62.6)}
+klaar hl 0xbee5ffa9 {'fills': 1184, 'trades': 291, 'maker_pct_fills': 86.7, 'edge_bps_bruto': 4.59, 'lead_med_s': 1133.1, 'spiegel_vult_0m_pct': np.float64(88.6)}
+klaar hl 0xdc899ed4 {'fills': 472, 'trades': 76, 'maker_pct_fills': 57.8, 'edge_bps_bruto': 41.83, 'lead_med_s': 13804.4, 'spiegel_vult_0m_pct': np.float64(100.0)}
+klaar hl 0xa1b6d8ef {'fills': 7606, 'trades': 1108, 'maker_pct_fills': 69.2, 'edge_bps_bruto': 33.09, 'lead_med_s': 12.5, 'spiegel_vult_0m_pct': np.float64(95.6)}
+klaar hl 0xb36fa339 {'fills': 432, 'trades': 142, 'maker_pct_fills': 63.4, 'edge_bps_bruto': 27.11, 'lead_med_s': 4985.6, 'spiegel_vult_0m_pct': np.float64(100.0)}
+klaar hl 0xc0b2a1ce {'fills': 928, 'trades': 28, 'maker_pct_fills': 35.3, 'edge_bps_bruto': 42.45, 'lead_med_s': 2612.1, 'spiegel_vult_0m_pct': np.float64(77.7)}
+klaar hl 0x8477e447 {'fills': 910, 'trades': 47, 'maker_pct_fills': 1.6, 'edge_bps_bruto': 102.35, 'lead_med_s': 22776.4, 'spiegel_vult_0m_pct': None}
+klaar hl 0x25554a80 {'fills': 1224, 'trades': 15, 'maker_pct_fills': 39.7, 'edge_bps_bruto': 61.26, 'lead_med_s': 935197.5, 'spiegel_vult_0m_pct': np.float64(94.7)}
+klaar hl 0x80f2e5f3 {'fills': 1056, 'trades': 16, 'maker_pct_fills': 51.1, 'edge_bps_bruto': 47.71, 'lead_med_s': 65.8, 'spiegel_vult_0m_pct': None}
+klaar hl 0xc31141b1 {'fills': 5322, 'trades': 13, 'maker_pct_fills': 93.3, 'edge_bps_bruto': 157.27, 'lead_med_s': 2222.8, 'spiegel_vult_0m_pct': np.float64(97.9)}
+klaar orderly 0x0cb8c001 {'fills': 705, 'trades': 67, 'maker_pct_fills': 0.0, 'edge_bps_bruto': 43.32, 'lead_med_s': None, 'spiegel_vult_0m_pct': None}
+klaar orderly 0x1c97b80f {'fills': 562, 'trades': 171, 'maker_pct_fills': 20.8, 'edge_bps_bruto': 33.1, 'lead_med_s': 22900.5, 'spiegel_vult_0m_pct': None}
+klaar orderly 0x48fcc971 {'fills': 288, 'trades': 56, 'maker_pct_fills': 2.4, 'edge_bps_bruto': 23.9, 'lead_med_s': 3036.6, 'spiegel_vult_0m_pct': None}
+klaar orderly CF6ht9EdxR {'fills': 362, 'trades': 46, 'maker_pct_fills': 0.0, 'edge_bps_bruto': 58.6, 'lead_med_s': None, 'spiegel_vult_0m_pct': None}
+klaar orderly 5HmEhLDgcF {'fills': 203, 'trades': 39, 'maker_pct_fills': 39.9, 'edge_bps_bruto': 63.33, 'lead_med_s': 115929.2, 'spiegel_vult_0m_pct': None}
+klaar orderly 0x75da5c6a {'fills': 297, 'trades': 25, 'maker_pct_fills': 44.1, 'edge_bps_bruto': 50.85, 'lead_med_s': 59.6, 'spiegel_vult_0m_pct': None}

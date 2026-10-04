@@ -1,0 +1,210 @@
+{
+ "markten": 211,
+ "A_from": {
+  "timestamp_from_ms": {
+   "status": 200,
+   "n": 0,
+   "oudste": "",
+   "nieuwste": "",
+   "fout": null
+  },
+  "timestamp_from_s": {
+   "status": 200,
+   "n": 0,
+   "oudste": "",
+   "nieuwste": "",
+   "fout": null
+  },
+  "trade_id_from_min_100000": {
+   "status": 200,
+   "n": 100,
+   "oudste": "2026-10-03",
+   "nieuwste": "2026-10-03",
+   "fout": null
+  },
+  "trade_id_from_min_1000000": {
+   "status": 200,
+   "n": 100,
+   "oudste": "2026-10-03",
+   "nieuwste": "2026-10-03",
+   "fout": null
+  },
+  "trade_id_from_min_10000000": {
+   "status": 200,
+   "n": 100,
+   "oudste": "2026-10-03",
+   "nieuwste": "2026-10-03",
+   "fout": null
+  },
+  "trade_id_from_min_100000000": {
+   "status": 200,
+   "n": 100,
+   "oudste": "2026-10-02",
+   "nieuwste": "2026-10-02",
+   "fout": null
+  },
+  "block_from_min_100000": {
+   "status": 200,
+   "n": 100,
+   "oudste": "2026-10-03",
+   "nieuwste": "2026-10-03",
+   "fout": null
+  },
+  "block_from_min_1000000": {
+   "status": 200,
+   "n": 100,
+   "oudste": "2026-10-02",
+   "nieuwste": "2026-10-02",
+   "fout": null
+  },
+  "block_from_min_10000000": {
+   "status": 200,
+   "n": 0,
+   "oudste": "",
+   "nieuwste": "",
+   "fout": null
+  }
+ },
+ "B_indexen": {
+  "probes": {
+   "1": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "2": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "3": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "5": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "10": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "50": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "100": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "500": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "1000": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "5000": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "10000": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "50000": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "100000": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "200000": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "500000": {
+    "status": 200,
+    "bestaat": true,
+    "type": 0
+   },
+   "1000000": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "2000000": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "5000000": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "10000000": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "100000000": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "1000000000": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "1000000000000": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "140737488355328": {
+    "status": 400,
+    "bestaat": false,
+    "type": null
+   },
+   "281474976710654": {
+    "status": 200,
+    "bestaat": true,
+    "type": 3
+   }
+  },
+  "hoogste_index_geschat": 500000,
+  "steekproef_300": {
+   "bestaat": 91,
+   "type_0": 91,
+   "nooit_gehandeld_of_geen_fills": 2,
+   "fill_laatste_90d": 1,
+   "fill_na_25-6": 1,
+   "bestaat_niet": 209
+  },
+  "fills_90d_verdeling(max 100)": [
+   2
+  ]
+ },
+ "calls": {
+  "200": 207,
+  "400": 9,
+  "405": 210
+ },
+ "calls_per_s": 3.66
+}

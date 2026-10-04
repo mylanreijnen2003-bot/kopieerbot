@@ -1,0 +1,30 @@
+{
+ "request": {
+  "type": "orderbook",
+  "symbol": "PERP_ALPIX_USDC_alpix",
+  "max_level": 1
+ },
+ "status": 200,
+ "response": {
+  "success": true,
+  "data": {
+   "symbol": "PERP_ALPIX_USDC_alpix",
+   "mid_price": "36.64",
+   "spread": "0.02",
+   "asks": [
+    {
+     "price": "36.65",
+     "quantity": "1.97"
+    }
+   ],
+   "bids": [
+    {
+     "price": "36.63",
+     "quantity": "2.71"
+    }
+   ],
+   "ts": 1791101761961
+  },
+  "ts": 1791101762827
+ }
+}

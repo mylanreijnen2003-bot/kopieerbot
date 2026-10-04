@@ -1,0 +1,61 @@
+== GET https://stats-data.hyperliquid.xyz/Mainnet/vaults -> 200 (14183043 bytes)
+aantal vaults: 9476
+keys: ["apr", "pnls", "summary"]
+voorbeeld: {"apr": 0.0, "pnls": [["day", ["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0"]], ["week", ["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0"]], ["month", ["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0"]], ["allTime", ["0.0", "14108.094219", "9492.356115", "1449.257998", "260.080016", "260.080016", "260.080016", "260.080016", "260.080016", "260.080016", "260.080016", "260.080016"]]], "summary": {"name": "Snipe Trading", "vaultAddress": "0x0004…e0dc", "leader": "0x9ab0…6c06", "tvl": "0.000016", "isClosed": true, "relationship": {"type": "normal"}, "createTimeMillis": 1736422051357}}
+isClosed: 6381
+== POST https://api.hyperliquid.xyz/info -> 200 (2 bytes)
+vaultSummaries: []
+== POST https://api.hyperliquid.xyz/info -> 200 (57903 bytes)
+details keys: ["allowDeposits", "alwaysCloseOnWithdraw", "apr", "description", "followerState", "followers", "isClosed", "leader", "leaderCommission", "leaderFraction", "maxDistributable", "maxWithdrawable", "name", "portfolio", "relationship", "vaultAddress"]
+  name: "Hyperliquidity Provider (HLP)"
+  apr: 0.038865586796088696
+  leaderFraction: 0.001986307812768284
+  leaderCommission: 0.0
+  isClosed: false
+  allowDeposits: true
+  maxDistributable: 42565840.849986
+  followers: 100; voorbeeld {"user": "0x03e1…255e", "vaultEquity": "604789.1965547194", "pnl": "80654.3927427193", "allTimePnl": "156679.7532567193", "daysFollowing": 653, "vaultEntryTime": 1734650428028, "lockupUntil": 1770680880422}
+  portfolio day: av 42 punten [[1791026114572, "182775019.2753530145"], [1791027017484, "182775022.1372250021"]] … [[1791112999449, "182137941.7585859895"]]; pnl 42
+  portfolio week: av 63 punten [[1790465853551, "182892320.3021000028"], [1790510276300, "182712708.648555994"]] … [[1791112999449, "182137941.7585859895"]]; pnl 63
+  portfolio month: av 45 punten [[1788479159620, "189409583.2949570119"], [1788565630716, "190010545.8858169913"]] … [[1791112999449, "182137941.7585859895"]]; pnl 45
+  portfolio allTime: av 100 punten [[1683758700034, "0.0"], [1683762300034, "82331.181599"]] … [[1791112999449, "182137941.7585859895"]]; pnl 100
+  portfolio perpDay: av 42 punten [[1791026114572, "43230383.2794049978"], [1791027017484, "43230407.6970380023"]] … [[1791112999449, "42566318.7173829973"]]; pnl 42
+  portfolio perpWeek: av 63 punten [[1790465853551, "43439005.5760089979"], [1790510276300, "43263720.2485570014"]] … [[1791112999449, "42566318.7173829973"]]; pnl 63
+  portfolio perpMonth: av 45 punten [[1788479159620, "50045170.8322699964"], [1788565630716, "50646715.4881390035"]] … [[1791112999449, "42566318.7173829973"]]; pnl 45
+  portfolio perpAllTime: av 77 punten [[1714607953536, "0.0"], [1715212533532, "33814370.0411399975"]] … [[1791112999449, "42566318.7173829973"]]; pnl 77
+== POST https://api.hyperliquid.xyz/info -> 200 (22532 bytes)
+details keys: ["allowDeposits", "alwaysCloseOnWithdraw", "apr", "description", "followerState", "followers", "isClosed", "leader", "leaderCommission", "leaderFraction", "maxDistributable", "maxWithdrawable", "name", "portfolio", "relationship", "vaultAddress"]
+  name: "Blown Out Backing"
+  apr: 0.0
+  leaderFraction: 0.8718528586909737
+  leaderCommission: 0.1
+  isClosed: true
+  allowDeposits: true
+  maxDistributable: 510.711749
+  followers: 3; voorbeeld {"user": "0x4d0f…7cf6", "vaultEquity": "53.5635371793", "pnl": "53.5635371793", "allTimePnl": "-2030.7546098207", "daysFollowing": 442, "vaultEntryTime": 1752850201353, "lockupUntil": 1753350076138}
+  portfolio day: av 13 punten [[1791024960046, "625.410002"], [1791032160048, "625.410002"]] … [[1791113000658, "625.410002"]]; pnl 13
+  portfolio week: av 65 punten [[1790507760046, "625.410002"], [1790514960060, "625.410002"]] … [[1791113000658, "625.410002"]]; pnl 65
+  portfolio month: av 46 punten [[1788478560040, "625.410002"], [1788566160054, "625.410002"]] … [[1791113000658, "625.410002"]]; pnl 46
+  portfolio allTime: av 68 punten [[1752701880053, "0.0"], [1752705480053, "24420.9061"]] … [[1791113000658, "625.410002"]]; pnl 68
+  portfolio perpDay: av 13 punten [[1791024960046, "625.410002"], [1791032160048, "625.410002"]] … [[1791113000658, "625.410002"]]; pnl 13
+  portfolio perpWeek: av 65 punten [[1790507760046, "625.410002"], [1790514960060, "625.410002"]] … [[1791113000658, "625.410002"]]; pnl 65
+  portfolio perpMonth: av 46 punten [[1788478560040, "625.410002"], [1788566160054, "625.410002"]] … [[1791113000658, "625.410002"]]; pnl 46
+  portfolio perpAllTime: av 68 punten [[1752701880053, "0.0"], [1752705480053, "24420.9061"]] … [[1791113000658, "625.410002"]]; pnl 68
+== POST https://api.hyperliquid.xyz/info -> 200 (57892 bytes)
+details keys: ["allowDeposits", "alwaysCloseOnWithdraw", "apr", "description", "followerState", "followers", "isClosed", "leader", "leaderCommission", "leaderFraction", "maxDistributable", "maxWithdrawable", "name", "portfolio", "relationship", "vaultAddress"]
+  name: "Hyperliquidity Provider (HLP)"
+  apr: 0.03886571809732261
+  leaderFraction: 0.001986307812768284
+  leaderCommission: 0.0
+  isClosed: false
+  allowDeposits: true
+  maxDistributable: 42565841.379438
+  followers: 100; voorbeeld {"user": "0x03e1…255e", "vaultEquity": "604789.1999955486", "pnl": "80654.3961835486", "allTimePnl": "156679.7566975486", "daysFollowing": 653, "vaultEntryTime": 1734650428028, "lockupUntil": 1770680880422}
+  portfolio day: av 42 punten [[1791026114572, "182775019.2753530145"], [1791027017484, "182775022.1372250021"]] … [[1791113001866, "182137942.7948240042"]]; pnl 42
+  portfolio week: av 63 punten [[1790465853551, "182892320.3021000028"], [1790510276300, "182712708.648555994"]] … [[1791113001866, "182137942.7948240042"]]; pnl 63
+  portfolio month: av 45 punten [[1788479159620, "189409583.2949570119"], [1788565630716, "190010545.8858169913"]] … [[1791113001866, "182137942.7948240042"]]; pnl 45
+  portfolio allTime: av 100 punten [[1683758700034, "0.0"], [1683762300034, "82331.181599"]] … [[1791113001866, "182137942.7948240042"]]; pnl 100
+  portfolio perpDay: av 42 punten [[1791026114572, "43230383.2794049978"], [1791027017484, "43230407.6970380023"]] … [[1791113001866, "42566319.2468350008"]]; pnl 42
+  portfolio perpWeek: av 63 punten [[1790465853551, "43439005.5760089979"], [1790510276300, "43263720.2485570014"]] … [[1791113001866, "42566319.2468350008"]]; pnl 63
+  portfolio perpMonth: av 45 punten [[1788479159620, "50045170.8322699964"], [1788565630716, "50646715.4881390035"]] … [[1791113001866, "42566319.2468350008"]]; pnl 45
+  portfolio perpAllTime: av 77 punten [[1714607953536, "0.0"], [1715212533532, "33814370.0411399975"]] … [[1791113001866, "42566319.2468350008"]]; pnl 77

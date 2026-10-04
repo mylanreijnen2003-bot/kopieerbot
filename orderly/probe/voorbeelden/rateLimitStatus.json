@@ -1,0 +1,16 @@
+{
+ "request": {
+  "type": "rateLimitStatus"
+ },
+ "status": 200,
+ "response": {
+  "success": true,
+  "data": {
+   "limit": 1200,
+   "remaining": 1200,
+   "reset": 1791050880000,
+   "tier": "default"
+  },
+  "ts": 1791050860667
+ }
+}

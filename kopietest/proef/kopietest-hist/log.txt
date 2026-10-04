@@ -1,0 +1,2 @@
+klaar hl 0xc3b1bf1f {'fills': 3190, 'trades': 199, 'maker_pct_fills': 76.0, 'edge_bps_bruto': 34.16, 'lead_med_s': 938.3, 'spiegel_vult_0m_pct': np.float64(62.6)}
+klaar orderly 0x0cb8c001 {'fills': 705, 'trades': 67, 'maker_pct_fills': 0.0, 'edge_bps_bruto': 43.32, 'lead_med_s': None, 'spiegel_vult_0m_pct': None}

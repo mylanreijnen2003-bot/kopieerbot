@@ -1,0 +1,8 @@
+fout topAddresses  ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='api.orderly.org', port=443): Read timed out. (read timeout=30)"))
+fout topAddresses  ReadTimeout(ReadTimeoutError("HTTPSConnectionPool(host='api.orderly.org', port=443): Read timed out. (read timeout=30)"))
+pool 4423
+voorfilter 0 / 40 4 min
+voorfilter klaar 40 door 25 (nu actief 24 , actief rond knip 15 )
+wallets 0 / 25 7 min
+wallets klaar 25 oudste fill 2025-09-07 23:14:09.859000
+klaar {"knip": "2026-08-19", "oudste_data": "2025-09-07", "pool": 40, "voorfilter_door": 25, "wallets_met_fills": 25, "test_eisen": {"min_dagen": 90, "min_trades": 100}, "test_geschikt": 0, "regel_mylan": {"gekozen": [], "test_potje_pm_pct_gem": null, "test_verliesmaanden": [], "test_winst_pct": [], "test_trades": [], "test_potje_pm_pct": []}, "regel_methode": {"gekozen": [], "test_potje_pm_pct_gem": null, "test_verliesmaanden": [], "test_winst_pct": [], "test_trades": [], "test_potje_pm_pct": []}, "basis_alle_geschikt_test_potje_pm_pct_gem": null, "basis_alle_geschikt_test_potje_pm_pct_mediaan": null, "vandaag_eisen": {"min_dagen": 60, "min_trades": 60, "geschikt": 1}, "vandaag_regel_mylan": ["0x4f70…f5d3"], "vandaag_regel_methode": ["0x4f70…f5d3"]}

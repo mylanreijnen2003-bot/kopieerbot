@@ -1,0 +1,227 @@
+[
+ [
+  "24597812124",
+  {
+   "created": 1790776622821,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_XMR_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24597811499",
+  {
+   "created": 1790776579230,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_AMZN_USDC_mythos",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24597801267",
+  {
+   "created": 1790775779649,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_HOOD_USDC_mythos",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24597798159",
+  {
+   "created": 1790775550613,
+   "type": "LIMIT",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "CANCELLED",
+   "px": 113.2,
+   "coin": "PERP_HOOD_USDC_mythos",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24597797435",
+  {
+   "created": 1790775498510,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_HOOD_USDC_mythos",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24597474340",
+  {
+   "created": 1790753093015,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_XAU_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24596721370",
+  {
+   "created": 1790705997547,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_XAU_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24576386161",
+  {
+   "created": 1790666730123,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_XAU_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24576376314",
+  {
+   "created": 1790666118431,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_AMZN_USDC_mythos",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24576376119",
+  {
+   "created": 1790666105224,
+   "type": "LIMIT",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "CANCELLED",
+   "px": 239.0,
+   "coin": "PERP_AMZN_USDC_mythos",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24575501883",
+  {
+   "created": 1790606548599,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_XAU_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24575487027",
+  {
+   "created": 1790605386558,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_XAG_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24575464577",
+  {
+   "created": 1790603559145,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_CL_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24575427785",
+  {
+   "created": 1790600678098,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_CL_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24575291138",
+  {
+   "created": 1790590922106,
+   "type": "LIMIT",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "CANCELLED",
+   "px": 4112.0,
+   "coin": "PERP_XAU_USDC",
+   "side": "BUY"
+  }
+ ]
+]

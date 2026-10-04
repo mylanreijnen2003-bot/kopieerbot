@@ -1,0 +1,227 @@
+[
+ [
+  "24680038468",
+  {
+   "created": 1791090237308,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_SOL_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "67687786",
+  {
+   "created": 1790969513525,
+   "type": "TP_SL",
+   "tif": null,
+   "trigger": false,
+   "tpsl": true,
+   "reduce": true,
+   "status": "CANCELLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24679485880",
+  {
+   "created": 1790944465609,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679481330",
+  {
+   "created": 1790944179267,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "67685867",
+  {
+   "created": 1790943422694,
+   "type": "POSITIONAL_TP_SL",
+   "tif": null,
+   "trigger": false,
+   "tpsl": true,
+   "reduce": true,
+   "status": "CANCELLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24636767288",
+  {
+   "created": 1790846575207,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "67679082",
+  {
+   "created": 1790827185155,
+   "type": "TP_SL",
+   "tif": null,
+   "trigger": false,
+   "tpsl": true,
+   "reduce": true,
+   "status": "CANCELLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24636463285",
+  {
+   "created": 1790826690309,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24636457025",
+  {
+   "created": 1790826343850,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "67677943",
+  {
+   "created": 1790792337288,
+   "type": "TP_SL",
+   "tif": null,
+   "trigger": false,
+   "tpsl": true,
+   "reduce": true,
+   "status": "CANCELLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24635879801",
+  {
+   "created": 1790792209351,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "67677511",
+  {
+   "created": 1790784785123,
+   "type": "TP_SL",
+   "tif": null,
+   "trigger": false,
+   "tpsl": true,
+   "reduce": true,
+   "status": "CANCELLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24597938263",
+  {
+   "created": 1790784739500,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "67677396",
+  {
+   "created": 1790783279573,
+   "type": "TP_SL",
+   "tif": null,
+   "trigger": false,
+   "tpsl": true,
+   "reduce": true,
+   "status": "CANCELLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24597911112",
+  {
+   "created": 1790783266364,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ASTER_USDC",
+   "side": "BUY"
+  }
+ ]
+]

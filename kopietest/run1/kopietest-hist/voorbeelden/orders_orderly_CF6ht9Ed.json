@@ -1,0 +1,227 @@
+[
+ [
+  "24679967777",
+  {
+   "created": 1791059974419,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_LINK_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679966161",
+  {
+   "created": 1791058398338,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_LINK_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679738803",
+  {
+   "created": 1790962601206,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_HBAR_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679737136",
+  {
+   "created": 1790962241592,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_LTC_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679336991",
+  {
+   "created": 1790933675988,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ETHFI_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679334912",
+  {
+   "created": 1790933520526,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ENA_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679334040",
+  {
+   "created": 1790933458237,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_JUP_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "67685297",
+  {
+   "created": 1790933377819,
+   "type": "POSITIONAL_TP_SL",
+   "tif": null,
+   "trigger": false,
+   "tpsl": true,
+   "reduce": true,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_MON_USDC",
+   "side": "SELL"
+  }
+ ],
+ [
+  "24679315485",
+  {
+   "created": 1790932082493,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ONDO_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679315124",
+  {
+   "created": 1790932064584,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_MON_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679313640",
+  {
+   "created": 1790931954597,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_FET_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679312997",
+  {
+   "created": 1790931911631,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_SOL_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24679308234",
+  {
+   "created": 1790931625485,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_SOL_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24637201690",
+  {
+   "created": 1790880419107,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ONDO_USDC",
+   "side": "BUY"
+  }
+ ],
+ [
+  "24637163227",
+  {
+   "created": 1790877478322,
+   "type": "MARKET",
+   "tif": null,
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "FILLED",
+   "px": 0.0,
+   "coin": "PERP_ONDO_USDC",
+   "side": "BUY"
+  }
+ ]
+]

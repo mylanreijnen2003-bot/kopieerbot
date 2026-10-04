@@ -1,0 +1,227 @@
+[
+ [
+  "564834975081",
+  {
+   "created": 1791101579567,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 90.397,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564834772366",
+  {
+   "created": 1791101551849,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "open",
+   "px": 90.359,
+   "coin": "HYPE",
+   "side": "A"
+  }
+ ],
+ [
+  "564833464951",
+  {
+   "created": 1791101389976,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1328.1,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564831026215",
+  {
+   "created": 1791101066720,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1328.4,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564830024166",
+  {
+   "created": 1791100960268,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1328.1,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564829460087",
+  {
+   "created": 1791100913657,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1327.8,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564828044406",
+  {
+   "created": 1791100779716,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1326.9,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564826385372",
+  {
+   "created": 1791100602145,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1326.1,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564825432095",
+  {
+   "created": 1791100469242,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1325.7,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564824709041",
+  {
+   "created": 1791100361397,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1325.5,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564823666031",
+  {
+   "created": 1791100190534,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1325.2,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564822142262",
+  {
+   "created": 1791099952139,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1324.9,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564819747176",
+  {
+   "created": 1791099583144,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1324.6,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564818595740",
+  {
+   "created": 1791099393275,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1324.3,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "564817811101",
+  {
+   "created": 1791099279144,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1324.3,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ]
+]

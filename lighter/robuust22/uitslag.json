@@ -1,0 +1,125 @@
+{
+ "reality_check": "overgeslagen (zie eerdere run)",
+ "rangcorrelatie": [
+  {
+   "knip": "2026-06-01",
+   "n": 99,
+   "spearman_potje3m_vs_volgende_maand": 0.292,
+   "spearman_potje_vs_volgende_maand": 0.325
+  },
+  {
+   "knip": "2026-07-01",
+   "n": 124,
+   "spearman_potje3m_vs_volgende_maand": 0.408,
+   "spearman_potje_vs_volgende_maand": 0.43
+  },
+  {
+   "knip": "2026-08-01",
+   "n": 168,
+   "spearman_potje3m_vs_volgende_maand": 0.241,
+   "spearman_potje_vs_volgende_maand": 0.258
+  }
+ ],
+ "monte_carlo": {
+  "meeste_winst_stop_None": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -8.2,
+    -0.7,
+    7.1
+   ],
+   "kans_verliesmaand_pct": 56.1,
+   "daling_p50_p95_pct": [
+    -3.3,
+    -10.8
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  },
+  "meeste_winst_stop_0.3": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -7.0,
+    -1.4,
+    5.3
+   ],
+   "kans_verliesmaand_pct": 64.0,
+   "daling_p50_p95_pct": [
+    -3.9,
+    -8.8
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  },
+  "veilig_stop_None": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -7.6,
+    -0.8,
+    5.7
+   ],
+   "kans_verliesmaand_pct": 57.2,
+   "daling_p50_p95_pct": [
+    -3.2,
+    -10.0
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  },
+  "veilig_stop_0.3": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -7.4,
+    -1.4,
+    5.1
+   ],
+   "kans_verliesmaand_pct": 65.4,
+   "daling_p50_p95_pct": [
+    -3.9,
+    -8.9
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  },
+  "standaard_stop_None": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -6.1,
+    0.5,
+    5.7
+   ],
+   "kans_verliesmaand_pct": 44.6,
+   "daling_p50_p95_pct": [
+    -2.5,
+    -9.4
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  },
+  "standaard_stop_0.3": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -5.5,
+    -0.2,
+    5.0
+   ],
+   "kans_verliesmaand_pct": 52.8,
+   "daling_p50_p95_pct": [
+    -3.3,
+    -7.7
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  }
+ },
+ "n_perm": 1000,
+ "uitleg": {
+  "alles": "testuitkomsten gehusseld over alle accounts per knip (toetst filters + rangschikking + zoektocht)",
+  "binnen_basis": "alleen gehusseld binnen accounts die aan de basiseisen voldoen (toetst extra filters + rangschikking + zoektocht)",
+  "p": "aandeel gehusselde werelden waarin de beste regel minstens zo goed scoort als de echte; < 0,05 = waarschijnlijk geen geluk"
+ },
+ "api_calls": {
+  "200": 1128,
+  "429": 116
+ }
+}

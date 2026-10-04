@@ -1,0 +1,5 @@
+shard 3 van 8 adressen 12
+voorfilter 0 / 12 0 min
+voorfilter klaar 12 door 4 (nu actief 2 , actief rond knip 2 )
+wallets 0 / 4 1 min
+shard klaar 4 oudste fill 2026-04-13 13:49:57.642000

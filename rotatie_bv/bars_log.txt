@@ -1,0 +1,22 @@
+bestanden:
+      1 dat/bt-part-0/bars_
+      1 dat/bt-part-0/fills_
+      1 dat/bt-part-1/bars_
+      1 dat/bt-part-1/fills_
+      1 dat/bt-part-10/bars_
+      1 dat/bt-part-10/fills_
+      1 dat/bt-part-11/bars_
+      1 dat/bt-part-11/fills_
+      1 dat/bt-part-2/bars_
+      1 dat/bt-part-2/fills_
+      1 dat/bt-part-3/bars_
+      1 dat/bt-part-3/fills_
+      1 dat/bt-part-4/bars_
+      1 dat/bt-part-4/fills_
+      1 dat/bt-part-5/bars_
+      1 dat/bt-part-5/fills_
+      1 dat/bt-part-6/bars_
+      1 dat/bt-part-6/fills_
+      1 dat/bt-part-7/bars_
+      1 dat/bt-part-7/fills_
+1584567 2231

@@ -1,0 +1,20 @@
+[
+ {
+  "coin": "TRUMP",
+  "side": "A",
+  "limitPx": "3.6",
+  "sz": "744.7",
+  "oid": 561486835966,
+  "timestamp": 1790787390768,
+  "triggerCondition": "N/A",
+  "isTrigger": false,
+  "triggerPx": "0.0",
+  "children": [],
+  "isPositionTpsl": false,
+  "reduceOnly": true,
+  "orderType": "Limit",
+  "origSz": "744.7",
+  "tif": "Gtc",
+  "cloid": null
+ }
+]

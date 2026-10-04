@@ -1,0 +1,70 @@
+{
+ "pool": 21281,
+ "met_historie_knip": 18505,
+ "geschikt_knip": 458,
+ "basis_test": {
+  "gem_pct": 286.06,
+  "mediaan_pct": -18.69,
+  "winst_aandeel": 0.293
+ },
+ "willekeurig_10_test": {
+  "gem_pct": 523.96,
+  "p10_pct": -487.08,
+  "p90_pct": 195.82
+ },
+ "test_mylan_5": {
+  "gem_pct": -604.05,
+  "mediaan_pct": -230.62,
+  "winst_aandeel": 0.0,
+  "slechtste_pct": -1616.21
+ },
+ "test_mylan_10": {
+  "gem_pct": -415.0,
+  "mediaan_pct": -210.33,
+  "winst_aandeel": 0.0,
+  "slechtste_pct": -1616.21
+ },
+ "test_mylan_20": {
+  "gem_pct": -265.42,
+  "mediaan_pct": -120.54,
+  "winst_aandeel": 0.05,
+  "slechtste_pct": -1616.21
+ },
+ "test_risico_5": {
+  "gem_pct": -43.03,
+  "mediaan_pct": -230.62,
+  "winst_aandeel": 0.2,
+  "slechtste_pct": -823.01
+ },
+ "test_risico_10": {
+  "gem_pct": -191.51,
+  "mediaan_pct": -146.93,
+  "winst_aandeel": 0.2,
+  "slechtste_pct": -1441.86
+ },
+ "test_risico_20": {
+  "gem_pct": -234.92,
+  "mediaan_pct": -219.3,
+  "winst_aandeel": 0.2,
+  "slechtste_pct": -1441.86
+ },
+ "test_max_5": {
+  "gem_pct": -13.99,
+  "mediaan_pct": -27.75,
+  "winst_aandeel": 0.4,
+  "slechtste_pct": -1441.86
+ },
+ "test_max_10": {
+  "gem_pct": -507.79,
+  "mediaan_pct": -430.64,
+  "winst_aandeel": 0.2,
+  "slechtste_pct": -2840.54
+ },
+ "test_max_20": {
+  "gem_pct": -841.98,
+  "mediaan_pct": -246.68,
+  "winst_aandeel": 0.2,
+  "slechtste_pct": -9365.26
+ },
+ "geschikt_vandaag": 393
+}

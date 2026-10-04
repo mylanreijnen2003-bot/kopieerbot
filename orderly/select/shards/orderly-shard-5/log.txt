@@ -1,0 +1,15 @@
+shard 5 van 8 adressen 554
+voorfilter 0 / 554 0 min
+voorfilter 250 / 554 12 min
+voorfilter 500 / 554 25 min
+voorfilter klaar 554 door 208 (nu actief 172 , actief rond knip 127 )
+wallets 0 / 208 28 min
+wallets 25 / 208 43 min
+wallets 50 / 208 55 min
+wallets 75 / 208 67 min
+wallets 100 / 208 82 min
+wallets 125 / 208 93 min
+wallets 150 / 208 105 min
+wallets 175 / 208 121 min
+wallets 200 / 208 137 min
+shard klaar 205 oudste fill 2025-12-07 00:26:17.275000

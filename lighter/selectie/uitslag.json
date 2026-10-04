@@ -1,0 +1,74 @@
+{
+ "knip": "2026-08-01",
+ "test_tot": "2026-10-04",
+ "eisen_extra": {
+  "min_equity_usd": 5000,
+  "max_posities_p90": 10,
+  "rangschikking": "potje-% = som / p90 posities"
+ },
+ "trechter_knip": {
+  "accounts_met_trades": 18313,
+  "eis_historie": 14375,
+  "eis_100": 5471,
+  "eis_rendement": 749,
+  "eis_pnl_dag": 431,
+  "eis_actief": 172,
+  "eis_handmatig": 104,
+  "eis_geen_mm": 98,
+  "eis_equity": 24,
+  "eis_posities": 22
+ },
+ "geschikt_knip": 22,
+ "test_alle_geschikt": {
+  "potje_pct_gem": 10.3,
+  "winstgevend": 16,
+  "van": 22
+ },
+ "test_top5": {
+  "test_potje_pct_gem": 22.4,
+  "winstgevend": 4,
+  "willekeurig_gem": 10.5,
+  "percentiel_vs_willekeurig": 88
+ },
+ "test_top10": {
+  "test_potje_pct_gem": 24.2,
+  "winstgevend": 8,
+  "willekeurig_gem": 10.2,
+  "percentiel_vs_willekeurig": 99
+ },
+ "test_top20": {
+  "test_potje_pct_gem": 12.1,
+  "winstgevend": 16,
+  "willekeurig_gem": 10.3,
+  "percentiel_vs_willekeurig": 90
+ },
+ "trechter_nu": {
+  "accounts_met_trades": 30002,
+  "eis_historie": 17045,
+  "eis_100": 6946,
+  "eis_rendement": 1085,
+  "eis_pnl_dag": 658,
+  "eis_actief": 295,
+  "eis_handmatig": 182,
+  "eis_geen_mm": 169,
+  "eis_equity": 66,
+  "eis_posities": 59
+ },
+ "dekking": {
+  "slices": 50,
+  "gescand": 755153,
+  "slices_niet_af": 19,
+  "bestaand": 754253,
+  "met_fills": 718577,
+  "kandidaten": 32493,
+  "druk_overgeslagen": 3120,
+  "fill_limiet_geraakt": 5507,
+  "calls": {
+   "200": 1129059,
+   "400": 900,
+   "429": 36081
+  },
+  "positie_mismatches": 73
+ },
+ "trechter_nu_bot(zonder handmatig-eis)": 82
+}

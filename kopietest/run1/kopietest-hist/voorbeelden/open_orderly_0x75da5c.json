@@ -1,0 +1,47 @@
+[
+ {
+  "order_id": "67693248",
+  "symbol": "PERP_SOL_USDC",
+  "side": "SELL",
+  "type": "TP_SL",
+  "price": null,
+  "quantity": "4.25000000",
+  "total_executed_quantity": "0.00000000",
+  "trigger_price": null,
+  "trigger_status": null,
+  "status": "OPEN",
+  "reduce_only": true,
+  "created_time": 1791090388319,
+  "updated_time": 1791090388327
+ },
+ {
+  "order_id": "67693245",
+  "symbol": "PERP_SOL_USDC",
+  "side": "SELL",
+  "type": "TP_SL",
+  "price": null,
+  "quantity": "4.25000000",
+  "total_executed_quantity": "0.00000000",
+  "trigger_price": null,
+  "trigger_status": null,
+  "status": "OPEN",
+  "reduce_only": true,
+  "created_time": 1791090384489,
+  "updated_time": 1791090384499
+ },
+ {
+  "order_id": "67687796",
+  "symbol": "PERP_ASTER_USDC",
+  "side": "SELL",
+  "type": "TP_SL",
+  "price": null,
+  "quantity": "9331.00000000",
+  "total_executed_quantity": "0.00000000",
+  "trigger_price": null,
+  "trigger_status": null,
+  "status": "OPEN",
+  "reduce_only": true,
+  "created_time": 1790969565539,
+  "updated_time": 1790969565548
+ }
+]

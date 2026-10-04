@@ -1,0 +1,38 @@
+{
+ "vastgelegd": "BACKTEST.md",
+ "train": "2025-07-28 t/m 2026-02-28",
+ "test": "2026-03-01 t/m 2026-08-18",
+ "trechter": {
+  "universum": 959,
+  "gesimuleerd": 90,
+  "geschikt": 38,
+  "set_kwintiel": 7,
+  "set_top10": 10,
+  "set_top30": 30,
+  "set_breed": 34,
+  "set_geverifieerd": 5,
+  "set_controle_onderste_kwintiel": 7
+ },
+ "beurzen": {
+  "kraken": 204,
+  "bitvavo": 426
+ },
+ "btc_test": -0.01838926989136369,
+ "hoofdtoets": {
+  "selectie": "kwintiel",
+  "variant": "P",
+  "omschrijving": "P: Kraken, 2x, stop -35%",
+  "wallets": 7,
+  "rendement": 0.0492,
+  "gem_dag": 0.00032,
+  "nw_t": 0.5,
+  "zonder_2_beste_dagen": 1e-05,
+  "max_drawdown": -0.0748,
+  "pct_potjes_winst": 0.571,
+  "btc": -0.0184,
+  "GO": false
+ },
+ "oordeel": "NO-GO",
+ "n_combinaties_GO": 0,
+ "n_combinaties": 48
+}

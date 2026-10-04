@@ -1,0 +1,38 @@
+[
+ {
+  "coin": "ZEC",
+  "side": "B",
+  "limitPx": "1328.1",
+  "sz": "1.44",
+  "oid": 564833464951,
+  "timestamp": 1791101389976,
+  "triggerCondition": "N/A",
+  "isTrigger": false,
+  "triggerPx": "0.0",
+  "children": [],
+  "isPositionTpsl": false,
+  "reduceOnly": false,
+  "orderType": "Limit",
+  "origSz": "1.44",
+  "tif": "Gtc",
+  "cloid": "0x00029a3c3922df51498b9d902e01dc85"
+ },
+ {
+  "coin": "NEAR",
+  "side": "A",
+  "limitPx": "4.8956",
+  "sz": "1100.3",
+  "oid": 564649872429,
+  "timestamp": 1791074335938,
+  "triggerCondition": "N/A",
+  "isTrigger": false,
+  "triggerPx": "0.0",
+  "children": [],
+  "isPositionTpsl": false,
+  "reduceOnly": true,
+  "orderType": "Limit",
+  "origSz": "1100.3",
+  "tif": "Gtc",
+  "cloid": "0x0008082affa90cfb42ae9b3878fcb271"
+ }
+]

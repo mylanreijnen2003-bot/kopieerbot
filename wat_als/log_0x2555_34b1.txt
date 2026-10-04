@@ -1,0 +1,54 @@
+{
+ "trades": 72,
+ "K": 10,
+ "inzet_per_trade": 50.0,
+ "long_pct": 83.3,
+ "op_kraken_pct": 95.8,
+ "op_bitvavo_pct": 76.4,
+ "bitvavo_bruikbaar_pct": 65.3,
+ "houdtijd_mediaan_uur": 53.7,
+ "trades_gestopt": 17,
+ "open_posities_nu": 4,
+ "kraken_eind": 630.1,
+ "kraken_maxdaling_pct": -3.2,
+ "bitvavo_eind": 742.96,
+ "bitvavo_maxdaling_pct": -2.1,
+ "hun_prijs_zonder_kosten_eind": 858.55,
+ "hun_prijs_zonder_kosten_maxdaling_pct": -2.6
+}
+         trades  kraken_eur  bitvavo_eur
+maand                                   
+2026-04       7       24.11        28.10
+2026-05       8       35.40        47.57
+2026-06       7      -10.22        43.52
+2026-07       6        9.06        24.40
+2026-08      24       54.79        55.82
+2026-09      17       13.48        43.52
+2026-10       3        3.48         0.03
+        trades  long_pct  kraken  bitvavo  kraken_eur
+base                                                 
+BTC         14        86    True     True        2.11
+ZEC         12        75    True    False        0.20
+TRUMP        4        50    True     True        5.84
+ENA          4        50    True     True        7.67
+PUMP         3       100    True     True       10.27
+AAVE         2       100    True     True      -10.32
+PENDLE       2        50    True     True       22.98
+HYPE         2       100    True     True       14.59
+TON          2       100   False    False        0.00
+PENGU        2       100    True     True       11.22
+PONS         2       100    True    False       15.14
+TRB          2       100    True     True       10.68
+AIXBT        1       100   False     True        0.00
+AVAX         1       100    True     True       -5.16
+BCH          1       100    True     True        1.80
+ARB          1       100    True     True       -5.16
+APE          1       100    True     True       24.01
+ONDO         1       100    True     True       21.10
+NEAR         1       100    True     True        3.10
+GRASS        1       100    True     True       -5.16
+ETHFI        1       100    True     True       13.46
+DYDX         1         0    True     True        1.11
+ENS          1       100    True     True        3.32
+CAKE         1       100    True     True       -5.16
+CRV          1       100    True     True        2.46

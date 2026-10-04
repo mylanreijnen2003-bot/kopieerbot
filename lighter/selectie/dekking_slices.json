@@ -1,0 +1,302 @@
+[
+ {
+  "van": 1,
+  "tot": 37831,
+  "gestopt_bij": 14671,
+  "gescand": 14670
+ },
+ {
+  "van": 113491,
+  "tot": 151321,
+  "gestopt_bij": 142775,
+  "gescand": 29284
+ },
+ {
+  "van": 151321,
+  "tot": 189151,
+  "gestopt_bij": 183796,
+  "gescand": 32475
+ },
+ {
+  "van": 189151,
+  "tot": 226981,
+  "gestopt_bij": 219254,
+  "gescand": 30103
+ },
+ {
+  "van": 226981,
+  "tot": 264811,
+  "gestopt_bij": 259576,
+  "gescand": 32595
+ },
+ {
+  "van": 264811,
+  "tot": 302641,
+  "gestopt_bij": 299000,
+  "gescand": 34189
+ },
+ {
+  "van": 302641,
+  "tot": 340471,
+  "gestopt_bij": 337086,
+  "gescand": 34445
+ },
+ {
+  "van": 340471,
+  "tot": 378301,
+  "gestopt_bij": 376736,
+  "gescand": 36265
+ },
+ {
+  "van": 378301,
+  "tot": 416131,
+  "gestopt_bij": 415285,
+  "gescand": 36984
+ },
+ {
+  "van": 37831,
+  "tot": 75661,
+  "gestopt_bij": 62584,
+  "gescand": 24753
+ },
+ {
+  "van": 416131,
+  "tot": 453961,
+  "gestopt_bij": 453773,
+  "gescand": 37642
+ },
+ {
+  "van": 453961,
+  "tot": 491791,
+  "gestopt_bij": null,
+  "gescand": 37830
+ },
+ {
+  "van": 491791,
+  "tot": 529621,
+  "gestopt_bij": 529141,
+  "gescand": 37350
+ },
+ {
+  "van": 529621,
+  "tot": 567451,
+  "gestopt_bij": null,
+  "gescand": 37830
+ },
+ {
+  "van": 567451,
+  "tot": 605281,
+  "gestopt_bij": null,
+  "gescand": 37830
+ },
+ {
+  "van": 605281,
+  "tot": 643111,
+  "gestopt_bij": 643069,
+  "gescand": 37788
+ },
+ {
+  "van": 643111,
+  "tot": 680941,
+  "gestopt_bij": 678808,
+  "gescand": 35697
+ },
+ {
+  "van": 680941,
+  "tot": 718771,
+  "gestopt_bij": 704830,
+  "gescand": 23889
+ },
+ {
+  "van": 718771,
+  "tot": 756584,
+  "gestopt_bij": 727768,
+  "gescand": 8997
+ },
+ {
+  "van": 75661,
+  "tot": 113491,
+  "gestopt_bij": 100051,
+  "gescand": 24390
+ },
+ {
+  "van": 100051,
+  "tot": 106771,
+  "gestopt_bij": null,
+  "gescand": 6720
+ },
+ {
+  "van": 106771,
+  "tot": 113491,
+  "gestopt_bij": null,
+  "gescand": 6720
+ },
+ {
+  "van": 142775,
+  "tot": 151321,
+  "gestopt_bij": null,
+  "gescand": 8546
+ },
+ {
+  "van": 14671,
+  "tot": 20461,
+  "gestopt_bij": null,
+  "gescand": 5790
+ },
+ {
+  "van": 183796,
+  "tot": 189151,
+  "gestopt_bij": null,
+  "gescand": 5355
+ },
+ {
+  "van": 20461,
+  "tot": 26251,
+  "gestopt_bij": null,
+  "gescand": 5790
+ },
+ {
+  "van": 219254,
+  "tot": 226981,
+  "gestopt_bij": null,
+  "gescand": 7727
+ },
+ {
+  "van": 259576,
+  "tot": 264811,
+  "gestopt_bij": null,
+  "gescand": 5235
+ },
+ {
+  "van": 26251,
+  "tot": 32041,
+  "gestopt_bij": null,
+  "gescand": 5790
+ },
+ {
+  "van": 299000,
+  "tot": 302641,
+  "gestopt_bij": null,
+  "gescand": 3641
+ },
+ {
+  "van": 32041,
+  "tot": 37831,
+  "gestopt_bij": null,
+  "gescand": 5790
+ },
+ {
+  "van": 337086,
+  "tot": 340471,
+  "gestopt_bij": null,
+  "gescand": 3385
+ },
+ {
+  "van": 376736,
+  "tot": 378301,
+  "gestopt_bij": null,
+  "gescand": 1565
+ },
+ {
+  "van": 415285,
+  "tot": 416131,
+  "gestopt_bij": null,
+  "gescand": 846
+ },
+ {
+  "van": 453773,
+  "tot": 453961,
+  "gestopt_bij": null,
+  "gescand": 188
+ },
+ {
+  "van": 529141,
+  "tot": 529621,
+  "gestopt_bij": null,
+  "gescand": 480
+ },
+ {
+  "van": 62584,
+  "tot": 69123,
+  "gestopt_bij": null,
+  "gescand": 6539
+ },
+ {
+  "van": 643069,
+  "tot": 643111,
+  "gestopt_bij": null,
+  "gescand": 42
+ },
+ {
+  "van": 678808,
+  "tot": 680941,
+  "gestopt_bij": null,
+  "gescand": 2133
+ },
+ {
+  "van": 69123,
+  "tot": 75661,
+  "gestopt_bij": null,
+  "gescand": 6538
+ },
+ {
+  "van": 704830,
+  "tot": 711801,
+  "gestopt_bij": null,
+  "gescand": 6971
+ },
+ {
+  "van": 711801,
+  "tot": 718771,
+  "gestopt_bij": null,
+  "gescand": 6970
+ },
+ {
+  "van": 727768,
+  "tot": 731370,
+  "gestopt_bij": null,
+  "gescand": 3602
+ },
+ {
+  "van": 731370,
+  "tot": 734972,
+  "gestopt_bij": null,
+  "gescand": 3602
+ },
+ {
+  "van": 734972,
+  "tot": 738574,
+  "gestopt_bij": null,
+  "gescand": 3602
+ },
+ {
+  "van": 738574,
+  "tot": 742176,
+  "gestopt_bij": 740916,
+  "gescand": 2342
+ },
+ {
+  "van": 742176,
+  "tot": 745778,
+  "gestopt_bij": 745608,
+  "gescand": 3432
+ },
+ {
+  "van": 745778,
+  "tot": 749380,
+  "gestopt_bij": null,
+  "gescand": 3602
+ },
+ {
+  "van": 749380,
+  "tot": 752982,
+  "gestopt_bij": null,
+  "gescand": 3602
+ },
+ {
+  "van": 752982,
+  "tot": 756584,
+  "gestopt_bij": null,
+  "gescand": 3602
+ }
+]

@@ -1,0 +1,7 @@
+config,groep,trades,bijkoop_trades_pct,groei_mediaan,groei_p90,groei_max,r_eerste_gem_pct,r_eerste_slechtste_pct,r_eerste_potje_mnd_pct,r_eerste_papier_mnd_pct,r_eerste_trader_maanden_winst_pct,r_gem_gem_pct,r_gem_slechtste_pct,r_gem_potje_mnd_pct,r_gem_papier_mnd_pct,r_gem_trader_maanden_winst_pct,r_max_gem_pct,r_max_slechtste_pct,r_max_potje_mnd_pct,r_max_papier_mnd_pct,r_max_trader_maanden_winst_pct
+meeste_winst,top10,1643,57.6,1.79,18.5,1750000.0,-0.041,-112.7,-2.3,-0.5,48.7,0.922,-62.4,22.7,8.9,84.6,0.919,-83.4,22.7,8.9,84.6
+meeste_winst,top5,1063,52.0,1.16,15.2,1750000.0,0.072,-51.4,-2.8,0.5,50.0,0.975,-25.5,32.4,12.1,90.0,0.978,-22.3,32.4,12.2,90.0
+standaard,top10,1383,72.3,2.55,40.5,9020000.0,-0.005,-112.7,0.5,0.3,56.4,1.079,-54.7,8.7,7.4,74.4,1.078,-83.4,8.7,7.4,74.4
+standaard,top5,730,70.3,2.43,27.9,1750000.0,0.101,-66.8,1.3,0.9,65.0,1.493,-30.9,11.4,9.4,90.0,1.525,-36.9,11.6,9.6,90.0
+veilig,top10,1274,73.9,2.74,45.1,9020000.0,-0.15,-112.7,-0.4,-0.8,46.2,1.092,-54.7,8.2,6.6,64.1,1.089,-83.4,8.3,6.6,64.1
+veilig,top5,687,70.7,2.49,33.3,9020000.0,-0.043,-112.7,1.5,0.2,52.6,1.717,-54.7,14.7,11.4,89.5,1.729,-83.4,15.0,11.4,89.5

@@ -1,0 +1,18 @@
+shard 0 van 8 adressen 555
+voorfilter 0 / 555 0 min
+voorfilter 250 / 555 15 min
+voorfilter 500 / 555 31 min
+fout trades rsy3u8bnhcvgzxr81jnfukmwuda7z19kbpv5ynmwvhf ConnectionError(ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')))
+voorfilter klaar 555 door 208 (nu actief 172 , actief rond knip 143 )
+wallets 0 / 208 35 min
+fout trades 0x070d…88c2 ConnectionError(ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')))
+fout trades 0x1f2c…b0df ConnectionError(ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')))
+wallets 25 / 208 51 min
+wallets 50 / 208 68 min
+wallets 75 / 208 86 min
+wallets 100 / 208 100 min
+wallets 125 / 208 117 min
+wallets 150 / 208 131 min
+wallets 175 / 208 147 min
+wallets 200 / 208 161 min
+shard klaar 205 oudste fill 2025-12-06 22:53:58.303000

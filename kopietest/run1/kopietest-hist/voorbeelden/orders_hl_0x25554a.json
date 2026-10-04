@@ -1,0 +1,227 @@
+[
+ [
+  "541229953094",
+  {
+   "created": 1789044603919,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.40204,
+   "coin": "PONS",
+   "side": "B"
+  }
+ ],
+ [
+  "541229953095",
+  {
+   "created": 1789044603919,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.4102,
+   "coin": "PONS",
+   "side": "B"
+  }
+ ],
+ [
+  "538816684986",
+  {
+   "created": 1788830083523,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.6087,
+   "coin": "WLD",
+   "side": "A"
+  }
+ ],
+ [
+  "538816684985",
+  {
+   "created": 1788830083523,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.58913,
+   "coin": "WLD",
+   "side": "A"
+  }
+ ],
+ [
+  "541229953096",
+  {
+   "created": 1789044603919,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.41837,
+   "coin": "PONS",
+   "side": "B"
+  }
+ ],
+ [
+  "541229953097",
+  {
+   "created": 1789044603919,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.42653,
+   "coin": "PONS",
+   "side": "B"
+  }
+ ],
+ [
+  "541229953098",
+  {
+   "created": 1789044603919,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.43469,
+   "coin": "PONS",
+   "side": "B"
+  }
+ ],
+ [
+  "541229953099",
+  {
+   "created": 1789044603919,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.44286,
+   "coin": "PONS",
+   "side": "B"
+  }
+ ],
+ [
+  "562683039720",
+  {
+   "created": 1790878616679,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1271.1,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "562683039721",
+  {
+   "created": 1790878616679,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1278.9,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "562683039722",
+  {
+   "created": 1790878616679,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1286.8,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "562683039723",
+  {
+   "created": 1790878616679,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1294.7,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "562683039724",
+  {
+   "created": 1790878616679,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 1302.6,
+   "coin": "ZEC",
+   "side": "B"
+  }
+ ],
+ [
+  "541229953100",
+  {
+   "created": 1789044603919,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.45102,
+   "coin": "PONS",
+   "side": "B"
+  }
+ ],
+ [
+  "541229953101",
+  {
+   "created": 1789044603919,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.45918,
+   "coin": "PONS",
+   "side": "B"
+  }
+ ]
+]

@@ -1,0 +1,227 @@
+[
+ [
+  "564829690088",
+  {
+   "created": 1791100933039,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.030505,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564829689787",
+  {
+   "created": 1791100932972,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.03151,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564829689780",
+  {
+   "created": 1791100932972,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.032245,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564829387110",
+  {
+   "created": 1791100904922,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.032833,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564829387101",
+  {
+   "created": 1791100904922,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.033339,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564829386499",
+  {
+   "created": 1791100904856,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.033836,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564804988400",
+  {
+   "created": 1791097317522,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.030535,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564779342524",
+  {
+   "created": 1791093731246,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.031542,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564779342513",
+  {
+   "created": 1791093731246,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.032273,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564779341975",
+  {
+   "created": 1791093731178,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.032856,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564779171351",
+  {
+   "created": 1791093705526,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.033357,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564779170851",
+  {
+   "created": 1791093705391,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.033848,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564779558192",
+  {
+   "created": 1791093763936,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.03054,
+   "coin": "MON",
+   "side": "B"
+  }
+ ],
+ [
+  "564779170589",
+  {
+   "created": 1791093705320,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": true,
+   "status": "open",
+   "px": 0.035138,
+   "coin": "MON",
+   "side": "A"
+  }
+ ],
+ [
+  "564777212672",
+  {
+   "created": 1791093405264,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 0.034774,
+   "coin": "MON",
+   "side": "B"
+  }
+ ]
+]

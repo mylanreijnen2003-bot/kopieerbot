@@ -1,0 +1,9 @@
+== aws s3 ls --no-sign-request
+
+aws: [ERROR]: An error occurred (AccessDenied) when calling the ListObjectsV2 operation: Anonymous users cannot invoke requests against Requester Pays buckets. Please authenticate.
+== https list (anoniem, requester-pays header)
+<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>AccessDenied</Code><Message>Anonymous users cannot invoke requests against Requester Pays buckets. Please authenticate.</Message><RequestId>FWA2W3SE8HVR9ZGX</RequestId><HostId>qIuqjhXcrcDFPUCBJ0YXTy/2hnv2YizmfQjBuCwsWvDwqckF/JgewTv7IDPHpy8EI4VttFuTeqA/ul8YJdiNYjgIg8KRfOFT</HostId></Error>
+== https list (anoniem)
+<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>AccessDenied</Code><Message>Anonymous users cannot invoke requests against Requester Pays buckets. Please authenticate.</Message><RequestId>FWA9SK6A7Y1CDVNY</RequestId><HostId>AT/WAKlknSK3C5r3/zA7tICfzpxdiKr/aoNskyQKJTRD57evrx69XBL5yQzNjJS7zlmyrmf/BrGSXWO2BrpzQwdUqwE9c119</HostId></Error>

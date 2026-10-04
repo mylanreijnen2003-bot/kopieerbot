@@ -1,0 +1,157 @@
+{
+ "reality_check": {
+  "echt": {
+   "max_min_ontwerp": 35.33,
+   "holdout_van_beste": 42.05,
+   "max_gem_alle": 39.54
+  },
+  "echt_beste_cfg": {
+   "min_equity": 0,
+   "max_pos": 5,
+   "handmatig": false,
+   "rang": "potje_3m",
+   "N": 5
+  },
+  "configs_echt_gem_per_fold": {
+   "meeste_winst": [
+    36.12,
+    38.42,
+    33.07,
+    40.86
+   ],
+   "veilig": [
+    16.35,
+    15.17,
+    11.17,
+    17.84
+   ],
+   "standaard": [
+    13.71,
+    15.45,
+    9.59,
+    10.81
+   ]
+  },
+  "alles": {
+   "p_zoektocht_min_ontwerp": 0.0,
+   "p_zoektocht_gem_alle": 0.0,
+   "nul_beste_min_ontwerp_p50_p95_pct": [
+    0.64,
+    3.72
+   ],
+   "nul_beste_gem_alle_p50_p95_pct": [
+    2.96,
+    8.35
+   ],
+   "per_config_p": {
+    "meeste_winst": 0.0,
+    "veilig": 0.0,
+    "standaard": 0.0
+   },
+   "per_config_nul_gem_pct": {
+    "meeste_winst": -1.85,
+    "veilig": -1.87,
+    "standaard": -1.87
+   }
+  },
+  "binnen_basis": {
+   "p_zoektocht_min_ontwerp": 0.0,
+   "p_zoektocht_gem_alle": 0.0,
+   "nul_beste_min_ontwerp_p50_p95_pct": [
+    7.62,
+    13.84
+   ],
+   "nul_beste_gem_alle_p50_p95_pct": [
+    11.41,
+    16.66
+   ],
+   "per_config_p": {
+    "meeste_winst": 0.0,
+    "veilig": 0.003,
+    "standaard": 0.013
+   },
+   "per_config_nul_gem_pct": {
+    "meeste_winst": 3.87,
+    "veilig": 3.79,
+    "standaard": 3.69
+   }
+  }
+ },
+ "rangcorrelatie": [
+  {
+   "knip": "2026-06-01",
+   "n": 99,
+   "spearman_potje3m_vs_volgende_maand": 0.292,
+   "spearman_potje_vs_volgende_maand": 0.325
+  },
+  {
+   "knip": "2026-07-01",
+   "n": 124,
+   "spearman_potje3m_vs_volgende_maand": 0.408,
+   "spearman_potje_vs_volgende_maand": 0.43
+  },
+  {
+   "knip": "2026-08-01",
+   "n": 168,
+   "spearman_potje3m_vs_volgende_maand": 0.241,
+   "spearman_potje_vs_volgende_maand": 0.258
+  }
+ ],
+ "monte_carlo": {
+  "meeste_winst": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -5.8,
+    -1.4,
+    5.0
+   ],
+   "kans_verliesmaand_pct": 67.2,
+   "daling_p50_p95_pct": [
+    -3.2,
+    -6.5
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  },
+  "veilig": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -7.7,
+    -2.6,
+    3.6
+   ],
+   "kans_verliesmaand_pct": 77.4,
+   "daling_p50_p95_pct": [
+    -4.3,
+    -8.7
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  },
+  "standaard": {
+   "trader_maanden": 39,
+   "maand_p5_p50_p95_pct": [
+    -5.7,
+    -1.0,
+    3.6
+   ],
+   "kans_verliesmaand_pct": 64.5,
+   "daling_p50_p95_pct": [
+    -3.2,
+    -7.1
+   ],
+   "kans_daling_gt_20_pct": 0.0,
+   "kans_daling_gt_30_pct": 0.0
+  }
+ },
+ "n_perm": 1000,
+ "uitleg": {
+  "alles": "testuitkomsten gehusseld over alle accounts per knip (toetst filters + rangschikking + zoektocht)",
+  "binnen_basis": "alleen gehusseld binnen accounts die aan de basiseisen voldoen (toetst extra filters + rangschikking + zoektocht)",
+  "p": "aandeel gehusselde werelden waarin de beste regel minstens zo goed scoort als de echte; < 0,05 = waarschijnlijk geen geluk"
+ },
+ "api_calls": {
+  "200": 1128,
+  "429": 105
+ }
+}

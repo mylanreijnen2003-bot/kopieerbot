@@ -1,0 +1,227 @@
+[
+ [
+  "564749005166",
+  {
+   "created": 1791089182247,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 90.593,
+   "coin": "HYPE",
+   "side": "A"
+  }
+ ],
+ [
+  "564749000661",
+  {
+   "created": 1791089181459,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 75.701,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564748996768",
+  {
+   "created": 1791089180634,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 79.301,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564748993211",
+  {
+   "created": 1791089179744,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 82.916,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564748989233",
+  {
+   "created": 1791089178993,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 84.712,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564748984900",
+  {
+   "created": 1791089178116,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 86.503,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564748980054",
+  {
+   "created": 1791089177304,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 87.403,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564748976214",
+  {
+   "created": 1791089176500,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 88.313,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564748972501",
+  {
+   "created": 1791089175693,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 89.223,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564748969030",
+  {
+   "created": 1791089174859,
+   "type": "Limit",
+   "tif": "Ioc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 91.046,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564582126527",
+  {
+   "created": 1791064634095,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 88.781,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564582133632",
+  {
+   "created": 1791064634914,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 87.875,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564582141680",
+  {
+   "created": 1791064635934,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 86.97,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564582146574",
+  {
+   "created": 1791064636740,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 86.074,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ],
+ [
+  "564582152047",
+  {
+   "created": 1791064637543,
+   "type": "Limit",
+   "tif": "Gtc",
+   "trigger": false,
+   "tpsl": false,
+   "reduce": false,
+   "status": "open",
+   "px": 84.292,
+   "coin": "HYPE",
+   "side": "B"
+  }
+ ]
+]

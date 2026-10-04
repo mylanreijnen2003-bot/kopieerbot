@@ -1,0 +1,73 @@
+{
+ "wallets": 7950,
+ "geschikt_knip": 1311,
+ "basis": {
+  "gem": 1.3,
+  "mediaan": 0.7,
+  "winst_aandeel": 0.53
+ },
+ "mylan_5": {
+  "gem": -14.5,
+  "mediaan": -10.3,
+  "winst_aandeel": 0.4,
+  "slechtste": -83.5,
+  "dd_gem": -28.8
+ },
+ "mylan_10": {
+  "gem": -1.7,
+  "mediaan": 3.5,
+  "winst_aandeel": 0.6,
+  "slechtste": -83.6,
+  "dd_gem": -21.7
+ },
+ "mylan_20": {
+  "gem": 10.5,
+  "mediaan": 4.1,
+  "winst_aandeel": 0.65,
+  "slechtste": -83.6,
+  "dd_gem": -14.8
+ },
+ "risico_5": {
+  "gem": -30.2,
+  "mediaan": -14.8,
+  "winst_aandeel": 0.2,
+  "slechtste": -83.6,
+  "dd_gem": -34.2
+ },
+ "risico_10": {
+  "gem": -15.3,
+  "mediaan": -0.5,
+  "winst_aandeel": 0.4,
+  "slechtste": -95.3,
+  "dd_gem": -27.0
+ },
+ "risico_20": {
+  "gem": 7.9,
+  "mediaan": 1.5,
+  "winst_aandeel": 0.55,
+  "slechtste": -95.3,
+  "dd_gem": -20.2
+ },
+ "max_5": {
+  "gem": -69.4,
+  "mediaan": -83.6,
+  "winst_aandeel": 0.0,
+  "slechtste": -96.1,
+  "dd_gem": -67.9
+ },
+ "max_10": {
+  "gem": -15.8,
+  "mediaan": -35.9,
+  "winst_aandeel": 0.3,
+  "slechtste": -96.1,
+  "dd_gem": -53.4
+ },
+ "max_20": {
+  "gem": -8.1,
+  "mediaan": -10.4,
+  "winst_aandeel": 0.35,
+  "slechtste": -96.1,
+  "dd_gem": -42.2
+ },
+ "geschikt_vandaag": 2017
+}

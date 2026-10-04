@@ -1,0 +1,16 @@
+{'address': '0xc3b1…4b11', 'venue': 'hl', 'equity_gem': np.float64(191375.8066654375), 'equity_min': 139680.909593, 'equity_max': 213469.516322, 'pnl_maand_portfolio': 8335.683745, 'dagen': 30.577877037037037}
+{'address': '0xbee5…5665', 'venue': 'hl', 'equity_gem': np.float64(1009.1052644565218), 'equity_min': 910.625974, 'equity_max': 1102.336743, 'pnl_maand_portfolio': 10.691037, 'dagen': 30.565916608796297}
+{'address': '0xdc89…f196', 'venue': 'hl', 'equity_gem': np.float64(13612.919915636363), 'equity_min': 12834.565909, 'equity_max': 14388.821116, 'pnl_maand_portfolio': 3458.23062, 'dagen': 30.636764212962962}
+{'address': '0xa1b6…4f04', 'venue': 'hl', 'equity_gem': np.float64(394964.40101699997), 'equity_min': 186001.013245, 'equity_max': 507888.803395, 'pnl_maand_portfolio': 14722.359055, 'dagen': 30.577056967592593}
+{'address': '0xb36f…d02c', 'venue': 'hl', 'equity_gem': np.float64(1121.506773680851), 'equity_min': 1045.194719, 'equity_max': 1170.844299, 'pnl_maand_portfolio': 119.489531, 'dagen': 30.63679201388889}
+{'address': '0xc0b2…e688', 'venue': 'hl', 'equity_gem': np.float64(242307.61592593614), 'equity_min': 131026.778417, 'equity_max': 333671.677224, 'pnl_maand_portfolio': -22324.360602, 'dagen': 30.636805520833335}
+{'address': '0x8477…9cb5', 'venue': 'hl', 'equity_gem': np.float64(2895.415581767857), 'equity_min': 0.0, 'equity_max': 11960.56269, 'pnl_maand_portfolio': 9349.50511, 'dagen': 30.58265221064815}
+{'address': '0x2555…34b1', 'venue': 'hl', 'equity_gem': np.float64(315113.2237751364), 'equity_min': 290470.349013, 'equity_max': 354771.103492, 'pnl_maand_portfolio': 93544.367989, 'dagen': 30.636832986111113}
+{'address': '0x80f2…0c3a', 'venue': 'hl', 'equity_gem': np.float64(79674.57403812766), 'equity_min': 1631.937332, 'equity_max': 188984.923155, 'pnl_maand_portfolio': 44651.028102, 'dagen': 30.58268079861111}
+{'address': '0xc311…ed23', 'venue': 'hl', 'equity_gem': np.float64(39296.46942259616), 'equity_min': 0.0, 'equity_max': 100837.015306, 'pnl_maand_portfolio': 53164.868409, 'dagen': 30.611861238425927}
+{'address': '0x0cb8…1dec', 'venue': 'orderly', 'equity_gem': 29421.775814510238, 'equity_min': 28090.298482000002, 'equity_max': 31108.712069, 'stortingen_30d': 0, 'dagen': 30}
+{'address': '0x1c97…8640', 'venue': 'orderly', 'equity_gem': 7573.350821556627, 'equity_min': 7396.179338343514, 'equity_max': 7660.146782, 'stortingen_30d': 0, 'dagen': 30}
+{'address': '0x48fc…6d7b', 'venue': 'orderly', 'equity_gem': 1466.895728022128, 'equity_min': 1404.6288509620895, 'equity_max': 1501.2590912142073, 'stortingen_30d': 0, 'dagen': 30}
+{'address': 'CF6ht9EdxR8HwE6HVkfKu32wpqzEPwFC54JT6zziYsNH', 'venue': 'orderly', 'equity_gem': 4185.465256662052, 'equity_min': 3336.4234838582533, 'equity_max': 4973.115191036844, 'stortingen_30d': -2063.543145, 'dagen': 30}
+{'address': '5HmEhLDgcFFfrZhNz18vXmeZ547RQ6BcHgRx3fkX1uqb', 'venue': 'orderly', 'equity_gem': 414.68320956940437, 'equity_min': 0.0, 'equity_max': 612.3902967157217, 'stortingen_30d': -1561.096115, 'dagen': 30}
+{'address': '0x75da…5714', 'venue': 'orderly', 'equity_gem': 742.0012029303581, 'equity_min': 520.5210584455513, 'equity_max': 1378.7202254563954, 'stortingen_30d': -1240.0, 'dagen': 30}

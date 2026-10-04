@@ -1,0 +1,15 @@
+shard 1 van 8 adressen 555
+voorfilter 0 / 555 0 min
+voorfilter 250 / 555 13 min
+voorfilter 500 / 555 28 min
+voorfilter klaar 555 door 214 (nu actief 178 , actief rond knip 136 )
+wallets 0 / 214 31 min
+wallets 25 / 214 43 min
+wallets 50 / 214 57 min
+wallets 75 / 214 73 min
+wallets 100 / 214 88 min
+wallets 125 / 214 109 min
+wallets 150 / 214 124 min
+wallets 175 / 214 140 min
+wallets 200 / 214 158 min
+shard klaar 212 oudste fill 2025-12-06 22:07:49.454000
