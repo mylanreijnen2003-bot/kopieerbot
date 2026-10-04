@@ -32,7 +32,8 @@ def stats(shard, n, upath, d, vdir, out):
         f = data.fills(d, set(chunk))
         for a, x in f.groupby("address"):
             fl = [{"time": int(t), "coin": c, "start": s, "after": af, "px": p}
-                  for t, c, s, af, p in zip(x.ts, x.coin, x.start, x.after, x.px)]
+                  for t, c, s, af, p in zip(x.ts, x.coin, x.start, x.after, x.px)
+                  if not str(c).startswith(("#", "@"))]   # '#…' = uitkomst-/gokmarkten, '@…' = spot
             bt_ = bot_trades(fl)
             if len(bt_) < 3:
                 continue
