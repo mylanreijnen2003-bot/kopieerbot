@@ -1,0 +1,49 @@
+name: lighter-robuust
+
+# Robuustheid (lighter/robuust.py): reality check (permutaties incl. zoektocht), houdbaarheid, staartrisico.
+# Start door run-id's in lighter/ROBUUST te zetten. Openbaar alleen aggregaten.
+on:
+  push:
+    branches: [lighter]
+    paths: ["lighter/ROBUUST"]
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  KEY: ${{ secrets.LIGHTER_DATA_KEY }}
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests pandas pyarrow numpy
+      - name: Versleutelde delen ophalen
+        env: {GH_TOKEN: "${{ github.token }}"}
+        run: |
+          for id in $(cat lighter/ROBUUST); do
+            mkdir -p enc/$id && gh run download $id -R ${{ github.repository }} -p 'lighter-part-*' -D enc/$id || true
+          done
+          mkdir -p dat
+          for f in enc/*/*/part.tgz.enc; do
+            d=dat/$(echo $f | cut -d/ -f2)-$(basename $(dirname $f)); mkdir -p $d
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KEY -in $f | tar xzf - -C $d
+          done
+          echo "delen: $(ls dat | wc -l)"
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          rm -rf res/lighter/robuust && mkdir -p res/lighter/robuust
+      - run: python -m lighter.robuust dat res/vast/kraken.json res/lighter/robuust
+      - name: Opslaan
+        if: always()
+        run: |
+          cd res && git add -A lighter
+          git commit -qm "lighter robuust $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
