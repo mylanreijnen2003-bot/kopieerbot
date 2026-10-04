@@ -32,6 +32,7 @@ NU = int(time.time() * 1000)
 KNIPS = ["2026-06-01", "2026-07-01", "2026-08-01", "2026-09-01"]
 ONTWERP = KNIPS[:3]
 HOLDOUT = KNIPS[3]
+SCHOON = ["2026-08-01", "2026-09-01"]   # pool = laatste fill na 25-7: voor 1-6 en 1-7 mist wie vóór 25-7 stopte (survivorship)
 RNG = np.random.default_rng(11)
 KOSTEN_LEIDER = 0.002          # zoals tot nu: 0,2% per trade (heen + terug)
 
@@ -122,6 +123,7 @@ def kenmerken(idx, tr: pd.DataFrame, fl: pd.DataFrame, p, K, kraken):
         "t7": int((k.sluit >= K - 7 * DAG).sum()), "t14": int((k.sluit >= K - 14 * DAG).sum()),
         "equity": eq if eq is not None else 0.0, "pnl_keuze": pnl_keuze if pnl_keuze is not None else -1.0,
         "kraken": kr,
+        "slechtste_r": float(r.min()), "gem_winst": float(r[r > 0].mean()) if (r > 0).any() else 0.0,
     }
 
 
@@ -167,7 +169,8 @@ def beoordeel_cfg(folds, cfg):
         echt = float(top.test_potje.mean())
         tp = g.test_potje.values
         rnd = np.array([tp[RNG.choice(len(tp), size=n, replace=False)].mean() for _ in range(500)])
-        out[K] = {"geschikt": len(g), "echt": echt, "winnaars": int((top.test_potje > 0).sum()),
+        out[K] = {"geschikt": len(g), "echt": echt, "mediaan": float(top.test_potje.median()),
+                  "winnaars": int((top.test_potje > 0).sum()),
                   "willekeurig": float(rnd.mean()), "pctl": float((rnd < echt).mean() * 100),
                   "alle_geschikt": float(tp.mean())}
     return out
@@ -350,6 +353,9 @@ def main():
             rij[f"{K}_willek_pct"] = round(100 * r["willekeurig"], 2) if r["echt"] is not None else None
             rij[f"{K}_pctl"] = round(r["pctl"]) if r["echt"] is not None else None
             rij[f"{K}_winnaars"] = r.get("winnaars")
+            rij[f"{K}_mediaan_pct"] = round(100 * r["mediaan"], 2) if r["echt"] is not None else None
+        schoon = [res[K]["echt"] for K in SCHOON if res[K]["echt"] is not None]
+        rij["schoon_gem_pct"] = round(100 * np.mean(schoon), 2) if schoon else None
         rijen.append(rij)
     raster = pd.DataFrame(rijen)
     raster.to_csv(f"{uit}/raster.csv", index=False)
@@ -361,9 +367,16 @@ def main():
 
     # 5) uitvoeringssimulatie voor gekozen traders (standaard + beste robuuste instelling), alle knips
     keuzes = {"standaard": dict(min_equity=5000, max_pos=10, handmatig=True, rang="potje", N=10)}
+    def cfg_van(rij):
+        return {k: (rij[k].item() if hasattr(rij[k], "item") else rij[k]) for k in RASTER}
     if len(beste):
-        b0 = beste.iloc[0]
-        keuzes["beste_ontwerp"] = {k: (b0[k].item() if hasattr(b0[k], "item") else b0[k]) for k in RASTER}
+        keuzes["beste_ontwerp"] = cfg_van(beste.iloc[0])
+    bh = kandid[kandid.handmatig == True]
+    if len(bh):
+        keuzes["beste_handmatig"] = cfg_van(bh.iloc[0])
+    be = kandid[kandid.min_equity >= 5000]
+    if len(be):
+        keuzes["beste_equity5k"] = cfg_van(be.iloc[0])
     P = Prijzen()
     sim_rijen, trader_rijen = [], []
     t_start = time.time()
@@ -379,7 +392,10 @@ def main():
                 trader_rijen.append({"keuze": naam, "knip": K, "adres": kort((accs.get(int(r.idx)) or {}).get("l1")),
                                      "keuze_potje_pct": round(100 * r.potje, 1), "p90": r.p90,
                                      "equity_knip": round(r.equity), "test_trades": len(tt),
-                                     "test_potje_leider_pct": round(100 * tt.r.sum() / pot, 1), "kraken_pct": round(100 * r.kraken)})
+                                     "test_potje_leider_pct": round(100 * tt.r.sum() / pot, 1), "kraken_pct": round(100 * r.kraken),
+                                     "winst_pct": round(100 * r.winst_pct), "slechtste_trade_pct": round(100 * r.slechtste_r, 1),
+                                     "gem_winst_pct": round(100 * r.gem_winst, 2), "houd_u": round(r.houd_u, 1),
+                                     "trades_per_dag": round(r.tpd30, 2), "maker_pct": round(100 * r.maker)})
                 for tr in tt.to_dict("records"):
                     m = sym_inv.get(tr["coin"])
                     if m is None or time.time() - t_start > 4 * 3600:
@@ -440,6 +456,8 @@ def main():
         "raster_holdout_positief_pct": round(float((raster[f"{HOLDOUT}_pct"] > 0).mean()) * 100, 1),
         "raster_holdout_boven_willekeurig_pct": round(float((raster[f"{HOLDOUT}_pctl"] > 50).mean()) * 100, 1),
         "beste_ontwerp_holdout": beste[[f"{HOLDOUT}_pct", f"{HOLDOUT}_willek_pct", f"{HOLDOUT}_pctl"]].to_dict("records"),
+        "let_op": "folds 1-6 en 1-7 zijn optimistisch: de pool bevat alleen accounts met een fill na 25-7 (wie eerder stopte, ontbreekt). 1-8 en 1-9 zijn schoon.",
+        "keuzes": keuzes,
         "candle_calls": P.calls,
         "api_calls": {str(k): v for k, v in api.CALLS.items()},
     }
