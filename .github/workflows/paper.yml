@@ -14,6 +14,9 @@ permissions:
 
 concurrency: {group: results, cancel-in-progress: false}
 
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
 jobs:
   paper:
     runs-on: ubuntu-24.04
@@ -27,7 +30,7 @@ jobs:
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
           if git ls-remote --exit-code --heads origin results; then
-            git fetch origin results && git worktree add -B results res origin/results
+            git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
           else
             git worktree add --detach res && cd res && git checkout --orphan results && git rm -rfq . && cd ..
           fi
@@ -40,6 +43,6 @@ jobs:
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A paper
+          cd res && python3 ../bt/kluis.py dicht . && git add -A paper
           git commit -qm "paper H3b $(date -u +%F) [skip ci]" || true
           git push origin HEAD:results

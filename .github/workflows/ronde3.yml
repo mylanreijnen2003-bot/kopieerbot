@@ -8,6 +8,9 @@ permissions:
   contents: write
   actions: read
 
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
 jobs:
   universum:
     runs-on: ubuntu-24.04
@@ -87,11 +90,11 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - run: mkdir -p res/ronde3 && python -m bt.hand3_select st uni/universe.parquet res/ronde3
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A ronde3
+          cd res && python3 ../bt/kluis.py dicht . && git add -A ronde3
           git commit -qm "ronde3 $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

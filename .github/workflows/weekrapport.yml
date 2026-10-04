@@ -9,6 +9,9 @@ on:
 permissions:
   contents: write
 
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
 jobs:
   run:
     runs-on: ubuntu-24.04
@@ -21,13 +24,13 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - run: python -m bt.weekrapport res/papier2
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A papier2/weekrapport.md
+          cd res && python3 ../bt/kluis.py dicht . && git add -A papier2/weekrapport.md
           git commit -qm "weekrapport $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

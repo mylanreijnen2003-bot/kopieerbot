@@ -16,6 +16,9 @@ permissions:
 
 concurrency: {group: backtest, cancel-in-progress: true}
 
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
 jobs:
   extract:
     if: inputs.reuse_run == '' || inputs.reuse_run == null
@@ -27,6 +30,7 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     steps:
       - uses: actions/checkout@v4
+      - run: python3 bt/kluis.py open data
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy huggingface_hub requests
@@ -44,6 +48,7 @@ jobs:
         what: [av, funding, beurzen]
     steps:
       - uses: actions/checkout@v4
+      - run: python3 bt/kluis.py open data
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy huggingface_hub requests
@@ -62,6 +67,7 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
+      - run: python3 bt/kluis.py open data
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy requests
@@ -78,6 +84,7 @@ jobs:
     timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
+      - run: python3 bt/kluis.py open data
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy requests
@@ -89,7 +96,7 @@ jobs:
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
           if git ls-remote --exit-code --heads origin results; then
-            git fetch origin results && git worktree add -B results res origin/results
+            git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
           else
             git worktree add --detach res && cd res && git checkout --orphan results && git rm -rfq . && cd ..
           fi
@@ -100,6 +107,6 @@ jobs:
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A backtest
+          cd res && python3 ../bt/kluis.py dicht . && git add -A backtest
           git commit -qm "backtest $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

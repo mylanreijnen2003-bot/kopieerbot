@@ -11,6 +11,9 @@ permissions:
   contents: write
   actions: read
 
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
 jobs:
   select:
     runs-on: ubuntu-24.04
@@ -50,11 +53,11 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - run: mkdir -p res/varianten && cp oud/* res/varianten/ ; cp nieuw/* res/varianten/ ; python -m bt.var_summary res/varianten
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A varianten
+          cd res && python3 ../bt/kluis.py dicht . && git add -A varianten
           git commit -qm "varianten $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

@@ -11,6 +11,9 @@ permissions:
   contents: write
   actions: read
 
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
 jobs:
   run:
     runs-on: ubuntu-24.04
@@ -25,11 +28,14 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
-      - run: python -m bt.wat_als ${{ inputs.adres }} ${{ inputs.dagen }} ${{ inputs.pot }} beurs res/wat_als/${{ inputs.adres }} 2>&1 | tee log.txt; mkdir -p res/wat_als && cp log.txt res/wat_als/log_${{ inputs.adres }}.txt
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
+      - env: {ADRES: "${{ inputs.adres }}", DAGEN: "${{ inputs.dagen }}", POT: "${{ inputs.pot }}"}
+        run: |
+          echo "::add-mask::$ADRES"; K=${ADRES:0:6}_${ADRES: -4}
+          python -m bt.wat_als $ADRES $DAGEN $POT beurs res/wat_als/$K 2>&1 | tee log.txt; mkdir -p res/wat_als && cp log.txt res/wat_als/log_$K.txt
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A wat_als
+          cd res && python3 ../bt/kluis.py dicht . && git add -A wat_als
           git commit -qm "wat-als $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

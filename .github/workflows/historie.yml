@@ -8,6 +8,9 @@ permissions:
   contents: write
   actions: read
 
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
 jobs:
   extract:
     runs-on: ubuntu-24.04
@@ -21,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy huggingface_hub requests
-      - run: git fetch origin results && git show origin/results:recent/top60.csv > top60.csv && python -m bt.historie uni top60.csv uni
+      - run: git fetch origin results && python3 bt/kluis.py show recent/top60.csv > top60.csv && python -m bt.historie uni top60.csv uni
       - run: python -m bt.extract ${{ matrix.shard }} 8 part && rm -f part/bars_*.parquet
         env: {UNIVERSE: uni/universe.parquet}
       - uses: actions/upload-artifact@v4
@@ -42,11 +45,11 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - run: mkdir -p res/historie && python -m bt.historie stats res/recent/top60.csv dat res/historie
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A historie
+          cd res && python3 ../bt/kluis.py dicht . && git add -A historie
           git commit -qm "historie $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

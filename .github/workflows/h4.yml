@@ -14,6 +14,7 @@ permissions:
 concurrency: {group: h4, cancel-in-progress: true}
 
 env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
   OLD_RUN: "37124999519"
 
 jobs:
@@ -26,6 +27,7 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     steps:
       - uses: actions/checkout@v4
+      - run: python3 bt/kluis.py open data
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy huggingface_hub requests
@@ -46,6 +48,7 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     steps:
       - uses: actions/checkout@v4
+      - run: python3 bt/kluis.py open data
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy requests
@@ -65,6 +68,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      - run: python3 bt/kluis.py open data
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy requests
@@ -75,7 +79,7 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - run: python -m bt.h4_select sim dat res/paper_h4
       - run: python -m bot.paper res/paper_h4 res/paper_h4/selection.json res/paper_h4/kraken.json
         env: {REGELS: H4}
@@ -87,6 +91,6 @@ jobs:
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A paper_h4
+          cd res && python3 ../bt/kluis.py dicht . && git add -A paper_h4
           git commit -qm "H4 start $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

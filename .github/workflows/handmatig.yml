@@ -9,6 +9,7 @@ permissions:
   actions: read
 
 env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
   BREDE_RUN: "37142561295"
   BARS_RUN: "37124999519"
 
@@ -52,7 +53,7 @@ jobs:
         with: {pattern: "brede-part-*", path: dat, run-id: "${{ env.BREDE_RUN }}", github-token: "${{ github.token }}"}
       - uses: actions/download-artifact@v4
         with: {name: hl-bars, path: hb}
-      - run: git fetch origin results && git show origin/results:brede/alle_stats.csv > alle_stats.csv
+      - run: git fetch origin results && python3 bt/kluis.py show brede/alle_stats.csv > alle_stats.csv
       - run: python -m bt.delay_stats ${{ matrix.shard }} 12 alle_stats.csv dat hb/bars.parquet out
       - uses: actions/upload-artifact@v4
         with: {name: "hand-dstats-${{ matrix.shard }}", path: out, retention-days: 30}
@@ -72,11 +73,11 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - run: python -m bt.delay_select ds res/brede
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A brede
+          cd res && python3 ../bt/kluis.py dicht . && git add -A brede
           git commit -qm "handmatig-route $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

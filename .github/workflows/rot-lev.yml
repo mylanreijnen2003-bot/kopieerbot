@@ -9,6 +9,7 @@ permissions:
   actions: read
 
 env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
   ROT: "37197767731"
   BT: "37124999519"
   BARS: "37215239671"
@@ -54,11 +55,11 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - run: mkdir -p res/rotatie_lev && python -m bt.rot_bv kies st res/rotatie_lev 2>&1 | tee res/rotatie_lev/log.txt
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A rotatie_lev
+          cd res && python3 ../bt/kluis.py dicht . && git add -A rotatie_lev
           git commit -qm "rotatie hefboom $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

@@ -9,6 +9,7 @@ permissions:
   actions: read
 
 env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
   VAR: "37157905999"
 
 jobs:
@@ -64,11 +65,11 @@ jobs:
       - name: Resultatenbranch klaarzetten
         run: |
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - run: mkdir -p res/consensus && python -m bt.cons sim cf beurs res/consensus
       - name: Opslaan
         if: always()
         run: |
-          cd res && git add -A consensus
+          cd res && python3 ../bt/kluis.py dicht . && git add -A consensus
           git commit -qm "consensus $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done

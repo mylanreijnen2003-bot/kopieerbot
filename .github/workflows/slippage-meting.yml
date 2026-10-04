@@ -10,6 +10,9 @@ on:
 permissions:
   contents: write
 
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
 jobs:
   meten:
     runs-on: ubuntu-24.04
@@ -30,7 +33,7 @@ jobs:
       - if: steps.d.outputs.aan == '1'
         run: |
           pip install pandas numpy requests websockets
-          git fetch origin results && git show origin/results:papier-hl/selectie.json > selectie.json
+          git fetch origin results && python3 bt/kluis.py show papier-hl/selectie.json > selectie.json
           DUUR_MIN=290 TRADERS_JSON=selectie.json SHARD=${{ matrix.i }} NSHARD=2 timeout 18300 python -m kopietest.live out/s${{ matrix.i }} || true
       - uses: actions/upload-artifact@v4
         if: steps.d.outputs.aan == '1'
@@ -55,9 +58,9 @@ jobs:
         run: |
           ls out/ >/dev/null 2>&1 || exit 0
           git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
-          git fetch origin results && git worktree add -B results res origin/results
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
           D=res/kopietest/live-$(date -u +%F); mkdir -p $D; cp -r out/* $D/ || true
           python -m kopietest.slip_samenvatting res
-          cd res && git add -A kopietest
+          cd res && python3 ../bt/kluis.py dicht . && git add -A kopietest
           git commit -qm "slippage-meting $(date -u +%F) [skip ci]" || true
           for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
