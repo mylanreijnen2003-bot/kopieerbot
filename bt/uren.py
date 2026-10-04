@@ -32,11 +32,8 @@ def main():
     tab["bitvavo_sluit"] = df[(df.soort == "sluit") & df.bv].groupby("uur").size()
     tab = tab.reindex(range(24), fill_value=0).fillna(0).astype(int)
     tab.to_csv(f"{out}/uren.csv")
-    dag = df[df.bv].groupby(["dag", "soort"]).size().unstack(fill_value=0)
-    dag.to_csv(f"{out}/dagen.csv")
     nacht = df[df.bv & df.uur.between(0, 6)]
     print(tab.to_string())
-    print(dag.to_string())
     print("Bitvavo-acties totaal", int(df.bv.sum()), "waarvan 00-07u NL", len(nacht),
           f"({100 * len(nacht) / max(1, int(df.bv.sum())):.0f}%)")
 

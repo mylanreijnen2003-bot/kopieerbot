@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       adres: {required: true}
-      dagen: {required: true, default: "183"}
+      dagen: {required: true, default: "30"}
 
 permissions:
   contents: write
