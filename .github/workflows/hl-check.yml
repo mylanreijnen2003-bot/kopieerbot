@@ -1,0 +1,28 @@
+name: hl-check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [orderly]
+    paths: ["kopietest/RUN_HLCHECK"]
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - name: Controleren en opslaan
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          python -m kopietest.hl_check res/hl_select/check res/hl_select/uitslag.json
+          cd res && git add -A hl_select
+          git commit -qm "hl-check [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
