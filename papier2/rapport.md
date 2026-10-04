@@ -1,15 +1,15 @@
-# Papier v2 — stand 2026-10-04 17:03 UTC (dag 0.2)
+# Papier v2 — stand 2026-10-04 19:10 UTC (dag 0.3)
 
 BTC sinds start: +0.3%
 
 ## Versie A — max rendement
-Start €800 → nu €800.00 (+0.0%), met de hand 1 u later: +0.0%
+Start €800 → nu €800.23 (+0.0%), met de hand 1 u later: +0.0%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |
 |---|---|---|---|---|---|---|---|---|
 | 0x5089…26b4 | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x48bb…8c9d | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0xad82…533d | 1 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
+| 0xad82…533d | 1 | €40 | actief | 0 | 1 | €+0.23 | €+0.00 |  |
 | 0x0f4f…834a | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x7d93…620b | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x84bb…00bb | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
@@ -17,7 +17,7 @@ Start €800 → nu €800.00 (+0.0%), met de hand 1 u later: +0.0%
 | 0x03ce…8c76 | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 
 ## Versie B — laag risico
-Start €500 → nu €501.10 (+0.2%), met de hand 1 u later: -0.0%
+Start €500 → nu €500.80 (+0.2%), met de hand 1 u later: +0.3%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |
 |---|---|---|---|---|---|---|---|---|
@@ -25,30 +25,30 @@ Start €500 → nu €501.10 (+0.2%), met de hand 1 u later: -0.0%
 | 0x2555…34b1 | 3 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x96d5…1127 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xe86d…6273 | 3 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0xe4c5…2b1f | 5 | €20 | actief | 2 | 1 | €+1.10 | €-0.10 |  |
+| 0xe4c5…2b1f | 5 | €20 | actief | 2 | 3 | €+0.80 | €+1.28 |  |
 
 ## Versie C — controle: recent top 30, geen regels
-Start €3000 → nu €2999.34 (-0.0%), met de hand 1 u later: +0.0%
+Start €3000 → nu €2999.20 (-0.0%), met de hand 1 u later: +0.0%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |
 |---|---|---|---|---|---|---|---|---|
 | 0x0daa…9b23 | 1 | €40 | actief | 0 | 1 | €+0.00 | €+0.00 |  |
-| 0xad82…533d | 1 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
+| 0xad82…533d | 1 | €40 | actief | 0 | 1 | €+0.23 | €+0.00 |  |
 | 0x4250…12a8 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x0c91…198d | 1 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x53bb…efb3 | 1 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x7d93…620b | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x84bb…00bb | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0xa4a8…57a3 | 4 | €25 | actief | 0 | 1 | €-0.72 | €+0.00 |  |
+| 0xa4a8…57a3 | 4 | €25 | actief | 0 | 1 | €-0.71 | €+0.00 |  |
 | 0x0d4a…5efd | 3 | €33 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x9824…be68 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x5e70…9d84 | 3 | €33 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x5a75…8258 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xbaa9…d8b6 | 1 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x3261…2522 | 1 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0xe916…e550 | 1 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
+| 0xe916…e550 | 1 | €40 | actief | 0 | 1 | €-0.34 | €+0.00 |  |
 | 0x48bb…8c9d | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0x9c90…a2ee | 1 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
+| 0x9c90…a2ee | 1 | €40 | actief | 0 | 1 | €+0.00 | €+0.00 |  |
 | 0x599d…2d09 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x4341…12d8 | 3 | €33 | actief | 0 | 1 | €-0.05 | €+0.00 |  |
 | 0x1165…1356 | 5 | €20 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
@@ -59,12 +59,12 @@ Start €3000 → nu €2999.34 (-0.0%), met de hand 1 u later: +0.0%
 | 0x0c23…f0d1 | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x556d…aafb | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x635b…2188 | 2 | €40 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0x9611…a105 | 1 | €40 | actief | 1 | 1 | €+0.11 | €+0.09 |  |
+| 0x9611…a105 | 1 | €40 | actief | 1 | 1 | €+0.07 | €+0.09 |  |
 | 0x9a13…d0f9 | 3 | €33 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xccaa…fb25 | 5 | €20 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 
 ## Versie D — controle: willekeurig 30, geen regels
-Start €3000 → nu €3000.40 (+0.0%), met de hand 1 u later: +0.0%
+Start €3000 → nu €3000.58 (+0.0%), met de hand 1 u later: +0.0%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |
 |---|---|---|---|---|---|---|---|---|
@@ -75,7 +75,7 @@ Start €3000 → nu €3000.40 (+0.0%), met de hand 1 u later: +0.0%
 | 0x478e…7ba7 | 3 | €33 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xe86d…6273 | 3 | €33 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x2718…2fb0 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0x8cb0…6898 | 5 | €20 | actief | 0 | 1 | €+0.40 | €+0.00 |  |
+| 0x8cb0…6898 | 5 | €20 | actief | 1 | 1 | €+0.58 | €+0.00 |  |
 | 0x882c…e0cb | 2 | €40 | actief | 0 | 1 | €+0.00 | €+0.00 |  |
 | 0x6f19…6688 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x5cb4…d3f4 | 5 | €20 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
