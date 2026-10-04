@@ -1,0 +1,51 @@
+name: hl-select
+
+# Selectie voor kopiëren op Hyperliquid zelf: accountrendement uit portfolio-API, keuze t/m 18-8, test 19-8 t/m nu.
+on:
+  workflow_dispatch:
+  push:
+    branches: [orderly]
+    paths: ["kopietest/RUN_HLSEL"]
+
+permissions:
+  contents: write
+
+jobs:
+  shard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix: {i: [0, 1, 2, 3, 4, 5, 6, 7]}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - run: cat kopietest/RUN_HLSEL >> "$GITHUB_ENV"
+      - run: git fetch origin results && git worktree add res origin/results
+      - run: python -m kopietest.hl_select shard out/s${{ matrix.i }} ${{ matrix.i }} 8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: "hlsel-${{ matrix.i }}", path: "out/s${{ matrix.i }}"}
+
+  kies:
+    needs: shard
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "hlsel-*", path: out}
+      - name: Kiezen en opslaan
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results
+          rm -rf res/hl_select && mkdir -p res/hl_select
+          python -m kopietest.hl_select kies res/hl_select out/hlsel-* | tee res/hl_select/log.txt
+          cd res && git add -A hl_select
+          git commit -qm "hl-select $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
