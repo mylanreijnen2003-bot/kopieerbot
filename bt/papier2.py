@@ -362,8 +362,14 @@ def rapport(d, state, mids, alle_trades):
             fh.write(f"{pd.to_datetime(NU, unit='ms'):%Y-%m-%d %H:%M} {m}\n")
     print("\n".join(regels_md))
     topic = os.environ.get("NTFY_TOPIC")
-    dagelijks = pd.to_datetime(NU, unit="ms").hour == 6
+    # dagbericht: eerste run na 06:00 UTC van de dag (GitHub-cron loopt soms uren achter)
+    nu_ts = pd.to_datetime(NU, unit="ms")
+    db_pad = f"{d}/dagbericht.txt"
+    vorige = open(db_pad).read().strip() if os.path.exists(db_pad) else ""
+    dagelijks = nu_ts.hour >= 6 and vorige != f"{nu_ts:%Y-%m-%d}"
     if topic and (MELDINGEN or dagelijks):
+        if dagelijks:
+            open(db_pad, "w").write(f"{nu_ts:%Y-%m-%d}")
         try:
             requests.post(f"https://ntfy.sh/{topic}", data=dagbericht(d, state, hist, alle_trades, btc, dagelijks).encode(),
                           headers={"Title": "Kopieerbot papier: dagupdate" if dagelijks else "Kopieerbot papier: wijziging"},
