@@ -1,0 +1,50 @@
+name: papier-nado
+
+# Papier volgen: top 10 Nado-traders (V2-test), vaste inzet. Code: branch kansen (kansen/papier_nado.py).
+# Elke 6 uur; dagbericht via ntfy. Rapport: branch results, map papier-nado/ (volledige adressen via kluis versleuteld).
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: {group: papier-nado, cancel-in-progress: false}
+
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: kansen}
+      - name: kluis.py van main
+        run: git fetch -q origin main && git show FETCH_HEAD:bt/kluis.py > bt/kluis.py
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas numpy requests pyarrow
+      - name: Draaien en opslaan
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          KANSEN_KEY: ${{ secrets.LIGHTER_DATA_KEY }}
+          FORCEER_BERICHT: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
+          mkdir -p res/papier-nado
+          if [ ! -f res/papier-nado/selectie.json ]; then
+            mkdir -p tmp && openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -salt \
+              -in res/kansen/nado/priv.tgz.enc -pass env:KANSEN_KEY | tar xz -C tmp
+            CSV=$(find tmp -name volgbaar_vandaag.csv | head -1)
+            python -m kansen.papier_nado res/papier-nado --selectie "$CSV"
+            rm -rf tmp
+          fi
+          python -m kansen.papier_nado res/papier-nado
+          cd res && python3 ../bt/kluis.py dicht . && python3 ../bt/kluis.py check papier-nado
+          git add -A papier-nado
+          git commit -qm "papier-nado $(date -u +%F_%H%M) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
