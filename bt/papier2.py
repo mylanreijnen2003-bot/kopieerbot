@@ -159,10 +159,18 @@ def regels_check(v, tr, res, regels):
             r.append("> 50 trades/week")
     if len(df) and (df.status == "open").sum() > 5:
         r.append("> 5 posities open")
+    # Account: alleen echt handelsverlies telt (geld opnemen of verplaatsen is geen reden om eruit te gaan).
+    # Eruit bij handelsverlies >= 50% van zijn account bij toevoegen, of account vrijwel leeg (< $100).
     try:
         av = float(hl.info({"type": "clearinghouseState", "user": tr["address"]}).get("marginSummary", {}).get("accountValue", 0))
-        if av < 1000 or (tr.get("av_start") and av < 0.5 * tr["av_start"]):
-            r.append(f"account ${av:,.0f}")
+        per = dict(hl.info({"type": "portfolio", "user": tr["address"]}, weight=20))
+        pts = sorted((int(x), float(y)) for x, y in per.get("perpMonth", {}).get("pnlHistory", []))
+        p0, p1 = hl.av_at(pts, tr["toegevoegd"]), hl.av_at(pts, NU)
+        verlies = (p1 - p0) if (p0 is not None and p1 is not None) else 0.0
+        if av < 100:
+            r.append(f"account leeg (${av:,.0f})")
+        elif tr.get("av_start") and verlies < -0.5 * tr["av_start"]:
+            r.append(f"handelsverlies ${-verlies:,.0f} (account bij start ${tr['av_start']:,.0f})")
     except Exception:  # noqa: BLE001
         pass
     return r
@@ -185,7 +193,8 @@ def voeg_toe(vs, sel, v, n):
         except Exception:  # noqa: BLE001
             av = 0.0
         vs["traders"].append({"address": a, "K": ks[a], "toegevoegd": NU, "status": "actief", "pnl": 0.0,
-                              "hand_pnl": 0.0, "piek": POT, "av_start": av})
+                              "hand_pnl": 0.0, "piek": POT, "av_start": av,
+                              "stake": round(min(float(vs.get("pot", POT)) / ks[a], vs.get("cap", 1e9)), 2)})
         if v in ("A", "B"):
             MELDINGEN.append(f"{v}: nieuw {kort(a)} (K={ks[a]})")
 
