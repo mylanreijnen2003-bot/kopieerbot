@@ -5,7 +5,7 @@ Elke run (elke 6 u via GitHub Actions): nieuwe fills van elke trader ophalen en 
   minimale order $10: kleinere verschillen worden opgespaard tot ze >= $10 zijn (sluiten mag altijd)
   schone start: posities die de trader al had bij de start worden overgeslagen tot hij plat is
   hefboom-plafond: totale positie max 10x je potje; stop per trader: potje -25% -> alles dicht, trader op pauze
-  funding wordt (nog) niet meegerekend
+  funding: elk uur over open posities (long betaalt bij positieve rate), vanaf 5-10-2026 ±18:30 UTC
 Gebruik: python -m kopietest.papierhl <map>   (map bevat selectie.json; state.json/ geschiedenis.csv/ trades.csv/ rapport.md)
 """
 from __future__ import annotations
@@ -29,6 +29,33 @@ MAX_HEFBOOM = 10.0
 STOP = 0.75
 
 
+_FUND = {}
+
+
+def fund_rates(c):
+    if c not in _FUND:
+        try:
+            _FUND[c] = hl.funding(c, NU - 3 * 86_400_000, NU)
+        except Exception:  # noqa: BLE001
+            _FUND[c] = {}
+    return _FUND[c]
+
+
+def accrue(s, tot, mids):
+    """Funding over de open posities van s['fund_t'] tot `tot` (per heel uur). Long betaalt bij positieve rate."""
+    van = s.setdefault("fund_t", NU)
+    if tot <= van:
+        return
+    for c, (q, avg) in s["pos"].items():
+        px = mids.get(c, avg)
+        for h, rate in fund_rates(c).items():
+            if van < h <= tot:
+                pay = -q * px * rate
+                s["kas"] += pay
+                s["funding"] = s.get("funding", 0.0) + pay
+    s["fund_t"] = tot
+
+
 def laad(naam, standaard):
     p = f"{MAP}/{naam}"
     return json.load(open(p)) if os.path.exists(p) else standaard
@@ -48,7 +75,7 @@ def main():
         if a not in st["traders"]:
             s = st["traders"][a] = {"potje": sel["potje"], "start_potje": sel["potje"], "kas": 0.0, "pos": {}, "skip": {},
                                     "laatste": NU, "actief": True, "fees": 0.0, "trades": 0, "overgeslagen_klein": 0,
-                                    "geplafonneerd": 0, "start_ms": NU}
+                                    "geplafonneerd": 0, "start_ms": NU, "fund_t": NU, "funding": 0.0}
             # schone start: wat de trader nu al open heeft, overslaan tot hij plat is
             stt = hl.info({"type": "clearinghouseState", "user": a}, weight=2) or {}
             for p in stt.get("assetPositions") or []:
@@ -65,6 +92,7 @@ def main():
         for f in fl:
             if f["kind"] == "spot":
                 continue
+            accrue(s, f["time"], mids)
             c = f["coin"]
             if s["skip"].get(c):                         # positie van vóór de start: pas meedoen als hij plat is
                 if f["after"] == 0:
@@ -113,6 +141,7 @@ def main():
                           "fee": round(fee, 4), "winst": round(pnl, 4), "positie_na": round(nq, 8), "zijn_prijs": f["px"]})
         if fl:
             s["laatste"] = max(f["time"] for f in fl)
+        accrue(s, NU, mids)
         # stop per trader
         eq = s["potje"] + s["kas"] + sum(p[0] * (mids.get(k, p[1]) - p[1]) for k, p in s["pos"].items())
         s["equity"] = eq
@@ -148,7 +177,11 @@ def main():
         tot += s.get("equity", s["potje"])
         start_tot += s["start_potje"]
     rij["totaal"] = round(tot, 2)
-    pd.DataFrame([rij]).to_csv(f"{MAP}/geschiedenis.csv", mode="a", header=not os.path.exists(f"{MAP}/geschiedenis.csv"), index=False)
+    tot_f = sum(s.get("funding", 0.0) for s in st["traders"].values())
+    rij["funding"] = round(tot_f, 2)
+    gp = f"{MAP}/geschiedenis.csv"   # kolommen kunnen wijzigen (traders erbij): alles inlezen en herschrijven
+    oud = [pd.read_csv(gp, on_bad_lines="skip")] if os.path.exists(gp) else []
+    pd.concat(oud + [pd.DataFrame([rij])], ignore_index=True).to_csv(gp, index=False)
     # groepen (bv. top 5): totaal per groep
     groep_regels, groep_tekst = [], []
     for naam, leden in (sel.get("groepen") or {}).items():
@@ -161,12 +194,14 @@ def main():
     dagen = max((NU - st["start"]) / 86_400_000, 1e-9)
     regels = [f"# Papier-HL (proportioneel kopiëren op Hyperliquid zelf)", "",
               f"Start {pd.Timestamp(st['start'], unit='ms'):%d-%m %H:%M} UTC, bijgewerkt {pd.Timestamp(NU, unit='ms'):%d-%m %H:%M} UTC ({dagen:.1f} dagen).",
-              f"**Totaal: ${tot:,.0f} van ${start_tot:,.0f} ({100 * (tot / start_tot - 1):+.1f}%)**", *groep_regels, "",
-              "| Trader | Potje | Rendement | Trader zelf | Trades | Open | Fees | Te klein | Status |", "|---|---|---|---|---|---|---|---|---|"]
+              f"**Totaal: ${tot:,.0f} van ${start_tot:,.0f} ({100 * (tot / start_tot - 1):+.1f}%)**",
+              f"Funding (vanaf 5-10 ±18:30 UTC): ${tot_f:+,.2f} — zonder funding: ${tot - tot_f:,.0f} ({100 * ((tot - tot_f) / start_tot - 1):+.1f}%)",
+              *groep_regels, "",
+              "| Trader | Potje | Rendement | Trader zelf | Trades | Open | Fees | Funding | Te klein | Status |", "|---|---|---|---|---|---|---|---|---|---|"]
     for a, s in sorted(st["traders"].items(), key=lambda x: -x[1].get("equity", 0)):
         e = s.get("equity", s["potje"])
         regels.append(f"| {kort(a)} | ${e:,.0f} | {100 * (e / s['start_potje'] - 1):+.1f}% | {s.get('trader_rend_pct', '–')}% | {s['trades']} | "
-                      f"{s.get('open_posities', 0)} | ${s['fees']:.2f} | {s['overgeslagen_klein']} | {'actief' if s['actief'] else 'gestopt'} |")
+                      f"{s.get('open_posities', 0)} | ${s['fees']:.2f} | ${s.get('funding', 0.0):+.2f} | {s['overgeslagen_klein']} | {'actief' if s['actief'] else 'gestopt'} |")
     open(f"{MAP}/rapport.md", "w").write("\n".join(regels) + "\n")
     print("\n".join(regels))
     # dagbericht naar telefoon (ntfy), één keer per dag rond 06-08 UTC
@@ -174,7 +209,7 @@ def main():
     uur = pd.Timestamp(NU, unit="ms").hour
     if topic and (os.environ.get("FORCEER_BERICHT") or 6 <= uur < 8):
         top = sorted(st["traders"].items(), key=lambda x: -x[1].get("equity", 0))
-        tekst = f"Papier-HL: ${tot:,.0f} ({100 * (tot / start_tot - 1):+.1f}%) na {dagen:.1f} d\n" + "".join(x + "\n" for x in groep_tekst) + "\n".join(
+        tekst = f"Papier-HL: ${tot:,.0f} ({100 * (tot / start_tot - 1):+.1f}%) na {dagen:.1f} d (funding ${tot_f:+,.0f})\n" + "".join(x + "\n" for x in groep_tekst) + "\n".join(
             f"{kort(a)}: {100 * (s.get('equity', s['potje']) / s['start_potje'] - 1):+.1f}%{'' if s['actief'] else ' (gestopt)'}" for a, s in top)
         try:
             requests.post(f"https://ntfy.sh/{topic}", data=tekst.encode(), headers={"Title": "Papier-HL dagupdate"}, timeout=20)
