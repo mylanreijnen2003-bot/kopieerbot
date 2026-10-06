@@ -194,6 +194,18 @@ G1 gem. per maand: BTC stijgend -0.27% (4 mnd), dalend -0.40% (2 mnd)
 | knip_2026-04-01 | +0.5 | -1.2 | 100 |
 | knip_2026-06-01 | -0.4 | -1.2 | 85 |
 
+## Info achteraf (niet in GO): hun eigen instapprijs, 0,10% kosten
+
+Proportioneel kopiëren (bijkopen meedoen) benadert hun eigen rendement. Selectie blijft op bot-basis.
+
+| Venster | G1 n | G1 gem. potje-% | G1 % positief | pool gem. | percentiel | Spearman (hun r) |
+|---|---|---|---|---|---|---|
+| hoofd | 130 | -2.5 | 21% | -2.3 | 41 | +0.249 |
+| knip_2025-12-01 | 81 | +0.4 | 37% | -0.5 | 86 | +0.123 |
+| knip_2026-02-01 | 81 | -5.3 | 25% | -1.8 | 0 | +0.079 |
+| knip_2026-04-01 | 214 | -5.4 | 16% | -5.9 | 83 | +0.455 |
+| knip_2026-06-01 | 93 | +1.3 | 41% | -5.7 | 100 | +0.603 |
+
 ## Oordeel
 
 - 1 persistentie (Spearman > 0, p < 0,05): NIET gehaald
