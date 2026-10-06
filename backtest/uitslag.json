@@ -9,8 +9,8 @@
   "set_kwintiel": 8,
   "set_top10": 10,
   "set_top30": 30,
-  "set_breed": 37,
-  "set_geverifieerd": 7,
+  "set_breed": 38,
+  "set_geverifieerd": 8,
   "set_controle_onderste_kwintiel": 8
  },
  "beurzen": {
@@ -23,11 +23,11 @@
   "variant": "P",
   "omschrijving": "P: Kraken, 2x, stop -35%",
   "wallets": 8,
-  "rendement": 0.0408,
-  "gem_dag": 0.00026,
-  "nw_t": 0.47,
-  "zonder_2_beste_dagen": -1e-05,
-  "max_drawdown": -0.069,
+  "rendement": -0.0076,
+  "gem_dag": -0.0,
+  "nw_t": -0.01,
+  "zonder_2_beste_dagen": -0.00029,
+  "max_drawdown": -0.1287,
   "pct_potjes_winst": 0.5,
   "btc": -0.0184,
   "GO": false
