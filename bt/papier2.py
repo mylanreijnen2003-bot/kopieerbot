@@ -36,7 +36,7 @@ NAMEN = {"A": "A — max rendement", "B": "B — laag risico", "C": "C — contr
          "D": "D — controle: willekeurig 30, geen regels",
          "E": "E — eigen experiment: 0x2555, €50 op Bitvavo (longs, €10/trade, max 5)",
          "F": "F — constantheid: top 10 op winst-% (84 d, houdtijd ≥ 12 u, ≥ 1%/trade), elke 14 d",
-         "G": "G — consistent rendement: top 10 op rendement zonder 3 beste trades (84 d), elke 14 d"}
+         "G": "G — consistent rendement: top 10 op rendement zonder 3 beste trades (84 d), blijft tot buiten top 20, elke 14 d"}
 CAP_CONTROLE = 40.0
 GEEN_MELDING = {"C", "D"}   # controlegroepen: alleen in het rapport, niet op de telefoon
 POT = 100.0
@@ -203,10 +203,13 @@ def voeg_toe(vs, sel, v, n):
 def f_vul(vs, selF, v="F"):
     """Groep F/G: aanvullen tot de top 10 van de nieuwste selectie (ook eerder gestopte traders mogen terug, vers potje)."""
     actief = {t["address"] for t in vs["traders"] if t["status"] == "actief"}
-    for x in selF["lijst"][:selF["n_actief"]]:
+    for x in selF["lijst"]:
+        if len(actief) >= selF["n_actief"]:
+            break
         a = x["address"]
         if a in actief:
             continue
+        actief.add(a)
         vs["traders"].append({"address": a, "K": max(1, int(x["K"])), "toegevoegd": NU, "status": "actief", "pnl": 0.0,
                               "hand_pnl": 0.0, "piek": POT, "av_start": float(x.get("av", 0))})
         maat = f"winst-% {x.get('winst_pct')}" if v == "F" else f"consistent {x.get('cons_maand_pct')}%/mnd"
@@ -233,10 +236,12 @@ def f_run(v, vs, selF, mids, kraken, start, alle_trades):
         if POT + tr["pnl"] <= POT * 0.80:
             stop_trader(v, tr, "potje -20%")
     if NU - vs["laatste_herbalans"] >= 14 * DAG and selF.get("gemaakt", 0) > vs["laatste_herbalans"]:
-        top = {x["address"] for x in selF["lijst"][:selF["n_actief"]]}
+        # F: eruit buiten de top 10. G: buffer, blijft zolang hij in de top 20 staat (rotatie3: beter dan alleen top 10).
+        grens = 20 if v == "G" else selF["n_actief"]
+        top = {x["address"] for x in selF["lijst"][:grens]}
         for tr in vs["traders"]:
             if tr["status"] == "actief" and tr["address"] not in top:
-                stop_trader(v, tr, "herbalans: niet meer in top 10")
+                stop_trader(v, tr, f"herbalans: niet meer in top {grens}")
         f_vul(vs, selF, v)
         vs["laatste_herbalans"] = NU
 
