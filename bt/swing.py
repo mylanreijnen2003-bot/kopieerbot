@@ -39,6 +39,9 @@ for _d in ["2025-12-01", "2026-02-01", "2026-04-01", "2026-06-01"]:
     _t = ms(_d)
     VENSTERS[f"knip_{_d}"] = (max(START, _t - 120 * DAG), _t, min(EIND, _t + 60 * DAG))
 
+EXTRA = {"volledig": (START, EIND, EIND)}  # beschrijvende top 30 (niet in E47-oordeel)
+SPLIT = ms("2026-03-01")
+
 MIN_TRADES = 30
 HOLD_MIN, HOLD_MAX = 24.0, 240.0
 SWING_AANDEEL = 0.5
@@ -179,7 +182,26 @@ def kies_stats(rows, k_van, knip, rang):
             "winst_pct": float((netto > 0).mean()), "maanden": int(len(mnd)),
             "winstmaanden": float((mnd > 0).mean()), "zonder_top3": float(srt[3:].sum()),
             "K": k90(df.open.tolist(), df.sluit_eff.tolist()),
-            "dagen_sinds_laatste": float((knip - df.open.max()) / DAG)}
+            "dagen_sinds_laatste": float((knip - df.open.max()) / DAG),
+            **extra_stats(df, netto)}
+
+
+def extra_stats(df, netto):
+    """Beschrijvend: periode, frequentie, helften, munten, daling (potje op K)."""
+    o = df.open.to_numpy()
+    k = k90(df.open.tolist(), df.sluit_eff.tolist())
+    srt = df.assign(r=netto).sort_values("sluit_eff")
+    eq = 1 + (srt.r / k).cumsum().to_numpy()
+    dd = float((eq / np.maximum.accumulate(np.concatenate([[1.0], eq]))[1:] - 1).min())
+    weken = max(1.0, (o.max() - o.min()) / (7 * DAG))
+    a, b = netto[o < SPLIT], netto[o >= SPLIT]
+    munten = df.coin.map(to_base).value_counts()
+    return {"eerste_trade": int(o.min()), "laatste_trade": int(o.max()), "trades_per_week": float(len(df) / weken),
+            "potje_totaal": float(netto.sum() / k), "maxdd_potje": dd, "beste_trade": float(netto.max()),
+            "slechtste_trade": float(netto.min()), "n_a": int(len(a)), "som_a": float(a.sum()),
+            "winst_a": float((a > 0).mean()) if len(a) else np.nan, "n_b": int(len(b)), "som_b": float(b.sum()),
+            "winst_b": float((b > 0).mean()) if len(b) else np.nan,
+            "munten": ", ".join(f"{c} {100 * n / len(df):.0f}%" for c, n in munten.head(3).items())}
 
 
 def is_pool(s):
@@ -200,6 +222,9 @@ def stats(shard, n, upath, d, ppath, cpath, out):
     dset = ds.dataset(glob.glob(f"{d}/**/fills_*.parquet", recursive=True), format="parquet")
     srows, frows = [], []
     teller = {"wallets": 0, **{f"{w}_{k}": 0 for w in VENSTERS for k in ["n30", "swing", "pool", "g1"]}}
+    keuze = os.environ.get("SWING_VENSTERS", "")
+    vensters = {k: v for k, v in {**VENSTERS, **EXTRA}.items() if k in keuze.split(",")} if keuze else VENSTERS
+    teller.update({f"{w}_{k}": 0 for w in vensters for k in ["n30", "swing", "pool", "g1"]})
     for chunk in np.array_split(u.address.values, max(1, len(u) // 400)):
         t = dset.to_table(filter=ds.field("address").isin(pa.array(sorted(set(chunk)))),
                           columns=["address", "coin", "ts", "tid", "px", "start", "signed"])
@@ -212,7 +237,7 @@ def stats(shard, n, upath, d, ppath, cpath, out):
             tr = trades(list(zip(x.ts.tolist(), x.coin.tolist(), x.start.tolist(), x.after.tolist(), x.px.tolist())))
             if len(tr) < MIN_TRADES:
                 continue
-            for w, (k_van, knip, meet_tot) in VENSTERS.items():
+            for w, (k_van, knip, meet_tot) in vensters.items():
                 kies = []
                 for t_ in tr:
                     if k_van <= t_["open"] < knip:
@@ -443,6 +468,81 @@ def uitslag(sdir, ppath, out):
     print("\n".join(L))
 
 
+# ---------------------------------------------------------------- beschrijvende top 30 + live check
+
+def live(addr, nu):
+    """Sinds 19-8-2026 via de API: trades (bot-basis, 0,32%), accountwaarde nu, open posities."""
+    from bot import hl
+    try:
+        fl = [f for f in hl.fills(addr, EIND, nu) if f["kind"] == "perp"]
+        tr = trades([(f["time"], f["coin"], f["start"], f["after"], f["px"]) for f in fl])
+        dicht = [t for t in tr if t["sluit"] is not None]
+        r = np.array([t["dir"] * (t["gem_uit"] / t["eerste"] - 1) - KOSTEN for t in dicht])
+        pts, _ = hl.av_points(addr)
+        st = hl.info({"type": "clearinghouseState", "user": addr})
+        pos = [p for p in st.get("assetPositions", []) if float(p["position"]["szi"]) != 0]
+        return {"live_fills": len(fl), "live_trades": len(dicht), "live_open": len(pos),
+                "live_som_r": float(r.sum()) if len(r) else 0.0,
+                "live_winst": float((r > 0).mean()) if len(r) else np.nan,
+                "live_laatste": max([f["time"] for f in fl]) if fl else None,
+                "live_av": float(pts[-1][1]) if pts else np.nan,
+                "live_av_18aug": hl.av_at(pts, EIND) if pts else np.nan,
+                "live_munten": ", ".join(sorted({to_base(p["position"]["coin"]) for p in pos}))}
+    except Exception as exc:  # noqa: BLE001
+        print("live fout", kort(addr), exc, flush=True)
+        return {}
+
+
+def datum(t):
+    return "–" if t is None or (isinstance(t, float) and np.isnan(t)) else str(pd.to_datetime(int(t), unit="ms").date())
+
+
+def top(sdir, out, n=30):
+    os.makedirs(out, exist_ok=True)
+    st = pd.concat([pd.read_parquet(p) for p in glob.glob(f"{sdir}/**/stats_*.parquet", recursive=True)])
+    v = st[st.venster == "volledig"]
+    g1 = v[v.g1].sort_values("tstat", ascending=False).head(n).copy()
+    nu = int(pd.Timestamp.now(tz="UTC").value // 10**6)
+    lv = pd.DataFrame([{"address": a, **live(a, nu)} for a in g1.address])
+    g1 = g1.merge(lv, on="address", how="left")
+    g1.to_csv(f"{out}/top30.csv", index=False)
+    pool, ng1 = int(v.pool.sum()), int(v.g1.sum())
+    L = ["# Top 30 swing-wallets op large/mid caps (Hyperliquid) — beschrijvend", "",
+         f"Gemaakt {datum(nu)}. Data 28-7-2025 t/m 18-8-2026 (HF-dataset) + live API sinds 19-8. "
+         f"Pool (≥ 30 trades, houdtijd 1–10 d, ≥ 80% CMC-top-100): {pool}; consistent (G1): {ng1}. "
+         "Rangorde op t-stat netto rendement per trade (bot-basis: instap eerste fill, 0,32% kosten).", "",
+         "**Let op: E47 = NO-GO.** Kiezen op dit soort historie voorspelde de periode erna niet (Spearman +0,03). "
+         "Dit is een overzicht, geen kooplijst. Volledige adressen versleuteld in `top30.csv`.", "",
+         "## Historie (dataset)", "",
+         "| # | Wallet | Data van–tot | Trades | /week | Houdtijd u | Winst-% | Gem. netto/trade | t | Winstmnd | "
+         "Potje-% totaal | Max daling | Long-% | Top-100 | Munten |",
+         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for i, r in enumerate(g1.itertuples(), 1):
+        L.append(f"| {i} | {kort(r.address)} | {datum(r.eerste_trade)} – {datum(r.laatste_trade)} | {r.n} | "
+                 f"{r.trades_per_week:.1f} | {r.houdtijd_med_u:.0f} | {100 * r.winst_pct:.0f}% | {100 * r.gem_r:+.2f}% | "
+                 f"{r.tstat:.1f} | {100 * r.winstmaanden:.0f}% ({r.maanden}) | {100 * r.potje_totaal:+.0f}% | "
+                 f"{100 * r.maxdd_potje:.0f}% | {100 * r.long_aandeel:.0f}% | {100 * r.cap100_aandeel:.0f}% | {r.munten} |")
+    L += ["", "## Per helft en live", "",
+          "| # | Wallet | Trades jul–feb | Netto som jul–feb | Winst-% | Trades mrt–aug | Netto som mrt–aug | Winst-% | "
+          "Sinds 19-8: trades | netto som | winst-% | laatste fill | open posities | accountwaarde 18-8 → nu |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for i, r in enumerate(g1.itertuples(), 1):
+        def pc(x):
+            return "–" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{100 * x:.0f}%"
+        av0, av1 = getattr(r, "live_av_18aug", np.nan), getattr(r, "live_av", np.nan)
+        avs = "–" if pd.isna(av1) else f"${av0:,.0f} → ${av1:,.0f}"
+        L.append(f"| {i} | {kort(r.address)} | {r.n_a} | {100 * r.som_a:+.0f}% | {pc(r.winst_a)} | {r.n_b} | "
+                 f"{100 * r.som_b:+.0f}% | {pc(r.winst_b)} | {getattr(r, 'live_trades', '–')} | "
+                 f"{100 * getattr(r, 'live_som_r', np.nan):+.0f}% | {pc(getattr(r, 'live_winst', np.nan))} | "
+                 f"{datum(getattr(r, 'live_laatste', None))} | {getattr(r, 'live_open', '–')} "
+                 f"{getattr(r, 'live_munten', '') or ''} | {avs} |")
+    L += ["", "Begrippen: netto som = optelsom van netto rendement per trade (op de instap, zonder hefboom); "
+          "potje-% = netto som ÷ K (gelijktijdige posities, p90); max daling = grootste daling van dat potje; "
+          "t = gemiddelde ÷ onzekerheid (≥ 2 = waarschijnlijk geen toeval); winstmnd = aandeel maanden met winst (aantal maanden)."]
+    open(f"{out}/top30.md", "w").write("\n".join(L) + "\n")
+    print("\n".join(L))
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "prijzen":
@@ -451,3 +551,5 @@ if __name__ == "__main__":
         stats(int(sys.argv[2]), int(sys.argv[3]), *sys.argv[4:9])
     elif cmd == "uitslag":
         uitslag(*sys.argv[2:5])
+    elif cmd == "top":
+        top(sys.argv[2], sys.argv[3])
