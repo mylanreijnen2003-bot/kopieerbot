@@ -1,0 +1,78 @@
+name: swing
+
+# E47 swing-wallets (houdtijd 1-10 d) op large/mid caps, vooraf vastgelegd 6 okt 2026. Uitkomst: results/swing/.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+  ROT: "37197767731"
+
+jobs:
+  prijzen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {pattern: "rot-part-*", path: dat, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - run: mkdir -p pr && python -m bt.swing prijzen dat pr/prijzen.parquet
+      - uses: actions/upload-artifact@v4
+        with: {name: swing-prijzen, path: pr, retention-days: 14}
+
+  stats:
+    needs: prijzen
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy
+      - uses: actions/download-artifact@v4
+        with: {name: rot-uni, path: uni, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "rot-part-*", path: dat, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {name: swing-prijzen, path: pr}
+      - run: python -m bt.swing stats ${{ matrix.shard }} 12 uni/universe.parquet dat pr/prijzen.parquet data/cmc_rank200.csv out && python3 bt/kluis.py alles out
+      - uses: actions/upload-artifact@v4
+        with: {name: "swing-stats-${{ matrix.shard }}", path: out, retention-days: 14}
+
+  uitslag:
+    needs: stats
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy scipy
+      - uses: actions/download-artifact@v4
+        with: {pattern: "swing-stats-*", path: st}
+      - uses: actions/download-artifact@v4
+        with: {name: swing-prijzen, path: pr}
+      - run: python3 bt/kluis.py open st
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
+      - run: rm -rf res/swing && mkdir -p res/swing && python -m bt.swing uitslag st pr/prijzen.parquet res/swing 2>&1 | tee res/swing/log.txt
+      - name: Opslaan
+        if: ${{ !cancelled() }}
+        run: |
+          cd res && python3 ../bt/kluis.py dicht . && git add -A swing
+          git commit -qm "swing E47 $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
