@@ -3,6 +3,8 @@ name: swing
 # E47 swing-wallets (houdtijd 1-10 d) op large/mid caps, vooraf vastgelegd 6 okt 2026. Uitkomst: results/swing/.
 on:
   workflow_dispatch:
+    inputs:
+      stats_run: {description: "run-id met swing-stats-* en swing-prijzen om alleen de uitslag opnieuw te maken; leeg = alles", required: false, default: ""}
 
 permissions:
   contents: write
@@ -14,6 +16,7 @@ env:
 
 jobs:
   prijzen:
+    if: inputs.stats_run == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
@@ -51,7 +54,7 @@ jobs:
         with: {name: "swing-stats-${{ matrix.shard }}", path: out, retention-days: 14}
 
   uitslag:
-    needs: stats
+    needs: [prijzen, stats]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -61,9 +64,9 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install pandas pyarrow numpy scipy
       - uses: actions/download-artifact@v4
-        with: {pattern: "swing-stats-*", path: st}
+        with: {pattern: "swing-stats-*", path: st, run-id: "${{ inputs.stats_run || github.run_id }}", github-token: "${{ github.token }}"}
       - uses: actions/download-artifact@v4
-        with: {name: swing-prijzen, path: pr}
+        with: {name: swing-prijzen, path: pr, run-id: "${{ inputs.stats_run || github.run_id }}", github-token: "${{ github.token }}"}
       - run: python3 bt/kluis.py open st
       - name: Resultatenbranch klaarzetten
         run: |

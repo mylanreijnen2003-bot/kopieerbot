@@ -246,17 +246,17 @@ def stats(shard, n, upath, d, ppath, cpath, out):
 
 # ---------------------------------------------------------------- stap uitslag
 
-def potje(v, k, kosten, stop=-0.20):
+def potje(v, k, kosten, stop=-0.20, col="bot"):
     """v: trades van één trader (DataFrame), op sluitvolgorde; potje-rendement met stop."""
     tot = 0.0
-    for r in (v.sort_values("sluit").bot - kosten).to_numpy():
+    for r in (v.sort_values("sluit")[col] - kosten).to_numpy():
         tot += r / k
         if tot <= stop:
             return stop
     return tot
 
 
-def groep_tabel(st, vt, kosten):
+def groep_tabel(st, vt, kosten, col="bot"):
     """Per trader in de pool: potje-% in de meetperiode (0 als geen trades)."""
     res = []
     g = dict(tuple(vt.groupby("address")))
@@ -266,9 +266,10 @@ def groep_tabel(st, vt, kosten):
             res.append({"address": s.address, "g1": s.g1, "tstat": s.tstat, "potje": 0.0, "n_vooruit": 0,
                         "gem_r_vooruit": np.nan, "long_potje": 0.0, "short_potje": 0.0})
             continue
-        res.append({"address": s.address, "g1": s.g1, "tstat": s.tstat, "potje": potje(v, s.K, kosten),
-                    "n_vooruit": len(v), "gem_r_vooruit": float((v.bot - kosten).mean()),
-                    "long_potje": potje(v[v.dir > 0], s.K, kosten), "short_potje": potje(v[v.dir < 0], s.K, kosten)})
+        res.append({"address": s.address, "g1": s.g1, "tstat": s.tstat, "potje": potje(v, s.K, kosten, col=col),
+                    "n_vooruit": len(v), "gem_r_vooruit": float((v[col] - kosten).mean()),
+                    "long_potje": potje(v[v.dir > 0], s.K, kosten, col=col),
+                    "short_potje": potje(v[v.dir < 0], s.K, kosten, col=col)})
     return pd.DataFrame(res)
 
 
@@ -409,6 +410,24 @@ def uitslag(sdir, ppath, out):
         k = uit.get(("0,10%", w))
         if k is not None and len(k["g1"]):
             L.append(f"| {w} | {100 * k['g1'].potje.mean():+.1f} | {100 * k['pool_gem']:+.1f} | {k['perc']:.0f} |")
+    # ---- info achteraf (niet in GO): hun eigen instap (gem. instapprijs = proportioneel kopiëren), 0,10% kosten
+    L += ["", "## Info achteraf (niet in GO): hun eigen instapprijs, 0,10% kosten", "",
+          "Proportioneel kopiëren (bijkopen meedoen) benadert hun eigen rendement. Selectie blijft op bot-basis.", "",
+          "| Venster | G1 n | G1 gem. potje-% | G1 % positief | pool gem. | percentiel | Spearman (hun r) |",
+          "|---|---|---|---|---|---|---|"]
+    for w in VENSTERS:
+        s_ = st[(st.venster == w) & st.pool].copy()
+        if len(s_) == 0:
+            continue
+        gt = groep_tabel(s_, vt[vt.venster == w], KOSTEN_HL, col="hun")
+        g1 = gt[gt.g1]
+        perc = float((np.array([gt.potje.to_numpy()[rng.choice(len(gt), len(g1), replace=False)].mean()
+                                for _ in range(2000)]) < g1.potje.mean()).mean() * 100) if 0 < len(g1) < len(gt) else np.nan
+        sp_ = gt[gt.n_vooruit >= 10]
+        rho_ = spearman(s_.set_index("address").loc[sp_.address, "gem_r_hun"].to_numpy(),
+                        sp_.gem_r_vooruit.to_numpy())[0] if len(sp_) >= 10 else np.nan
+        L.append(f"| {w} | {len(g1)} | {100 * g1.potje.mean():+.1f} | {100 * (g1.potje > 0).mean():.0f}% | "
+                 f"{100 * gt.potje.mean():+.1f} | {perc:.0f} | {rho_:+.3f} |")
     # ---- oordeel
     n_g1 = len(h["g1"]) if h else 0
     L += ["", "## Oordeel", ""]
