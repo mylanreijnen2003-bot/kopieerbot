@@ -31,11 +31,12 @@ from bt.p2_common import DAG, KOSTEN, UUR, trades_open
 NU = int(time.time() * 1000)
 REGELS = {"A": {"stop": 0.20, "daling": 0.25, "inactief_d": 7, "vorm30": -0.10, "herbalans_d": 14, "top_houden": 16},
           "B": {"stop": 0.15, "daling": 0.20, "inactief_d": 14, "vorm30": -0.05, "herbalans_d": 30, "top_houden": 10},
-          "C": None, "D": None, "E": None, "F": "rotatie"}
+          "C": None, "D": None, "E": None, "F": "rotatie", "G": "rotatie"}
 NAMEN = {"A": "A — max rendement", "B": "B — laag risico", "C": "C — controle: recent top 30, geen regels",
          "D": "D — controle: willekeurig 30, geen regels",
          "E": "E — eigen experiment: 0x2555, €50 op Bitvavo (longs, €10/trade, max 5)",
-         "F": "F — constantheid: top 10 op winst-% (84 d, houdtijd ≥ 12 u, ≥ 1%/trade), elke 14 d"}
+         "F": "F — constantheid: top 10 op winst-% (84 d, houdtijd ≥ 12 u, ≥ 1%/trade), elke 14 d",
+         "G": "G — consistent rendement: top 10 op rendement zonder 3 beste trades (84 d), elke 14 d"}
 CAP_CONTROLE = 40.0
 GEEN_MELDING = {"C", "D"}   # controlegroepen: alleen in het rapport, niet op de telefoon
 POT = 100.0
@@ -199,8 +200,8 @@ def voeg_toe(vs, sel, v, n):
             MELDINGEN.append(f"{v}: nieuw {kort(a)} (K={ks[a]})")
 
 
-def f_vul(vs, selF):
-    """Groep F: aanvullen tot de top 10 van de nieuwste selectie (ook eerder gestopte traders mogen terug, vers potje)."""
+def f_vul(vs, selF, v="F"):
+    """Groep F/G: aanvullen tot de top 10 van de nieuwste selectie (ook eerder gestopte traders mogen terug, vers potje)."""
     actief = {t["address"] for t in vs["traders"] if t["status"] == "actief"}
     for x in selF["lijst"][:selF["n_actief"]]:
         a = x["address"]
@@ -208,7 +209,8 @@ def f_vul(vs, selF):
             continue
         vs["traders"].append({"address": a, "K": max(1, int(x["K"])), "toegevoegd": NU, "status": "actief", "pnl": 0.0,
                               "hand_pnl": 0.0, "piek": POT, "av_start": float(x.get("av", 0))})
-        MELDINGEN.append(f"F: nieuw {kort(a)} (K={int(x['K'])}, winst-% {x.get('winst_pct')})")
+        maat = f"winst-% {x.get('winst_pct')}" if v == "F" else f"consistent {x.get('cons_maand_pct')}%/mnd"
+        MELDINGEN.append(f"{v}: nieuw {kort(a)} (K={int(x['K'])}, {maat})")
 
 
 def f_run(v, vs, selF, mids, kraken, start, alle_trades):
@@ -235,7 +237,7 @@ def f_run(v, vs, selF, mids, kraken, start, alle_trades):
         for tr in vs["traders"]:
             if tr["status"] == "actief" and tr["address"] not in top:
                 stop_trader(v, tr, "herbalans: niet meer in top 10")
-        f_vul(vs, selF)
+        f_vul(vs, selF, v)
         vs["laatste_herbalans"] = NU
 
 
@@ -252,6 +254,8 @@ def main():
         sel.update(json.load(open(f"{d}/controle.json")))
     if os.path.exists(f"{d}/selectie_F.json"):
         sel["F"] = json.load(open(f"{d}/selectie_F.json"))
+    if os.path.exists(f"{d}/selectie_G.json"):
+        sel["G"] = json.load(open(f"{d}/selectie_G.json"))
     pad = f"{d}/state.json"
     mids = {k: float(v) for k, v in hl.info({"type": "allMids"}, weight=2).items()}
     if os.path.exists(pad):
@@ -270,10 +274,12 @@ def main():
                                    "gepauzeerd": False, "laatste_herbalans": NU, "traders": [], "start": NU}
             voeg_toe(state["versies"][v], sel, v, n)
             print(f"{v}: controlegroep gestart met {n} traders")
-    if "F" in sel and "F" not in state["versies"]:
-        state["versies"]["F"] = {"kapitaal_start": 10 * POT, "cap": 50.0, "pot": POT, "modus": "rotatie",
-                                 "gepauzeerd": False, "laatste_herbalans": NU, "traders": [], "start": NU}
-        f_vul(state["versies"]["F"], sel["F"])
+    for v in ["F", "G"]:
+        if v in sel and v not in state["versies"]:
+            state["versies"][v] = {"kapitaal_start": 10 * POT, "cap": 50.0, "pot": POT, "modus": "rotatie",
+                                   "gepauzeerd": False, "laatste_herbalans": NU, "traders": [], "start": NU}
+            f_vul(state["versies"][v], sel[v], v)
+            MELDINGEN.append(f"{v}: gestart met {len(state['versies'][v]['traders'])} traders")
     alle_trades = []
     for v, vs in state["versies"].items():
         regels, n = REGELS[v], sel[v]["n_actief"]

@@ -3,6 +3,9 @@ Kandidaten: Hyperliquid-ranglijst, accountwaarde >= $1000, all-time PnL > 0, maa
 Per kandidaat de laatste 84 dagen (API). Eisen: >= 30 trades, mediaan houdtijd >= 12 u, gem. >= 1% per trade na kosten
 (bot-basis), winstgevend, K <= 5, >= 70% Kraken, <= 150 fills/dag, laatste trade <= 7 d. Rangorde: winst-% van de trades.
 Top 10 actief, 11-20 reserve.
+Groep G (vooraf vastgelegd 6 okt 13:35, uit rotatie3: basis-universum, L=84 d, top 10, elke 14 d): zelfde kandidaten,
+eisen basis (winstgevend, K <= 5, >= 70% Kraken, <= 150 fills/dag, laatste trade <= 7 d) + consistent:
+3 beste trades <= 50% van de winst, >= 60% van de weken positief; rangorde rendement zonder de 3 beste trades.
 Stappen: `kand <uit>` | `api <deel> <aantal> <kand.parquet> <kraken.json> <uit>` | `kies <apimap> <uit>`
 """
 
@@ -55,7 +58,8 @@ def api(shard, n, kpath, kjson, out):
     for i, w in enumerate(k.itertuples()):
         signal.alarm(60)
         try:
-            fl = [f for f in hl.fills(w.address, NU - L * DAG, NU) if f["kind"] == "perp"]
+            fl = [f for f in hl.fills(w.address, NU - L * DAG, NU)
+                  if f["kind"] == "perp" and not str(f["coin"]).startswith(("#", "@"))]
         except Exception:  # noqa: BLE001
             continue
         finally:
@@ -66,10 +70,16 @@ def api(shard, n, kpath, kjson, out):
         t = pd.DataFrame(dicht)
         r = t.apply(r_bot, axis=1)
         kk = k90(t.open, t.sluit)
+        srt = np.sort(r.values)[::-1]
+        pos = float(r[r > 0].sum())
+        wk = r.groupby(((t.sluit - (NU - L * DAG)) // (7 * DAG)).values).sum()
         dagen = pd.Series([f["time"] // DAG for f in fl]).value_counts()
         rows.append({"address": w.address, "av": w.av, "n": len(t), "K": kk,
                      "winst_pct": round(100 * (r > 0).mean(), 1), "gem_r_pct": round(100 * r.mean(), 2),
                      "per_maand_pct": round(100 * r.sum() / kk / (L / 30.44), 2),
+                     "cons_maand_pct": round(100 * srt[3:].sum() / kk / (L / 30.44), 2),
+                     "top3_aandeel": round(float(srt[:3][srt[:3] > 0].sum()) / pos, 3) if pos > 0 else 1.0,
+                     "winstweken_pct": round(100 * float((wk > 0).mean()), 1),
                      "houdtijd_uur": round(float(((t.sluit - t.open) / UUR).median()), 1),
                      "kraken_pct": round(100 * np.mean([to_base(c) in kraken for c in t.coin]), 1),
                      "fills_per_dag": float(dagen.median()),
@@ -91,6 +101,17 @@ def kies(adir, out):
     top.assign(kort=top.address.str[:6] + "…" + top.address.str[-4:]).drop(columns=["address"]).to_csv(
         f"{out}/selectie_F.csv", index=False)
     print(top.drop(columns=["address"]).to_string(index=False))
+    # groep G: consistent rendement
+    if "cons_maand_pct" in s:
+        g = s[(s.per_maand_pct > 0) & (s.K <= 5) & (s.kraken_pct >= 70) & (s.fills_per_dag <= 150)
+              & (s.dagen_sinds_laatste <= 7) & (s.top3_aandeel <= 0.5) & (s.winstweken_pct >= 60) & (s.cons_maand_pct > 0)]
+        topg = g.sort_values("cons_maand_pct", ascending=False).head(20)
+        print("G door eisen", len(g))
+        json.dump({"gemaakt": NU, "n_actief": 10, "lijst": topg.to_dict("records")}, open(f"{out}/selectie_G.json", "w"),
+                  indent=1, default=str)
+        topg.assign(kort=topg.address.str[:6] + "…" + topg.address.str[-4:]).drop(columns=["address"]).to_csv(
+            f"{out}/selectie_G.csv", index=False)
+        print(topg.drop(columns=["address"]).to_string(index=False))
 
 
 if __name__ == "__main__":

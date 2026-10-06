@@ -15,7 +15,7 @@ import requests
 NU = int(time.time() * 1000)
 DAG = 86_400_000
 NAMEN = {"A": "A max rendement", "B": "B laag risico", "C": "C controle top 30", "D": "D controle willekeurig",
-         "E": "E 0x2555 Bitvavo", "F": "F constantheid"}
+         "E": "E 0x2555 Bitvavo", "F": "F constantheid", "G": "G consistent rendement"}
 
 
 def main():
@@ -25,7 +25,7 @@ def main():
     regels, md = [], [f"# Weekrapport papier v2 — {pd.to_datetime(NU, unit='ms'):%Y-%m-%d}", ""]
     laatste = g.sort_values("ts").groupby("versie").tail(1).set_index("versie")
     d_pm = None
-    for v in ["A", "B", "C", "D", "E", "F"]:
+    for v in ["A", "B", "C", "D", "E", "F", "G"]:
         if v not in laatste.index:
             continue
         x = g[g.versie == v].sort_values("ts")
@@ -43,7 +43,7 @@ def main():
     tekst = []
     for r in regels:
         eisen = ""
-        if r["v"] in ("A", "B", "E", "F"):
+        if r["v"] in ("A", "B", "E", "F", "G"):
             ok = [r["pct"] > 0, r["pm"] - r["btc_pm"] >= 3, d_pm is None or r["pm"] > d_pm]
             eisen = " ✅ haalt live-eisen" if all(ok) else f" ({sum(ok)}/3 eisen)"
         lijn = (f"{NAMEN[r['v']]}: {r['pct']:+.1f}% totaal ({r['pm']:+.1f}%/mnd), week {r['week']:+.1f}%, "

@@ -1,6 +1,6 @@
 name: papier2-f-select
 
-# Selectie groep F (constantheid, 84 d). Elke maandag en donderdag; de papier-engine herbalanceert F elke 14 dagen.
+# Selectie groep F (constantheid, 84 d) en G (consistent rendement, 84 d). Elke maandag en donderdag; de papier-engine herbalanceert F elke 14 dagen.
 on:
   workflow_dispatch:
   schedule:
