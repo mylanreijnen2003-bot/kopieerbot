@@ -47,3 +47,13 @@
 2026-10-08 06:39 A: nieuw 0xe6c0…1a10 (K=3)
 2026-10-08 14:03 B: 0xe86d…6273 eruit (account leeg ($0)), resultaat €+0.77
 2026-10-08 14:03 B: nieuw 0xcae0…ae69 (K=5)
+2026-10-08 23:33 A: 0x48bb…8c9d eruit (handelsverlies $4,265 (account bij start $7,509)), resultaat €-4.13
+2026-10-08 23:33 A: 0x599d…2d09 eruit (handelsverlies $61,621 (account bij start $95,469)), resultaat €-2.47
+2026-10-08 23:33 A: 0xa4a8…57a3 eruit (handelsverlies $5,000 (account bij start $8,387)), resultaat €-1.31
+2026-10-08 23:33 A: nieuw 0x53a5…3e9e (K=2)
+2026-10-08 23:33 A: nieuw 0x2385…b98a (K=3)
+2026-10-08 23:33 A: nieuw 0x2555…34b1 (K=3)
+2026-10-08 23:33 B: 0x7b77…3f66 eruit (handelsverlies $12,441 (account bij start $22,782)), resultaat €+0.00
+2026-10-08 23:33 B: 0x2555…34b1 eruit (> 5 posities open), resultaat €-1.94
+2026-10-08 23:33 B: nieuw 0x0d4a…5efd (K=3)
+2026-10-08 23:33 B: nieuw 0x2a96…4aad (K=3)
