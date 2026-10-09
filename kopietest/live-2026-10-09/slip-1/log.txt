@@ -1,0 +1,42 @@
+start live 10 HL 0 Orderly, munten 62
+loopt 10 min, spiegel open 51 {'leider_subscriptionResponse': 20, 'leider_userFills': 11, 'subscriptionResponse': 130, 'trades': 7759, 'bbo': 152859, 'leider_orderUpdates': 111, 'leider_pong': 190, 'pong': 19}
+loopt 20 min, spiegel open 90 {'leider_subscriptionResponse': 20, 'leider_userFills': 19, 'subscriptionResponse': 130, 'trades': 15851, 'bbo': 302148, 'leider_orderUpdates': 283, 'leider_pong': 390, 'pong': 39}
+loopt 30 min, spiegel open 94 {'leider_subscriptionResponse': 20, 'leider_userFills': 25, 'subscriptionResponse': 130, 'trades': 24119, 'bbo': 453064, 'leider_orderUpdates': 473, 'leider_pong': 590, 'pong': 59}
+loopt 40 min, spiegel open 75 {'leider_subscriptionResponse': 20, 'leider_userFills': 26, 'subscriptionResponse': 130, 'trades': 30354, 'bbo': 584990, 'leider_orderUpdates': 598, 'leider_pong': 790, 'pong': 79}
+loopt 50 min, spiegel open 99 {'leider_subscriptionResponse': 20, 'leider_userFills': 26, 'subscriptionResponse': 130, 'trades': 37422, 'bbo': 726495, 'leider_orderUpdates': 748, 'leider_pong': 990, 'pong': 99}
+loopt 60 min, spiegel open 106 {'leider_subscriptionResponse': 20, 'leider_userFills': 28, 'subscriptionResponse': 130, 'trades': 44032, 'bbo': 861105, 'leider_orderUpdates': 876, 'leider_pong': 1190, 'pong': 119}
+loopt 70 min, spiegel open 63 {'leider_subscriptionResponse': 20, 'leider_userFills': 28, 'subscriptionResponse': 130, 'trades': 49533, 'bbo': 980146, 'leider_orderUpdates': 926, 'leider_pong': 1390, 'pong': 139}
+loopt 80 min, spiegel open 60 {'leider_subscriptionResponse': 20, 'leider_userFills': 28, 'subscriptionResponse': 130, 'trades': 55940, 'bbo': 1114185, 'leider_orderUpdates': 1019, 'leider_pong': 1590, 'pong': 159}
+loopt 90 min, spiegel open 60 {'leider_subscriptionResponse': 20, 'leider_userFills': 28, 'subscriptionResponse': 130, 'trades': 61539, 'bbo': 1231852, 'leider_orderUpdates': 1065, 'leider_pong': 1790, 'pong': 179}
+loopt 100 min, spiegel open 99 {'leider_subscriptionResponse': 20, 'leider_userFills': 31, 'subscriptionResponse': 130, 'trades': 66412, 'bbo': 1343079, 'leider_orderUpdates': 1157, 'leider_pong': 1990, 'pong': 199}
+loopt 110 min, spiegel open 81 {'leider_subscriptionResponse': 20, 'leider_userFills': 31, 'subscriptionResponse': 130, 'trades': 73184, 'bbo': 1473322, 'leider_orderUpdates': 1255, 'leider_pong': 2190, 'pong': 219}
+loopt 120 min, spiegel open 96 {'leider_subscriptionResponse': 20, 'leider_userFills': 37, 'subscriptionResponse': 130, 'trades': 80552, 'bbo': 1608612, 'leider_orderUpdates': 1395, 'leider_pong': 2390, 'pong': 239}
+loopt 130 min, spiegel open 92 {'leider_subscriptionResponse': 20, 'leider_userFills': 41, 'subscriptionResponse': 130, 'trades': 87113, 'bbo': 1737803, 'leider_orderUpdates': 1555, 'leider_pong': 2590, 'pong': 259}
+loopt 140 min, spiegel open 67 {'leider_subscriptionResponse': 20, 'leider_userFills': 41, 'subscriptionResponse': 130, 'trades': 93723, 'bbo': 1859207, 'leider_orderUpdates': 1620, 'leider_pong': 2790, 'pong': 279}
+loopt 150 min, spiegel open 85 {'leider_subscriptionResponse': 20, 'leider_userFills': 41, 'subscriptionResponse': 130, 'trades': 99401, 'bbo': 1972361, 'leider_orderUpdates': 1708, 'leider_pong': 2990, 'pong': 299}
+loopt 160 min, spiegel open 68 {'leider_subscriptionResponse': 20, 'leider_userFills': 41, 'subscriptionResponse': 130, 'trades': 104889, 'bbo': 2080239, 'leider_orderUpdates': 1768, 'leider_pong': 3190, 'pong': 319}
+hl leider fout 0x6ff765b3 ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+hl leider fout 0xa1b6d8ef ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+loopt 170 min, spiegel open 84 {'leider_subscriptionResponse': 24, 'leider_userFills': 43, 'subscriptionResponse': 130, 'trades': 109895, 'bbo': 2190431, 'leider_orderUpdates': 1867, 'leider_pong': 3389, 'pong': 339}
+hl leider fout 0x47096aea ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+hl markt fout ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+hl leider fout 0x1d1a8caf ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+hl leider fout 0x618d6943 ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+hl leider fout 0xbee5ffa9 ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+hl leider fout 0x2bfab9fe ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+loopt 180 min, spiegel open 146 {'leider_subscriptionResponse': 34, 'leider_userFills': 56, 'subscriptionResponse': 260, 'trades': 116908, 'bbo': 2307829, 'leider_orderUpdates': 2205, 'leider_pong': 3586, 'pong': 359}
+hl leider fout 0x94d71513 ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+hl leider fout 0xca2f5c06 ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+hl leider fout 0x49a7820a ConnectionClosedOK(Close(code=1000, reason='Expired'), Close(code=1000, reason='Expired'), True)
+loopt 190 min, spiegel open 100 {'leider_subscriptionResponse': 40, 'leider_userFills': 60, 'subscriptionResponse': 260, 'trades': 123292, 'bbo': 2432128, 'leider_orderUpdates': 2350, 'leider_pong': 3784, 'pong': 379}
+loopt 200 min, spiegel open 128 {'leider_subscriptionResponse': 40, 'leider_userFills': 63, 'subscriptionResponse': 260, 'trades': 128601, 'bbo': 2554780, 'leider_orderUpdates': 2536, 'leider_pong': 3984, 'pong': 399}
+loopt 210 min, spiegel open 77 {'leider_subscriptionResponse': 40, 'leider_userFills': 64, 'subscriptionResponse': 260, 'trades': 133662, 'bbo': 2666356, 'leider_orderUpdates': 2599, 'leider_pong': 4184, 'pong': 419}
+loopt 220 min, spiegel open 75 {'leider_subscriptionResponse': 40, 'leider_userFills': 64, 'subscriptionResponse': 260, 'trades': 138209, 'bbo': 2770097, 'leider_orderUpdates': 2677, 'leider_pong': 4383, 'pong': 439}
+loopt 230 min, spiegel open 76 {'leider_subscriptionResponse': 40, 'leider_userFills': 66, 'subscriptionResponse': 260, 'trades': 142557, 'bbo': 2879700, 'leider_orderUpdates': 2768, 'leider_pong': 4584, 'pong': 459}
+loopt 240 min, spiegel open 66 {'leider_subscriptionResponse': 40, 'leider_userFills': 66, 'subscriptionResponse': 260, 'trades': 147287, 'bbo': 2979230, 'leider_orderUpdates': 2818, 'leider_pong': 4783, 'pong': 479}
+loopt 250 min, spiegel open 78 {'leider_subscriptionResponse': 40, 'leider_userFills': 67, 'subscriptionResponse': 260, 'trades': 152088, 'bbo': 3075825, 'leider_orderUpdates': 2911, 'leider_pong': 4984, 'pong': 499}
+loopt 260 min, spiegel open 113 {'leider_subscriptionResponse': 40, 'leider_userFills': 69, 'subscriptionResponse': 260, 'trades': 159316, 'bbo': 3181285, 'leider_orderUpdates': 3070, 'leider_pong': 5183, 'pong': 519}
+loopt 270 min, spiegel open 106 {'leider_subscriptionResponse': 40, 'leider_userFills': 69, 'subscriptionResponse': 260, 'trades': 168267, 'bbo': 3302912, 'leider_orderUpdates': 3190, 'leider_pong': 5384, 'pong': 539}
+loopt 280 min, spiegel open 83 {'leider_subscriptionResponse': 40, 'leider_userFills': 69, 'subscriptionResponse': 260, 'trades': 174099, 'bbo': 3421127, 'leider_orderUpdates': 3341, 'leider_pong': 5583, 'pong': 559}
+loopt 290 min, spiegel open 84 {'leider_subscriptionResponse': 40, 'leider_userFills': 69, 'subscriptionResponse': 260, 'trades': 180061, 'bbo': 3532073, 'leider_orderUpdates': 3426, 'leider_pong': 5784, 'pong': 579}
+klaar live
