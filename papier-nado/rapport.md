@@ -1,6 +1,6 @@
 # Papier Nado (top 10 uit de V2-test, vaste inzet)
 
-Start 05-10 13:36 UTC, bijgewerkt 11-10 05:54 UTC (5.7 dagen).
+Start 05-10 13:36 UTC, bijgewerkt 11-10 12:58 UTC (6.0 dagen).
 **Totaal: 989.2 van 1,000 (-1.08%)**
 
 Alleen gesloten trades; open posities zijn niet meegewaardeerd. Kosten 0,2% per trade.
@@ -14,6 +14,6 @@ Alleen gesloten trades; open posities zijn niet meegewaardeerd. Kosten 0,2% per 
 | 0x4bea…0000 | 100.1 | +0.10% | 1 | 25.0 | 4 | 2 | 10-10 19:54 | actief |
 | 0x04c1…0000 | 100.0 | +0.00% | 0 | 33.3 | 3 | 2 | 08-10 17:15 | actief |
 | 0xfd30…0000 | 100.0 | +0.00% | 0 | 50.0 | 2 | 3 | 11-10 04:15 | actief |
-| 0x1168…0000 | 99.7 | -0.31% | 4 | 25.0 | 4 | 1 | 10-10 19:40 | actief |
+| 0x1168…0000 | 99.7 | -0.31% | 4 | 25.0 | 4 | 1 | 11-10 08:01 | actief |
 | 0xa922…0000 | 96.5 | -3.54% | 3 | 100.0 | 1 | 0 | 08-10 16:07 | actief |
 | 0xd3f8…0000 | 87.3 | -12.72% | 2 | 100.0 | 1 | 0 | 08-10 04:03 | actief |
