@@ -1,10 +1,99 @@
-Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
-  File "/home/runner/work/kopieerbot/kopieerbot/bt/e_analyse.py", line 23, in <module>
-    from bt.bot_stats import KOSTEN, bot_trades
-  File "/home/runner/work/kopieerbot/kopieerbot/bt/bot_stats.py", line 16, in <module>
-    from bt import data
-  File "/home/runner/work/kopieerbot/kopieerbot/bt/data.py", line 10, in <module>
-    import pyarrow as pa
-ModuleNotFoundError: No module named 'pyarrow'
+fills 11878 vanaf 2025-09-07 15:31:24.100000
+trades 246 open nu 15
+kaarsen voor 85 munten
+/home/runner/work/kopieerbot/kopieerbot/bt/e_analyse.py:212: Pandas4Warning: Timestamp.utcnow is deprecated and will be removed in a future version. Use Timestamp.now('UTC') instead.
+  regels = [f"# Analyse trader E (0x2555…34b1) — {pd.Timestamp.utcnow():%Y-%m-%d %H:%M} UTC", "",
+# Analyse trader E (0x2555…34b1) — 2026-10-12 14:21 UTC
+
+Trades: 246 (data vanaf 2025-09-07), open nu: 15. Basislijn = alle uren van dezelfde munten in dezelfde periode.
+
+## Algemeen
+
+- Long: 85% · winst-% 75% · gem. 6.54% · mediaan 2.99% per trade (bot-basis, na 0,32%)
+- Houdtijd mediaan 56 u (p25 8, p75 251)
+- Bijkopen: 79% van de trades, eerste fill = 15% van de positie (mediaan)
+- Cluster: mediaan 0 andere trades binnen 2 u; 27% in een mandje van ≥ 4
+- Uitstap: MFE mediaan 10.1%, MAE mediaan -3.8%, verkoopt mediaan -5.1% onder de hoogste koers tijdens de trade
+- BTC boven 140d-gemiddelde bij instap: 60% van de trades
+- Funding (24u voor instap) mediaan 0.12 bp/u
+
+## Instap vs willekeurig moment (longs)
+
+Gem. percentiel 50 = niet anders dan willekeurig; < 30 = hij koopt bij lage waarden, > 70 = bij hoge.
+
+| kenmerk   |   mediaan_E |   mediaan_basis |   gem_percentiel_E |   n_E |
+|:----------|------------:|----------------:|-------------------:|------:|
+| r4u       |        0.03 |           -0.04 |                 49 |    69 |
+| r24u      |       -0.12 |           -0.1  |                 49 |    69 |
+| r3d       |       -2.12 |           -0.18 |                 45 |    69 |
+| r7d       |       -1.33 |            0.07 |                 49 |    69 |
+| r30d      |       18.78 |            3.68 |                 59 |    56 |
+| van_top7d |      -10.51 |           -7.45 |                 45 |    69 |
+| plek_7d   |        0.36 |            0.45 |                 48 |    69 |
+| vs_ma20d  |        3.23 |            0.68 |                 52 |    68 |
+| vs_ma50d  |       10.89 |            1.11 |                 59 |    54 |
+| rsi_1u    |       51.1  |           49.3  |                 51 |    69 |
+| rsi_4u    |       45.53 |           48.9  |                 49 |    69 |
+| rsi_1d    |       55.38 |           49.32 |                 58 |    69 |
+| vol_x     |        1    |            0.89 |                 58 |    69 |
+| volat_7d  |        5.44 |            4.22 |                 60 |    69 |
+
+## Werkt het kenmerk zelf? Vooruit-rendement per kwintiel (alle munten, zelfde periode, geen kosten)
+
+| kenmerk   |    1 |    2 |    3 |    4 |     5 |
+|:----------|-----:|-----:|-----:|-----:|------:|
+| plek_7d   | 0.87 | 0.56 | 0.33 | 0.44 |  0.98 |
+| r24u      | 0.94 | 0.7  | 0.32 | 0.2  |  0.78 |
+| r30d      | 0.39 | 0.32 | 0.77 | 0.97 |  0.39 |
+| r3d       | 0.54 | 0.78 | 0.69 | 0.4  |  0.67 |
+| r4u       | 0.61 | 0.6  | 0.6  | 0.55 |  0.51 |
+| r7d       | 0.86 | 0.51 | 0.65 | 0.88 |  0.28 |
+| rsi_1d    | 0.65 | 0.59 | 0.75 | 0.89 |  0.13 |
+| rsi_1u    | 0.82 | 0.71 | 0.31 | 0.14 |  0.87 |
+| rsi_4u    | 0.52 | 0.73 | 0.48 | 0.25 |  0.9  |
+| van_top7d | 0.55 | 0.28 | 0.68 | 0.54 |  1.12 |
+| vol_x     | 0.42 | 0.43 | 0.57 | 0.7  |  1.06 |
+| volat_7d  | 0.7  | 0.78 | 0.99 | 0.71 | -0    |
+| vs_ma20d  | 0.77 | 0.68 | 0.83 | 1.02 |  0.17 |
+| vs_ma50d  | 0.45 | 0.16 | 0.87 | 0.68 | -0.07 |
+
+## Uur en dag van instap
+
+|        |   1 |   2 |   3 |   4 |   5 |   6 |   7 |   8 |   9 |   10 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |
+|:-------|----:|----:|----:|----:|----:|----:|----:|----:|----:|-----:|-----:|-----:|-----:|-----:|-----:|-----:|-----:|-----:|-----:|-----:|-----:|-----:|
+| trades |   6 |   7 |   4 |   2 |   5 |   2 |   2 |   7 |   2 |    3 |    5 |    8 |    1 |    3 |    4 |    7 |    5 |    1 |    2 |    1 |    1 |    3 |
+
+|        |   Friday |   Monday |   Saturday |   Sunday |   Thursday |   Tuesday |   Wednesday |
+|:-------|---------:|---------:|-----------:|---------:|-----------:|----------:|------------:|
+| trades |       14 |        4 |         12 |       13 |         14 |         7 |          17 |
+
+## Per munt
+
+| coin   |   trades |   gem_r |   long |
+|:-------|---------:|--------:|-------:|
+| BTC    |       14 |    0.3  |   0.86 |
+| ZEC    |       14 |   -0.07 |   0.79 |
+| PUMP   |        4 |    5.47 |   1    |
+| ENA    |        4 |    7.94 |   0.5  |
+| TRUMP  |        4 |    1.78 |   0.5  |
+| PENGU  |        2 |   11.6  |   1    |
+| PONS   |        2 |   15.14 |   1    |
+| UNI    |        2 |    4.18 |   1    |
+| AI16Z  |        2 |    5.64 |   1    |
+| AAVE   |        2 |   21.6  |   1    |
+| PENDLE |        2 |   22.99 |   0.5  |
+| HYPE   |        2 |   22.55 |   1    |
+| TON    |        2 |   11.6  |   1    |
+| TRB    |        2 |   10.68 |   1    |
+| ARB    |        1 |    4.27 |   1    |
+| AIXBT  |        1 |   13.88 |   1    |
+| APE    |        1 |   48.03 |   1    |
+| BNB    |        1 |   -0.32 |   1    |
+| CAKE   |        1 |   12.91 |   1    |
+| BCH    |        1 |    3.59 |   1    |
+| ARK    |        1 |  -59.33 |   1    |
+| OP     |        1 |    2.99 |   1    |
+| ONDO   |        1 |   42.19 |   1    |
+| NEAR   |        1 |    6.21 |   1    |
+| GRASS  |        1 |   17.33 |   1    |
+
