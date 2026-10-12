@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install pandas numpy requests tabulate
+      - run: pip install pandas numpy requests tabulate pyarrow
       - run: |
           git fetch origin results
           python3 bt/kluis.py show papier2/controle.json | python3 -c "import json,sys; c=json.load(sys.stdin); json.dump({'adres': c['E']['lijst'][0]['address']}, open('adr.json','w'))"
