@@ -1,0 +1,35 @@
+name: e-analyse
+
+# Analyse trader E (0x2555): instap- en uitstapkenmerken vs basislijn. Uitkomst: results/e_analyse/.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas numpy requests tabulate
+      - run: |
+          git fetch origin results
+          python3 bt/kluis.py show papier2/controle.json | python3 -c "import json,sys; c=json.load(sys.stdin); json.dump({'adres': c['E']['lijst'][0]['address']}, open('adr.json','w'))"
+      - name: Resultatenbranch klaarzetten
+        run: |
+          git config --global user.name "kopieerbot"; git config --global user.email "actions@users.noreply.github.com"
+          git worktree add -B results res origin/results && python3 bt/kluis.py open res
+      - run: rm -rf res/e_analyse && mkdir -p res/e_analyse && python -m bt.e_analyse adr.json res/e_analyse 2>&1 | tee res/e_analyse/log.txt
+      - name: Opslaan
+        if: ${{ !cancelled() }}
+        run: |
+          cd res && python3 ../bt/kluis.py dicht . && git add -A e_analyse
+          git commit -qm "e_analyse $(date -u +%F) [skip ci]" || true
+          for i in 1 2 3; do git pull -q --rebase origin results && git push -q origin HEAD:results && break; sleep 10; done
