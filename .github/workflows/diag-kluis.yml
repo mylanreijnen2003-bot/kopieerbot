@@ -1,0 +1,29 @@
+name: diag-kluis
+# Tijdelijk: test of secret DATA_KEY de .kluis-bestanden op branch results kan openen. Print geen inhoud of sleutel.
+on:
+  push:
+    branches: [diag-kluis]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      KLUIS_KEY: ${{ secrets.DATA_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: |
+          git fetch -q origin results && git worktree add -q res origin/results
+          echo "::notice::sleutel aanwezig=$([ -n "$KLUIS_KEY" ] && echo ja || echo nee) lengte=${#KLUIS_KEY}"
+          tot=0; ok10=0; ok200=0; mis=""
+          while IFS= read -r f; do
+            tot=$((tot+1))
+            if openssl enc -d -aes-256-cbc -pbkdf2 -iter 10000 -pass env:KLUIS_KEY -in "$f" -out /dev/null 2>/dev/null; then ok10=$((ok10+1));
+            elif openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:KLUIS_KEY -in "$f" -out /dev/null 2>/dev/null; then ok200=$((ok200+1));
+            else mis="$mis ${f#res/}"; fi
+          done < <(find res -name '*.kluis' | sort)
+          echo "::notice::kluis-bestanden=$tot open_iter10000=$ok10 open_iter200000=$ok200 mislukt=$((tot-ok10-ok200))"
+          echo "::notice::mislukt (max 15): $(echo $mis | tr ' ' '\n' | head -15 | tr '\n' ' ')"
+          echo "::notice::laatste wijziging per mislukt bestand: $(for p in $(echo $mis | tr ' ' '\n' | head -5); do git -C res log -1 --format='%ad' --date=short -- "$p"; done | sort | uniq -c | tr '\n' ' ')"
