@@ -253,7 +253,8 @@ def stop_trader(v, tr, reden):
 
 def main():
     d = sys.argv[1]
-    sel = json.load(open(f"{d}/selectie.json"))
+    # Sinds de herstart van 24 okt (nieuwe sleutel) lopen alleen D, E, F en G; selectie.json (A/B) is dan optioneel.
+    sel = json.load(open(f"{d}/selectie.json")) if os.path.exists(f"{d}/selectie.json") else {}
     kraken = set(json.load(open(f"{d}/kraken.json")))
     if os.path.exists(f"{d}/controle.json"):
         sel.update(json.load(open(f"{d}/controle.json")))
@@ -265,6 +266,9 @@ def main():
     mids = {k: float(v) for k, v in hl.info({"type": "allMids"}, weight=2).items()}
     if os.path.exists(pad):
         state = json.load(open(pad))
+        if not state.get("btc_start"):  # herstelde staat: BTC-prijs bij de oorspronkelijke start opnieuw opzoeken
+            k = hl.candles("BTC", state["start"] - UUR, state["start"] + UUR, "1h")
+            state["btc_start"] = next((v[0] for t, v in sorted(k.items()) if t >= state["start"] - UUR), mids.get("BTC"))
     else:
         state = {"start": NU, "btc_start": mids.get("BTC"), "versies": {}}
         for v in ["A", "B"]:

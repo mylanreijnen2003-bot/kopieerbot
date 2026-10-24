@@ -31,7 +31,7 @@ jobs:
           git fetch origin results && git worktree add -B results res origin/results && python3 bt/kluis.py open res
       - name: Bijwerken
         run: |
-          if [ ! -f res/papier2/selectie.json ]; then echo "nog geen selectie"; exit 0; fi
+          if [ ! -f res/papier2/state.json ] && [ ! -f res/papier2/selectie.json ]; then echo "nog geen selectie"; exit 0; fi
           python -m bt.papier2 res/papier2
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
