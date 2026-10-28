@@ -9,3 +9,6 @@ live/data/
 !.env.example
 *.adressen.*
 context/*-volledig*
+# F3-8: artefacten en tussendata met volledige adressen alleen lokaal
+data/rot3_artifacts/
+data/vol_tegenbar/
