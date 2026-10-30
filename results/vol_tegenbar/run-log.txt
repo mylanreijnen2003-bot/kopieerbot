@@ -1,0 +1,28 @@
+Stap stats (bt.rot3, ongewijzigd) ...
+Controle G: 5.69 %/mnd (rotatie3: 5.69)
+G: 108 verschillende traders over 20 perioden; kandidaten totaal 3929
+experiments.jsonl: 6 regels toegevoegd (K1-K3 tellen in N).
+Stap trades ...
+  trades: 80962 na 437 adressen
+  trades: 165589 na 874 adressen
+  trades: 247999 na 1311 adressen
+  trades: 328908 na 1748 adressen
+  trades: 411652 na 2185 adressen
+  trades: 492421 na 2621 adressen
+  trades: 571021 na 3057 adressen
+  trades: 654034 na 3493 adressen
+  trades: 748476 na 3929 adressen
+  3017 G-trades in de vooruitperioden
+Stap prijzen (Hyperliquid dagslot + funding, Binance 5m) ...
+  dagslot 50/200
+  dagslot 100/200
+  dagslot 150/200
+  dagslot 200/200
+  prijzen klaar (3323 s)
+  K0: 5.35 %/mnd (met funding, 0,32 %)
+  K1: 3.38 %/mnd (met funding, 0,32 %)
+  K2: 1.64 %/mnd (met funding, 0,32 %)
+  K3: 0.11 %/mnd (met funding, 0,32 %)
+  K0-B: 0.29 %/mnd (met funding, 0,32 %)
+  K1-B: -1.09 %/mnd (met funding, 0,32 %)
+Rapport: /home/runner/work/kopieerbot/kopieerbot/results/vol_tegenbar/rapport.md (3404 s)
