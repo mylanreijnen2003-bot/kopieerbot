@@ -15,6 +15,7 @@ import argparse
 import glob
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -34,8 +35,8 @@ from .kern import (H, M5, funding_r, g_selectie, instap_eerste_5m, instap_tegen,
                    potje_pct, schaal, sigma_dag, sigma_ref, vol_factor)
 
 REPO = Path(__file__).resolve().parents[1]
-ART = Path(r"C:\Users\mylan\kopieerbot\data\rot3_artifacts")
-WERK = REPO / "data" / "vol_tegenbar"
+ART = Path(os.environ.get("VT_ART", r"C:\Users\mylan\kopieerbot\data\rot3_artifacts"))
+WERK = Path(os.environ.get("VT_WERK", REPO / "data" / "vol_tegenbar"))
 CACHE = WERK / "cache"
 UIT = REPO / "results" / "vol_tegenbar"
 PREREG = REPO / "docs" / "prereg-vol-tegenbar.md"

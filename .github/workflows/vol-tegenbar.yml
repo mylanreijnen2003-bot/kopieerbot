@@ -1,0 +1,72 @@
+name: vol-tegenbar
+
+# F3-8: vol-inzet + instap na tegen-candle als overlay op groep G (docs/prereg-vol-tegenbar.md).
+# Start alleen bij een push van overlay/start-run.txt op deze branch (eenmalige run).
+# Stap stats = bt.rot3 stats (ongewijzigd, zoals rot3.yml); tussendata met adressen alleen versleuteld (kluis).
+on:
+  push:
+    branches: [claude/vol-tegenbar]
+    paths: [overlay/start-run.txt]
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  KLUIS_KEY: ${{ secrets.DATA_KEY }}
+  ROT: "37197767731"
+  BT: "37124999519"
+
+jobs:
+  stats:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {name: rot-uni, path: uni, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "rot-part-*", path: dat, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "bt-prep-beurzen", path: beurs, run-id: "${{ env.BT }}", github-token: "${{ github.token }}"}
+      - run: python -m bt.rot3 stats ${{ matrix.shard }} 12 uni/universe.parquet dat beurs out && python3 bt/kluis.py alles out
+      - uses: actions/upload-artifact@v4
+        with: {name: "vt-r3-${{ matrix.shard }}", path: out, retention-days: 3}
+
+  reken:
+    needs: stats
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas pyarrow numpy requests
+      - uses: actions/download-artifact@v4
+        with: {pattern: "vt-r3-*", path: werk/r3, merge-multiple: true}
+      - run: python3 bt/kluis.py open werk/r3
+      - uses: actions/download-artifact@v4
+        with: {name: rot-uni, path: art/rot-uni, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {pattern: "rot-part-*", path: art, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
+      - uses: actions/download-artifact@v4
+        with: {name: bt-prep-beurzen, path: art/bt-prep-beurzen, run-id: "${{ env.BT }}", github-token: "${{ github.token }}"}
+      - run: python -m overlay.run 2>&1 | tee overlay-log.txt
+        env: {VT_ART: art, VT_WERK: werk}
+      - name: Geen volledige adressen in de uitvoer
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p uitslag && cp -r results/vol_tegenbar uitslag/ 2>/dev/null || true
+          cp overlay-log.txt uitslag/ && cp experiments.jsonl uitslag/ 2>/dev/null || true
+          python3 bt/kluis.py alles uitslag && python3 bt/kluis.py check uitslag
+          find uitslag -name "*.kluis" -delete
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with: {name: vt-uitslag, path: uitslag, retention-days: 14}
