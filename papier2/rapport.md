@@ -1,76 +1,76 @@
-# Papier v2 — stand 2026-10-29 22:57 UTC (dag 25.4)
+# Papier v2 — stand 2026-10-30 06:24 UTC (dag 25.7)
 
-BTC sinds start: -7.2%
+BTC sinds start: -7.7%
 
 ## Versie D — controle: willekeurig 30, geen regels
-Start €3000 → nu €2917.79 (-2.7%), met de hand 1 u later: -2.4%
+Start €3000 → nu €2916.65 (-2.8%), met de hand 1 u later: -2.9%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |
 |---|---|---|---|---|---|---|---|---|
-| 0xf3e1…956e | 4 | €25 | actief | 16 | 1 | €-11.89 | €-14.17 |  |
+| 0xf3e1…956e | 4 | €25 | actief | 16 | 1 | €-11.78 | €-14.17 |  |
 | 0xf4b7…d894 | 3 | €33 | actief | 12 | 0 | €-5.31 | €-0.64 |  |
 | 0xb1de…f2ee | 3 | €33 | actief | 14 | 0 | €-0.13 | €-0.71 |  |
 | 0x2ed7…ebdd | 3 | €33 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0x478e…7ba7 | 3 | €33 | actief | 7 | 2 | €+6.08 | €+8.03 |  |
+| 0x478e…7ba7 | 3 | €33 | actief | 8 | 1 | €+6.15 | €+10.08 |  |
 | 0xe86d…6273 | 3 | €33 | actief | 7 | 0 | €-2.41 | €-2.54 |  |
-| 0x2718…2fb0 | 4 | €25 | actief | 11 | 3 | €+12.49 | €+17.50 |  |
-| 0x8cb0…6898 | 5 | €20 | actief | 48 | 3 | €-10.39 | €-8.91 |  |
+| 0x2718…2fb0 | 4 | €25 | actief | 13 | 2 | €+11.75 | €+14.44 |  |
+| 0x8cb0…6898 | 5 | €20 | actief | 59 | 4 | €-9.37 | €-10.41 |  |
 | 0x882c…e0cb | 2 | €40 | actief | 4 | 0 | €-2.65 | €-2.29 |  |
-| 0x6f19…6688 | 4 | €25 | actief | 61 | 2 | €-9.40 | €-13.83 |  |
-| 0x5cb4…d3f4 | 5 | €20 | actief | 50 | 0 | €-11.05 | €-17.03 |  |
+| 0x6f19…6688 | 4 | €25 | actief | 62 | 3 | €-8.34 | €-15.09 |  |
+| 0x5cb4…d3f4 | 5 | €20 | actief | 51 | 1 | €-11.55 | €-17.00 |  |
 | 0xefb0…1cd8 | 2 | €40 | actief | 5 | 0 | €-1.03 | €-1.25 |  |
-| 0x8c3d…e860 | 3 | €33 | actief | 13 | 2 | €-5.19 | €+1.43 |  |
+| 0x8c3d…e860 | 3 | €33 | actief | 14 | 1 | €-4.45 | €+0.47 |  |
 | 0x2070…fff9 | 2 | €40 | actief | 1 | 0 | €+0.08 | €+0.96 |  |
 | 0x0fe1…ebee | 1 | €40 | actief | 1 | 0 | €-4.13 | €-5.72 |  |
-| 0x53a5…3e9e | 2 | €40 | actief | 29 | 1 | €-15.19 | €-16.69 |  |
+| 0x53a5…3e9e | 2 | €40 | actief | 29 | 1 | €-17.08 | €-16.69 |  |
 | 0x53bb…efb3 | 1 | €40 | actief | 1 | 0 | €-4.13 | €-3.96 |  |
-| 0x7828…88a2 | 5 | €20 | actief | 11 | 2 | €+2.50 | €+1.90 |  |
-| 0x1363…e5aa | 2 | €40 | actief | 45 | 2 | €+8.47 | €+13.73 |  |
-| 0xccd2…c8a3 | 2 | €40 | actief | 22 | 2 | €-4.77 | €-4.47 |  |
-| 0x9b96…d3a3 | 4 | €25 | actief | 1 | 3 | €-6.24 | €-0.10 |  |
-| 0x5aaa…9399 | 5 | €20 | actief | 36 | 4 | €-7.05 | €-6.05 |  |
+| 0x7828…88a2 | 5 | €20 | actief | 13 | 3 | €+1.87 | €+2.71 |  |
+| 0x1363…e5aa | 2 | €40 | actief | 46 | 2 | €+8.69 | €+13.73 |  |
+| 0xccd2…c8a3 | 2 | €40 | actief | 22 | 4 | €-2.67 | €-4.47 |  |
+| 0x9b96…d3a3 | 4 | €25 | actief | 3 | 1 | €-6.78 | €-7.89 |  |
+| 0x5aaa…9399 | 5 | €20 | actief | 43 | 2 | €-7.78 | €-9.82 |  |
 | 0x5855…739f | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0x8374…842b | 4 | €25 | actief | 25 | 1 | €+9.72 | €+9.45 |  |
-| 0x02dd…82e5 | 4 | €25 | actief | 10 | 0 | €-10.47 | €-10.95 |  |
+| 0x8374…842b | 4 | €25 | actief | 25 | 1 | €+8.76 | €+9.45 |  |
+| 0x02dd…82e5 | 4 | €25 | actief | 11 | 1 | €-10.44 | €-10.95 |  |
 | 0x3f7c…2593 | 1 | €40 | actief | 8 | 0 | €-4.27 | €-4.64 |  |
-| 0x85b3…51f2 | 4 | €25 | actief | 8 | 3 | €-1.68 | €+5.11 |  |
-| 0x2882…0f8a | 4 | €25 | actief | 61 | 1 | €-6.95 | €-20.01 |  |
+| 0x85b3…51f2 | 4 | €25 | actief | 9 | 3 | €-2.45 | €+5.11 |  |
+| 0x2882…0f8a | 4 | €25 | actief | 61 | 1 | €-6.68 | €-20.01 |  |
 | 0xf83a…e4d0 | 5 | €20 | actief | 4 | 0 | €-0.24 | €+0.28 |  |
 | 0x1585…a393 | 3 | €33 | actief | 8 | 0 | €+3.02 | €+2.64 |  |
 
 ## Versie E — eigen experiment: 0x2555, €50 op Bitvavo (longs, €10/trade, max 5)
-Start €50 → nu €51.52 (+3.0%), met de hand 1 u later: +0.0%
+Start €50 → nu €51.08 (+2.2%), met de hand 1 u later: +0.0%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |
 |---|---|---|---|---|---|---|---|---|
-| 0x2555…34b1 | 3 | €10 | actief | 20 | 5 | €+1.52 | €+0.00 |  |
+| 0x2555…34b1 | 3 | €10 | actief | 20 | 5 | €+1.08 | €+0.00 |  |
 
 ## Versie F — constantheid: top 10 op winst-% (84 d, houdtijd ≥ 12 u, ≥ 1%/trade), elke 14 d
-Start €1000 → nu €976.40 (-2.4%), met de hand 1 u later: +5.1%
+Start €1000 → nu €978.42 (-2.2%), met de hand 1 u later: +5.2%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |
 |---|---|---|---|---|---|---|---|---|
 | 0x1003…940c | 2 | €50 | gestopt | 1 | 3 | €-14.50 | €+0.20 | herbalans: niet meer in top 10 |
 | 0x718b…b568 | 4 | €0 | gestopt | 0 | 0 | €-13.52 | €+1.23 | adres niet terug te vinden na sleutelverlies (stand 17-10) |
-| 0xd57c…18ea | 5 | €20 | actief | 2 | 2 | €-2.89 | €+2.72 |  |
+| 0xd57c…18ea | 5 | €20 | actief | 2 | 2 | €-2.02 | €+2.72 |  |
 | 0x2555…34b1 | 3 | €33 | gestopt | 41 | 3 | €+28.48 | €+39.09 | herbalans: niet meer in top 10 |
 | 0xfeb1…b87a | 4 | €25 | gestopt | 19 | 4 | €-15.66 | €-16.33 | herbalans: niet meer in top 10 |
 | 0x478e…7ba7 | 3 | €33 | gestopt | 6 | 0 | €+8.12 | €+7.91 | herbalans: niet meer in top 10 |
-| 0x96d5…1127 | 5 | €20 | actief | 3 | 5 | €-4.51 | €+3.45 |  |
+| 0x96d5…1127 | 5 | €20 | actief | 3 | 5 | €-4.03 | €+3.45 |  |
 | 0x1165…1356 | 5 | €20 | gestopt | 18 | 5 | €-4.88 | €-2.61 | herbalans: niet meer in top 10 |
 | 0x01cd…d479 | 3 | €33 | gestopt | 15 | 4 | €-2.27 | €+15.80 | herbalans: niet meer in top 10 |
 | 0x9b10…4bff | 3 | €33 | gestopt | 1 | 1 | €-2.31 | €-1.93 | herbalans: niet meer in top 10 |
 | 0x39d6…5e64 | 3 | €33 | actief | 1 | 0 | €-1.55 | €-1.22 |  |
-| 0xc311…ed23 | 3 | €33 | actief | 3 | 2 | €+1.32 | €-0.32 |  |
-| 0x5e0c…8e69 | 3 | €33 | actief | 1 | 1 | €+0.70 | €+2.74 |  |
+| 0xc311…ed23 | 3 | €33 | actief | 5 | 0 | €+2.63 | €+0.99 |  |
+| 0x5e0c…8e69 | 3 | €33 | actief | 1 | 1 | €-0.18 | €+2.74 |  |
 | 0x3705…9af2 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0xfb6f…77d5 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0xc6ee…76b7 | 4 | €25 | actief | 1 | 1 | €+0.12 | €+0.10 |  |
+| 0xc6ee…76b7 | 4 | €25 | actief | 1 | 2 | €+0.36 | €+0.10 |  |
 | 0xade7…3089 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
 | 0x2bdf…9f2a | 5 | €20 | actief | 1 | 0 | €-0.25 | €-0.08 |  |
 
 ## Versie G — consistent rendement: top 10 op rendement zonder 3 beste trades (84 d), blijft tot buiten top 20, elke 14 d
-Start €1000 → nu €1012.23 (+1.2%), met de hand 1 u later: +5.5%
+Start €1000 → nu €1012.84 (+1.3%), met de hand 1 u later: +5.1%
 
 | Trader | K | Inzet | Status | Trades | Open | Resultaat | Met de hand | Reden |
 |---|---|---|---|---|---|---|---|---|
@@ -78,16 +78,16 @@ Start €1000 → nu €1012.23 (+1.2%), met de hand 1 u later: +5.5%
 | 0x61f5…d617 | 1 | €50 | actief | 4 | 0 | €+0.46 | €+3.82 |  |
 | 0xd5e1…7b3a | 4 | €25 | actief | 19 | 0 | €+14.12 | €+7.55 |  |
 | 0xf6e4…af81 | 5 | €20 | gestopt | 41 | 2 | €+5.17 | €-2.56 | herbalans: niet meer in top 20 |
-| 0x2e1a…2c1a | 1 | €50 | actief | 27 | 0 | €+4.12 | €-3.20 |  |
+| 0x2e1a…2c1a | 1 | €50 | actief | 30 | 0 | €+3.56 | €-3.68 |  |
 | 0x2555…34b1 | 3 | €33 | gestopt | 41 | 3 | €+28.48 | €+39.09 | herbalans: niet meer in top 20 |
 | 0xdead…26e3 | 5 | €20 | gestopt | 41 | 2 | €+3.91 | €-2.56 | herbalans: niet meer in top 20 |
 | 0x253b…acf8 | 4 | €25 | gestopt | 17 | 8 | €-12.53 | €+3.76 | herbalans: niet meer in top 20 |
 | 0xf7ad…0139 | 1 | €50 | gestopt | 0 | 0 | €+0.00 | €+0.00 | herbalans: niet meer in top 20 |
 | 0x8726…3af9 | 2 | €50 | gestopt | 11 | 1 | €-5.73 | €-4.20 | herbalans: niet meer in top 20 |
-| 0xa325…71f7 | 4 | €25 | actief | 2 | 1 | €-0.56 | €+0.00 |  |
-| 0x33a9…4b6d | 3 | €33 | actief | 2 | 1 | €+1.73 | €-1.43 |  |
-| 0xfcac…babb | 1 | €50 | actief | 12 | 1 | €-1.44 | €-2.98 |  |
-| 0xfe8c…29a1 | 2 | €50 | actief | 4 | 0 | €-4.23 | €-0.09 |  |
+| 0xa325…71f7 | 4 | €25 | actief | 3 | 0 | €+0.27 | €+2.35 |  |
+| 0x33a9…4b6d | 3 | €33 | actief | 3 | 1 | €+2.51 | €-1.53 |  |
+| 0xfcac…babb | 1 | €50 | actief | 13 | 0 | €-1.46 | €-2.45 |  |
+| 0xfe8c…29a1 | 2 | €50 | actief | 4 | 0 | €-4.23 | €-6.71 |  |
 | 0xfb6f…77d5 | 4 | €25 | actief | 0 | 0 | €+0.00 | €+0.00 |  |
-| 0xdc52…19f5 | 3 | €33 | actief | 2 | 0 | €-1.09 | €-0.21 |  |
-| 0x7d93…620b | 3 | €33 | actief | 5 | 2 | €+0.47 | €+0.51 |  |
+| 0xdc52…19f5 | 3 | €33 | actief | 3 | 0 | €-0.97 | €-0.32 |  |
+| 0x7d93…620b | 3 | €33 | actief | 5 | 2 | €-0.07 | €+0.51 |  |
