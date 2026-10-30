@@ -58,8 +58,14 @@ jobs:
         with: {pattern: "rot-part-*", path: art, run-id: "${{ env.ROT }}", github-token: "${{ github.token }}"}
       - uses: actions/download-artifact@v4
         with: {name: bt-prep-beurzen, path: art/bt-prep-beurzen, run-id: "${{ env.BT }}", github-token: "${{ github.token }}"}
-      - run: python -m overlay.run 2>&1 | tee overlay-log.txt
+      # prijscache (alleen Hyperliquid/Binance-koersen en funding, geen adressen) bewaren tussen runs
+      - uses: actions/cache/restore@v4
+        with: {path: werk/cache, key: vt-prijzen-v1, restore-keys: vt-prijzen-v1-}
+      - run: set -o pipefail; python -m overlay.run 2>&1 | tee overlay-log.txt
         env: {VT_ART: art, VT_WERK: werk}
+      - uses: actions/cache/save@v4
+        if: ${{ !cancelled() }}
+        with: {path: werk/cache, key: "vt-prijzen-v1-${{ github.run_id }}"}
       - name: Geen volledige adressen in de uitvoer
         if: ${{ !cancelled() }}
         run: |

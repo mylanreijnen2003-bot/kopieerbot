@@ -103,8 +103,8 @@ def sigma_dag(slot: pd.Series, t: int) -> float:
 
 
 def sigma_ref(trades: pd.DataFrame, T: int) -> float:
-    """Mediaan van sigma (kolom `sigma`) over trades met open_t in [T-84 d, T)."""
-    m = (trades["open_t"] >= T - REF_DAGEN * DAG) & (trades["open_t"] < T)
+    """Mediaan van sigma (kolom `sigma`) over trades met opentijd `o` in [T-84 d, T)."""
+    m = (trades["o"] >= T - REF_DAGEN * DAG) & (trades["o"] < T)
     x = trades.loc[m, "sigma"].dropna()
     return float(x.median()) if len(x) else float("nan")
 

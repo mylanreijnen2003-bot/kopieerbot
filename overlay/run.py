@@ -165,7 +165,11 @@ def run(par: int, log=print):
         for m in sorted({mm for t in fwd.loc[fwd.coin == c, "o"] for mm in maanden(t)}):
             sym[(c, m)] = koppel(c, lambda n, m=m: od.bn_5m(CACHE, n, m) is not None)
     log(f"  prijzen klaar ({time.time() - t0:.0f} s)")
+    return reken(held, s84, fwd, ref, dag, fund, sym, r_g, df_g, t0, log)
 
+
+def reken(held, s84, fwd, ref, dag, fund, sym, r_g, df_g, t0, log=print):
+    """Varianten, controle en rapport; alle prijsdata staat dan al in de cache."""
     # sigma per trade (memo per munt en datum)
     memo = {}
 

@@ -96,7 +96,7 @@ def test_sigma_dag_alleen_dagen_tot_en_met_t_min_1():
 
 def test_sigma_ref_alleen_84_dagen_voor_de_herbalans():
     T = pd.Timestamp("2026-03-01").value // 10**6
-    tr = pd.DataFrame({"open_t": [T - 90 * DAG, T - 80 * DAG, T - 10 * DAG, T + DAG],
+    tr = pd.DataFrame({"o": [T - 90 * DAG, T - 80 * DAG, T - 10 * DAG, T + DAG],
                        "sigma": [9.0, 0.02, 0.04, 7.0]})
     assert sigma_ref(tr, T) == pytest.approx(0.03)            # alleen de twee binnen [T-84, T)
 
@@ -160,3 +160,53 @@ def test_koppeling():
     assert schaal(0.0123, 0.0124) == pytest.approx(1.0)
     assert schaal(0.0000123, 0.0124) == pytest.approx(0.001)   # 1000-contract
     assert schaal(1.0, 1.6) is None                            # > 25 % verschil: geen goede koppeling
+
+
+# 7. Rekenstap end-to-end op synthetische data (rapport wordt geschreven, K0 zonder funding = rot3) -------------
+
+def test_reken_smoke(tmp_path, monkeypatch):
+    from bt.rot_stats import TS
+    from overlay import run as vr
+
+    rng = np.random.default_rng(3)
+    held = {int(T): ["0x" + "a" * 40, "0x" + "b" * 40] for T in TS[:3]}
+    s84 = pd.DataFrame([{"address": a, "T": T, "K": 2} for T, hs in held.items() for a in hs]).set_index(["address", "T"])
+    rij, ref = [], []
+    for T, hs in held.items():
+        for a in hs:
+            for j in range(4):
+                o = T + j * DAG + 7 * 60_000
+                rij.append({"address": a, "coin": "AAA", "o": o, "c": o + 6 * 3_600_000, "dir": 1 if j % 2 else -1,
+                            "first": 10.0, "exit": 10.0 * (1 + rng.normal(0, 0.02)), "T": T, "K": 2})
+                ref.append({"address": a, "coin": "AAA", "o": T - (j + 5) * DAG, "Tref": T})
+    fwd, ref = pd.DataFrame(rij), pd.DataFrame(ref)
+    dagen = pd.date_range(pd.Timestamp(min(held), unit="ms") - pd.Timedelta(days=130), periods=260, freq="D")
+    slot = pd.Series(10 * np.exp(np.cumsum(rng.normal(0, 0.03, len(dagen)))), index=dagen)
+    dag = {"AAA": slot, "BTC": slot * 1000}
+    uur = 3_600_000
+    fund = {"AAA": pd.Series(0.0001, index=[min(held) + i * uur for i in range(24 * 60)])}
+    sym = {(c, m): "AAAUSDT" for c in ["AAA"] for t in fwd.o for m in vr.maanden(t)}
+
+    def nep_5m(cache, s, maand):
+        a = pd.Timestamp(maand + "-01")
+        idx = (pd.date_range(a, a + pd.offsets.MonthBegin(1), freq="5min", inclusive="left").asi8 // 10**6)
+        op = 10 + rng.normal(0, 0.01, len(idx))
+        return pd.DataFrame({"open": op, "close": op + rng.normal(0, 0.01, len(idx))}, index=idx)
+
+    monkeypatch.setattr(vr.od, "bn_5m", nep_5m)
+    monkeypatch.setattr(vr, "UIT", tmp_path)
+    # rot3-referentie: v14_pct = potje met dezelfde K0-r's
+    top = []
+    for T, hs in held.items():
+        per = []
+        for a in hs:
+            x = fwd[(fwd["T"] == T) & (fwd.address == a)]
+            lst = [(c, d * (e / f - 1) - 0.0032) for c, d, e, f in zip(x.c, x.dir, x.exit, x["first"])]
+            per.append(vr.potje_pct(lst, 2)[0])
+        top.append(np.mean(per))
+    df_g = pd.DataFrame({"top_pct": top})
+    res = vr.reken(held, s84, fwd, ref, dag, fund, sym, {"per_maand_pct": 5.69}, df_g, 0.0, log=lambda *_: None)
+    assert len(res) == 6 * 2 * 2
+    assert np.allclose(res[("K0", 0.0032, False)]["rets"], top)
+    tekst = (tmp_path / "rapport.md").read_text(encoding="utf-8")
+    assert "K3 tegen K1-B" in tekst and "0x" + "a" * 40 not in tekst
